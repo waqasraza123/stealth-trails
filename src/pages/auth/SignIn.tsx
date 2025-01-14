@@ -24,6 +24,7 @@ const SignIn = () => {
       const data = await login(formData);
       if (data.data?.token) {
         localStorage.setItem("authToken", data.data.token);
+        localStorage.setItem("user", JSON.stringify(data.data.user));
         toast({
           title: "Login successful!",
           description: "Welcome back to your account!",

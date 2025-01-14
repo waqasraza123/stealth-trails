@@ -1,32 +1,65 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, ArrowLeftRight, Loader2 } from "lucide-react";
+import { useGetUser } from "@/hooks/user/useGetUser";
 
 const Wallet = () => {
-  const [selectedAsset, setSelectedAsset] = useState("Bitcoin (BTC)");
+  const [selectedAsset, setSelectedAsset] = useState("Ethereum (ETH)");
   const [depositAmount, setDepositAmount] = useState(0);
-  const [depositAddress, setDepositAddress] = useState("0x1234...5678"); // Example address
-  //const { deposit, loading } = useApi(); // Assuming you have a useApi hook to handle the API calls
+  const [depositAddress, setDepositAddress] = useState("");
+  const [withdrawAddress, setWithdrawAddress] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const userId =
+      JSON.parse(localStorage.getItem("user") || "{}").supabaseUserId || "";
+  const { loading: loadingUser, user } = useGetUser(userId);
+  
+  useEffect(() => {
+    if (user?.ethereumAddress) {
+      setDepositAddress(user.ethereumAddress);
+    }
+  }, [user]);
 
   const handleDepositAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDepositAmount(parseFloat(e.target.value));
   };
 
+  const handleWithdrawAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setWithdrawAmount(parseFloat(e.target.value));
+  };
+
+  const handleWithdrawAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setWithdrawAddress(e.target.value);
+  };
+
   const handleDeposit = async () => {
-    if (depositAmount <= 0) {
-      // Show error message for invalid amount
-      return;
-    }
+    if (depositAmount <= 0) return;
 
     try {
-      //await deposit({ asset: selectedAsset, amount: depositAmount, address: depositAddress });
-      // Success message or redirect
+      setLoading(true);
+      // API call to deposit funds
+      // await deposit({ asset: selectedAsset, amount: depositAmount, address: depositAddress });
+      setLoading(false);
     } catch (err) {
-      // Handle any errors
+      setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (withdrawAmount <= 0 || !withdrawAddress) return;
+
+    try {
+      setLoading(true);
+      // API call to withdraw funds
+      // await withdraw({ asset: selectedAsset, amount: withdrawAmount, address: withdrawAddress });
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
     }
   };
 
@@ -49,7 +82,7 @@ const Wallet = () => {
                   <div className="mb-2 text-sm text-muted-foreground">Your Deposit Address</div>
                   <div className="flex items-center justify-between gap-4">
                     <code className="rounded bg-mint-50 px-2 py-1 text-sm">
-                      {depositAddress}
+                    {loadingUser ? <Loader2 className="animate-spin" /> : depositAddress}
                     </code>
                     <Button variant="outline" size="sm">
                       Show QR
@@ -69,9 +102,24 @@ const Wallet = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Input placeholder="Enter withdrawal address" />
-                <Input type="number" placeholder="Amount" />
-                <Button className="w-full">Withdraw Funds</Button>
+                <Input
+                  placeholder="Enter withdrawal address"
+                  value={withdrawAddress}
+                  onChange={handleWithdrawAddressChange}
+                />
+                <Input
+                  type="number"
+                  placeholder="Amount"
+                  value={withdrawAmount}
+                  onChange={handleWithdrawAmountChange}
+                />
+                <Button
+                  className="w-full"
+                  onClick={handleWithdraw}
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Withdraw Funds"}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -79,9 +127,10 @@ const Wallet = () => {
 
         <Card className="glass-card">
           <Tabs defaultValue="deposit" className="p-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="flex gap-4 w-full justify-start">
               <TabsTrigger value="deposit">Deposit</TabsTrigger>
               <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+              <TabsTrigger value="transfer">Transfer</TabsTrigger>
             </TabsList>
             <TabsContent value="deposit" className="space-y-4 pt-4">
               <div className="grid gap-4">
@@ -92,9 +141,10 @@ const Wallet = () => {
                     value={selectedAsset}
                     onChange={(e) => setSelectedAsset(e.target.value)}
                   >
-                    <option>Bitcoin (BTC)</option>
                     <option>Ethereum (ETH)</option>
                     <option>USD Coin (USDC)</option>
+                    <option>USDT</option>
+                    <option>Solana (SOL)</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -106,8 +156,11 @@ const Wallet = () => {
                     onChange={handleDepositAmountChange}
                   />
                 </div>
-                <Button onClick={handleDeposit} disabled={true}>
-                  Continue Deposit
+                <Button
+                  onClick={handleDeposit}
+                  disabled={loading || depositAmount <= 0}
+                >
+                  {loading ? "Processing..." : "Continue Deposit"}
                 </Button>
               </div>
             </TabsContent>
@@ -115,21 +168,71 @@ const Wallet = () => {
               <div className="grid gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Asset</label>
-                  <select className="w-full rounded-md border bg-transparent px-3 py-2">
-                    <option>Bitcoin (BTC)</option>
+                  <select
+                    className="w-full rounded-md border bg-transparent px-3 py-2"
+                    value={selectedAsset}
+                    onChange={(e) => setSelectedAsset(e.target.value)}
+                  >
                     <option>Ethereum (ETH)</option>
                     <option>USD Coin (USDC)</option>
+                    <option>USDT</option>
+                    <option>Solana (SOL)</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Withdrawal Address</label>
-                  <Input placeholder="Enter address" />
+                  <Input
+                    placeholder="Enter address"
+                    value={withdrawAddress}
+                    onChange={handleWithdrawAddressChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Amount</label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={withdrawAmount}
+                    onChange={handleWithdrawAmountChange}
+                  />
+                </div>
+                <Button
+                  onClick={handleWithdraw}
+                  disabled={loading || withdrawAmount <= 0}
+                >
+                  {loading ? "Processing..." : "Continue Withdrawal"}
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent value="transfer" className="space-y-4 pt-4">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Asset</label>
+                  <select
+                    className="w-full rounded-md border bg-transparent px-3 py-2"
+                    value={selectedAsset}
+                    onChange={(e) => setSelectedAsset(e.target.value)}
+                  >
+                    <option>Ethereum (ETH)</option>
+                    <option>USD Coin (USDC)</option>
+                    <option>USDT</option>
+                    <option>Solana (SOL)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Receiver Address</label>
+                  <Input placeholder="Enter receiver address" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Amount</label>
                   <Input type="number" placeholder="0.00" />
                 </div>
-                <Button>Continue Withdrawal</Button>
+                <Button
+                  onClick={handleWithdraw}
+                  disabled={loading || withdrawAmount <= 0}
+                >
+                  {loading ? "Processing..." : "Transfer Funds"}
+                </Button>
               </div>
             </TabsContent>
           </Tabs>

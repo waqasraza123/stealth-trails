@@ -1,30 +1,51 @@
+import React from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Shield, Wallet, LogOut } from "lucide-react";
+import { Bell, Shield, Wallet, LogOut, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useGetUser } from "@/hooks/user/useGetUser";
+import { LoaderOverlay } from "@/components/ui/loader-overlay";
 
 const Profile = () => {
   const navigate = useNavigate();
 
+  const userId =
+    JSON.parse(localStorage.getItem("user") || "{}").supabaseUserId || "";
+  const { user, loading, error } = useGetUser(userId);
+
   const handleLogout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
     navigate("/auth/sign-in");
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-mint-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    handleLogout();
+  }
 
   return (
     <Layout>
       <div className="space-y-8">
+        {/* {loading && <Loader2 className="animate-spin" />} */}
         <div className="flex items-center gap-6">
           <Avatar className="h-24 w-24">
             <AvatarImage src="https://github.com/shadcn.png" />
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-3xl font-semibold text-foreground">John Doe</h1>
-            <p className="text-muted-foreground">john.doe@example.com</p>
+            <h1 className="text-3xl font-semibold text-foreground">{user?.firstName ?? "John"} {user?.lastName ?? "Joe"}</h1>
+            <p className="text-muted-foreground">{user?.email ?? "john.doe@example.com"}</p>
           </div>
         </div>
 
@@ -65,7 +86,7 @@ const Profile = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">Main Wallet</div>
-                    <code className="text-sm text-muted-foreground">0x1234...5678</code>
+                    <code className="text-sm text-muted-foreground">{user?.ethereumAddress ?? ""}</code>
                   </div>
                   <Button variant="outline" size="sm">Remove</Button>
                 </div>

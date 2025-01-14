@@ -3,8 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
-import useAuth from "@/hooks/auth/useAuth";
 import { toast } from "@/components/ui/use-toast";
+import useAuth from "@/hooks/auth/useAuth";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 const SignUp = () => {
   const { signup, loading, error } = useAuth();
@@ -14,6 +25,9 @@ const SignUp = () => {
     email: "",
     password: "",
   });
+  const [privateKey, setPrivateKey] = useState<string | null>(null);
+  const [isAcknowledged, setIsAcknowledged] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(true); // Control Dialog visibility
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,12 +40,7 @@ const SignUp = () => {
       const data = await signup(formData);
 
       if (data.data?.user) {
-        toast({
-          title: "Account created successfully!",
-          description: "You are now logged in.",
-        });
-
-        navigate("/auth/sign-in");
+        setPrivateKey(data.data.user.privateKey);
       }
     } catch (err) {
       toast({
@@ -39,6 +48,16 @@ const SignUp = () => {
         description: error || "An error occurred during sign-up. Please try again.",
       });
     }
+  };
+
+  const handleAcknowledge = () => {
+    setIsAcknowledged(true);
+    toast({
+      title: "Private key saved",
+      description: "You can now sign in to your account.",
+    });
+    setIsDialogOpen(false); // Close the dialog
+    navigate("/auth/sign-in");
   };
 
   useEffect(() => {
@@ -117,6 +136,54 @@ const SignUp = () => {
           </Link>
         </p>
       </div>
+
+      {privateKey && (
+        <Dialog open={isDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Your Private Key</DialogTitle>
+              <DialogDescription>
+              Please copy and securely store your private key.
+              This key will not be displayed again, and we do not store it. If you lose access to your private key, you will permanently lose access to your account & assets.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-4 bg-gray-100 rounded-md text-sm font-mono overflow-x-auto">
+              {privateKey}
+            </div>
+            <div className="flex items-center space-x-2 mt-4">
+              <input
+                type="checkbox"
+                id="acknowledge"
+                className="form-checkbox"
+                onChange={() => setIsAcknowledged(!isAcknowledged)}
+                checked={isAcknowledged}
+              />
+              <label htmlFor="acknowledge" className="text-sm">
+                I have copied my private key
+              </label>
+            </div>
+            <DialogFooter>
+              <button
+                disabled={!isAcknowledged}
+                onClick={handleAcknowledge}
+                className={`w-full py-2 px-4 rounded ${
+                  isAcknowledged
+                    ? "bg-mint-600 text-white"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Continue to Sign In
+              </button>
+            </DialogFooter>
+            <DialogClose asChild>
+              <button className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 focus:outline-none">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
