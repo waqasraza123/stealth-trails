@@ -1,13 +1,13 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, History, Wallet, User, BarChart3 } from "lucide-react";
+import { Home, History, Wallet, User, CoinsIcon } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: History, label: "Transactions", path: "/transactions" },
   { icon: Wallet, label: "Deposit/Withdraw", path: "/wallet" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  { icon: CoinsIcon, label: "Staking", path: "/staking" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 

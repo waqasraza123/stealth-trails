@@ -8,7 +8,7 @@ import Transactions from "./pages/Transactions";
 import Wallet from "./pages/Wallet";
 import Loans from "./pages/Loans";
 import Profile from "./pages/Profile";
-import Analytics from "./pages/Analytics";
+import Staking from "./pages/Staking";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 
@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/loans" element={<Loans />} />
-          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/staking" element={<Staking />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
