@@ -4,8 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Shield, Wallet, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    navigate("/auth/sign-in");
+  };
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -99,7 +107,7 @@ const Profile = () => {
         </div>
 
         <div className="flex justify-end">
-          <Button variant="destructive">
+          <Button variant="destructive" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
           </Button>

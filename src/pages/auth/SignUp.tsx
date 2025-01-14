@@ -1,19 +1,52 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
+import useAuth from "@/hooks/auth/useAuth";
+import { toast } from "@/components/ui/use-toast";
 
 const SignUp = () => {
-  const [loading, setLoading] = useState(false);
+  const { signup, loading, error } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+  const navigate = useNavigate();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    // Simulate loading
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setLoading(false);
+    try {
+      const data = await signup(formData);
+
+      if (data.data?.user) {
+        toast({
+          title: "Account created successfully!",
+          description: "You are now logged in.",
+        });
+
+        navigate("/auth/sign-in");
+      }
+    } catch (err) {
+      toast({
+        title: "Sign-up failed",
+        description: error || "An error occurred during sign-up. Please try again.",
+      });
+    }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-mint-50/20 p-4">
@@ -30,72 +63,56 @@ const SignUp = () => {
         <div className="glass-card mt-8 p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium" htmlFor="firstName">
-                  First name
-                </label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  required
-                  className="mt-2"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium" htmlFor="lastName">
-                  Last name
-                </label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  required
-                  className="mt-2"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="email">
-                Email address
-              </label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="firstName"
+                name="firstName"
+                type="text"
                 required
                 className="mt-2"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleChange}
               />
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="password">
-                Password
-              </label>
               <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
+                id="lastName"
+                name="lastName"
+                type="text"
                 required
                 className="mt-2"
+                placeholder="Last Name"
+                value={formData.lastName}
+                onChange={handleChange}
               />
             </div>
-            <LoadingButton
-              type="submit"
-              className="w-full"
-              loading={loading}
-            >
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="mt-2"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="mt-2"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <LoadingButton type="submit" className="w-full" loading={loading}>
               Create account
             </LoadingButton>
           </form>
         </div>
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link
-            to="/auth/sign-in"
-            className="text-mint-600 hover:text-mint-500"
-          >
+          <Link to="/auth/sign-in" className="text-mint-600 hover:text-mint-500">
             Sign in
           </Link>
         </p>

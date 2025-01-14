@@ -15,6 +15,7 @@ import SignUp from "./pages/auth/SignUp";
 const queryClient = new QueryClient();
 
 const App = () => (
+  
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
