@@ -1,7 +1,8 @@
-import { Card } from "@/components/ui/card";
 import { Layout } from "@/components/Layout";
-import { ArrowUpRight, ArrowDownRight, DollarSign, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ArrowUpRight, ArrowDownRight, DollarSign, Activity } from "lucide-react";
+import { BalanceCard } from "@/components/dashboard/BalanceCard";
+import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 
 const Index = () => {
   const balances = [
@@ -65,77 +66,12 @@ const Index = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {balances.map((balance, index) => {
-            const Icon = balance.icon;
-            return (
-              <Card
-                key={index}
-                className="glass-card overflow-hidden p-6 transition-all hover:shadow-xl"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">{balance.title}</p>
-                    <h3 className="text-2xl font-semibold">{balance.amount}</h3>
-                    {balance.subAmount && (
-                      <p className="text-sm text-muted-foreground">
-                        {balance.subAmount}
-                      </p>
-                    )}
-                  </div>
-                  <div
-                    className={`rounded-full p-2 ${
-                      balance.positive ? "bg-mint-100" : "bg-destructive/10"
-                    }`}
-                  >
-                    <Icon
-                      className={`h-5 w-5 ${
-                        balance.positive ? "text-mint-700" : "text-destructive"
-                      }`}
-                    />
-                  </div>
-                </div>
-                <div
-                  className={`mt-4 text-sm ${
-                    balance.positive ? "text-mint-700" : "text-destructive"
-                  }`}
-                >
-                  {balance.change} from last week
-                </div>
-              </Card>
-            );
-          })}
+          {balances.map((balance, index) => (
+            <BalanceCard key={index} {...balance} />
+          ))}
         </div>
 
-        <Card className="glass-card p-6">
-          <h2 className="mb-6 text-xl font-semibold">Recent Transactions</h2>
-          <div className="space-y-4">
-            {recentTransactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-mint-50/50"
-              >
-                <div className="space-y-1">
-                  <p className="font-medium">{transaction.type}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {transaction.date}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">{transaction.amount}</p>
-                  <p
-                    className={`text-sm ${
-                      transaction.status === "completed"
-                        ? "text-mint-600"
-                        : "text-orange-500"
-                    }`}
-                  >
-                    {transaction.status}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <RecentTransactions transactions={recentTransactions} />
       </div>
     </Layout>
   );
