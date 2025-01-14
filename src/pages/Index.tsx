@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Layout } from "@/components/Layout";
-import { ArrowUpRight, ArrowDownRight, DollarSign } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, DollarSign, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const balances = [
@@ -55,7 +56,14 @@ const Index = () => {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Balance Cards */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-semibold text-foreground">Welcome Back</h1>
+          <Button>
+            <Activity className="mr-2 h-4 w-4" />
+            View Analytics
+          </Button>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-3">
           {balances.map((balance, index) => {
             const Icon = balance.icon;
@@ -98,7 +106,6 @@ const Index = () => {
           })}
         </div>
 
-        {/* Recent Transactions */}
         <Card className="glass-card p-6">
           <h2 className="mb-6 text-xl font-semibold">Recent Transactions</h2>
           <div className="space-y-4">
