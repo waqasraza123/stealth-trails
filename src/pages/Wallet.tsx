@@ -1,11 +1,35 @@
+import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QrCode, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 const Wallet = () => {
+  const [selectedAsset, setSelectedAsset] = useState("Bitcoin (BTC)");
+  const [depositAmount, setDepositAmount] = useState(0);
+  const [depositAddress, setDepositAddress] = useState("0x1234...5678"); // Example address
+  //const { deposit, loading } = useApi(); // Assuming you have a useApi hook to handle the API calls
+
+  const handleDepositAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDepositAmount(parseFloat(e.target.value));
+  };
+
+  const handleDeposit = async () => {
+    if (depositAmount <= 0) {
+      // Show error message for invalid amount
+      return;
+    }
+
+    try {
+      //await deposit({ asset: selectedAsset, amount: depositAmount, address: depositAddress });
+      // Success message or redirect
+    } catch (err) {
+      // Handle any errors
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -25,10 +49,9 @@ const Wallet = () => {
                   <div className="mb-2 text-sm text-muted-foreground">Your Deposit Address</div>
                   <div className="flex items-center justify-between gap-4">
                     <code className="rounded bg-mint-50 px-2 py-1 text-sm">
-                      0x1234...5678
+                      {depositAddress}
                     </code>
                     <Button variant="outline" size="sm">
-                      <QrCode className="mr-2 h-4 w-4" />
                       Show QR
                     </Button>
                   </div>
@@ -48,9 +71,7 @@ const Wallet = () => {
               <div className="space-y-4">
                 <Input placeholder="Enter withdrawal address" />
                 <Input type="number" placeholder="Amount" />
-                <Button className="w-full">
-                  Withdraw Funds
-                </Button>
+                <Button className="w-full">Withdraw Funds</Button>
               </div>
             </CardContent>
           </Card>
@@ -66,7 +87,11 @@ const Wallet = () => {
               <div className="grid gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Asset</label>
-                  <select className="w-full rounded-md border bg-transparent px-3 py-2">
+                  <select
+                    className="w-full rounded-md border bg-transparent px-3 py-2"
+                    value={selectedAsset}
+                    onChange={(e) => setSelectedAsset(e.target.value)}
+                  >
                     <option>Bitcoin (BTC)</option>
                     <option>Ethereum (ETH)</option>
                     <option>USD Coin (USDC)</option>
@@ -74,9 +99,16 @@ const Wallet = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Amount</label>
-                  <Input type="number" placeholder="0.00" />
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={depositAmount}
+                    onChange={handleDepositAmountChange}
+                  />
                 </div>
-                <Button>Continue Deposit</Button>
+                <Button onClick={handleDeposit} disabled={true}>
+                  Continue Deposit
+                </Button>
               </div>
             </TabsContent>
             <TabsContent value="withdraw" className="space-y-4 pt-4">
