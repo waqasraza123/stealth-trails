@@ -1,11 +1,13 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, History, Wallet, User } from "lucide-react";
+import { Home, History, Wallet, User, BarChart3 } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: History, label: "Transactions", path: "/transactions" },
   { icon: Wallet, label: "Deposit/Withdraw", path: "/wallet" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
@@ -19,7 +21,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <nav className="fixed h-screen w-64 border-r border-border bg-background/50 backdrop-blur-xl">
           <div className="flex h-full flex-col">
             <div className="p-6">
-              <h1 className="text-2xl font-semibold text-mint-600">DeFi Bank</h1>
+              <Logo />
             </div>
             <div className="flex-1 space-y-1 p-4">
               {navItems.map((item) => {
