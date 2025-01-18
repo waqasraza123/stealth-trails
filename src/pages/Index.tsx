@@ -1,9 +1,9 @@
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownRight, DollarSign, Activity, TrendingUp } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, DollarSign, Activity } from "lucide-react";
 import { BalanceCard } from "@/components/dashboard/BalanceCard";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
-import { Card } from "@/components/ui/card";
+import { InvestmentAdvisor } from "@/components/dashboard/InvestmentAdvisor";
 
 const Index = () => {
   const balances = [
@@ -26,9 +26,9 @@ const Index = () => {
       title: "Total Staked",
       amount: "Ξ 1.5",
       subAmount: "$2,832.10",
-      icon: TrendingUp,
-      change: "+0.8%",
-      positive: true,
+      icon: ArrowDownRight,
+      change: "-0.8%",
+      positive: false,
     },
   ];
 
@@ -61,7 +61,7 @@ const Index = () => {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-semibold text-foreground">Dashboard</h1>
-          <Button>
+          <Button className="bg-apple-blue hover:bg-apple-blue/90">
             <Activity className="mr-2 h-4 w-4" />
             View History
           </Button>
@@ -74,15 +74,7 @@ const Index = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="glass-card p-6">
-            <h2 className="mb-4 text-xl font-semibold">ETH Price Chart</h2>
-            <div className="h-[300px] rounded-lg bg-gradient-to-br from-mint-50/20 to-mint-100/20 backdrop-blur-sm">
-              {/* Chart component would go here */}
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                Price chart coming soon
-              </div>
-            </div>
-          </Card>
+          <InvestmentAdvisor />
           <RecentTransactions transactions={recentTransactions} />
         </div>
       </div>
