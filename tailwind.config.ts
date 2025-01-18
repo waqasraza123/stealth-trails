@@ -53,6 +53,7 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         apple: {
+          // Core brand colors
           gray: "#F5F5F7",
           blue: "#0071E3",
           purple: "#A45EDA",
@@ -60,6 +61,15 @@ export default {
           mint: "#63C7B2",
           yellow: "#FEF7CD",
           orange: "#FF9F0A",
+          // Additional UI colors
+          neutral: "#8E9196",
+          "light-purple": "#D6BCFA",
+          "soft-green": "#F2FCE2",
+          "soft-blue": "#D3E4FD",
+          "soft-gray": "#F1F0FB",
+          white: "#FFFFFF",
+          "light-gray": "#F1F1F1",
+          "cool-gray": "#AAADB0",
         },
       },
       borderRadius: {
