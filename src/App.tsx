@@ -9,13 +9,13 @@ import Wallet from "./pages/Wallet";
 import Loans from "./pages/Loans";
 import Profile from "./pages/Profile";
 import Staking from "./pages/Staking";
+import CreatePool from "./pages/CreatePool";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -29,6 +29,7 @@ const App = () => (
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/loans" element={<Loans />} />
           <Route path="/staking" element={<Staking />} />
+          <Route path="/create-pool" element={<CreatePool />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
