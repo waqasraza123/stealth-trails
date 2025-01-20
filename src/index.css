@@ -4,13 +4,13 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 250 100% 99%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 212 100% 47%;
+    --primary: 255 92% 76%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 5% 96%;
     --secondary-foreground: 240 6% 10%;
@@ -22,7 +22,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 212 100% 47%;
+    --ring: 255 92% 76%;
     --radius: 1rem;
   }
  
@@ -33,7 +33,7 @@
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 9%;
     --popover-foreground: 0 0% 95%;
-    --primary: 212 100% 47%;
+    --primary: 255 92% 76%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
@@ -45,7 +45,7 @@
     --destructive-foreground: 0 86% 97%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 212 100% 47%;
+    --ring: 255 92% 76%;
   }
 }
 
@@ -54,7 +54,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-background to-defi-light-purple/5;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -63,10 +63,26 @@
   @apply bg-white/30 backdrop-blur-md border border-white/20 shadow-lg;
 }
 
+.glass-effect {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
 .animate-in {
   animation: fadeIn 0.5s ease-out;
 }
 
 .slide-in {
   animation: slideIn 0.3s ease-out;
+}
+
+.gradient-border {
+  @apply relative rounded-lg p-[1px] bg-gradient-to-r from-defi-purple via-defi-blue to-defi-pink;
+}
+
+.gradient-border > * {
+  @apply bg-background rounded-lg;
+}
+
+.shimmer {
+  @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent;
 }

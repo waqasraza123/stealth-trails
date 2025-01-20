@@ -1,5 +1,6 @@
 import { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface BalanceCardProps {
   title: string;
@@ -19,33 +20,32 @@ export const BalanceCard = ({
   positive,
 }: BalanceCardProps) => {
   return (
-    <Card className="glass-card overflow-hidden p-6 transition-all hover:shadow-xl">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <h3 className="text-2xl font-semibold">{amount}</h3>
-          {subAmount && (
-            <p className="text-sm text-muted-foreground">{subAmount}</p>
-          )}
+    <Card className="gradient-border overflow-hidden group hover:scale-[1.02] transition-all duration-300">
+      <div className="p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <h3 className="text-2xl font-semibold bg-gradient-to-r from-defi-purple to-defi-blue bg-clip-text text-transparent">
+              {amount}
+            </h3>
+            {subAmount && (
+              <p className="text-sm text-muted-foreground">{subAmount}</p>
+            )}
+          </div>
+          <div className={cn(
+            "rounded-full p-3 transition-colors",
+            positive ? "bg-defi-purple/10 text-defi-purple" : "bg-destructive/10 text-destructive"
+          )}>
+            <Icon className="h-5 w-5" />
+          </div>
         </div>
-        <div
-          className={`rounded-full p-2 ${
-            positive ? "bg-mint-100" : "bg-destructive/10"
-          }`}
-        >
-          <Icon
-            className={`h-5 w-5 ${
-              positive ? "text-mint-700" : "text-destructive"
-            }`}
-          />
+        <div className={cn(
+          "flex items-center space-x-2 text-sm",
+          positive ? "text-defi-purple" : "text-destructive"
+        )}>
+          <span className="font-medium">{change}</span>
+          <span className="text-muted-foreground">from last week</span>
         </div>
-      </div>
-      <div
-        className={`mt-4 text-sm ${
-          positive ? "text-mint-700" : "text-destructive"
-        }`}
-      >
-        {change} from last week
       </div>
     </Card>
   );
