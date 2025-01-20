@@ -3,11 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
+import { Coins, ArrowLeftRight, Wallet } from "lucide-react";
 
 const TabsSection = () => {
-
-
-const [selectedAsset, setSelectedAsset] = useState("Ethereum (ETH)");
+  const [selectedAsset, setSelectedAsset] = useState("Ethereum (ETH)");
   const [depositAmount, setDepositAmount] = useState(0);
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
@@ -27,44 +26,43 @@ const [selectedAsset, setSelectedAsset] = useState("Ethereum (ETH)");
 
   const handleDeposit = async () => {
     if (depositAmount <= 0) return;
-
-    try {
-      setLoading(true);
-      // API call to deposit funds
-      //await deposit({ asset: selectedAsset, amount: depositAmount, address: depositAddress });
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-    }
+    setLoading(true);
+    // API call to deposit funds
+    setLoading(false);
   };
 
   const handleWithdraw = async () => {
     if (withdrawAmount <= 0 || !withdrawAddress) return;
-
-    try {
-      setLoading(true);
-      // API call to withdraw funds
-      // await withdraw({ asset: selectedAsset, amount: withdrawAmount, address: withdrawAddress });
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-    }
+    setLoading(true);
+    // API call to withdraw funds
+    setLoading(false);
   };
 
   return (
-    <Card className="glass-card">
+    <Card className="glass-card overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-defi-blue/5 to-defi-purple/5" />
       <Tabs defaultValue="deposit" className="p-6">
-        <TabsList className="flex gap-4 w-full justify-start">
-          <TabsTrigger value="deposit">Deposit</TabsTrigger>
-          <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
-          <TabsTrigger value="transfer">Transfer</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-defi-light-gray">
+          <TabsTrigger value="deposit" className="data-[state=active]:bg-white data-[state=active]:text-defi-purple">
+            <Wallet className="w-4 h-4 mr-2" />
+            Deposit
+          </TabsTrigger>
+          <TabsTrigger value="withdraw" className="data-[state=active]:bg-white data-[state=active]:text-defi-purple">
+            <Coins className="w-4 h-4 mr-2" />
+            Withdraw
+          </TabsTrigger>
+          <TabsTrigger value="transfer" className="data-[state=active]:bg-white data-[state=active]:text-defi-purple">
+            <ArrowLeftRight className="w-4 h-4 mr-2" />
+            Transfer
+          </TabsTrigger>
         </TabsList>
+
         <TabsContent value="deposit" className="space-y-4 pt-4">
           <div className="grid gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select Asset</label>
+              <label className="text-sm font-medium text-defi-gray">Select Asset</label>
               <select
-                className="w-full rounded-md border bg-transparent px-3 py-2"
+                className="w-full rounded-md border border-defi-purple/20 bg-white/50 backdrop-blur-sm px-3 py-2"
                 value={selectedAsset}
                 onChange={(e) => setSelectedAsset(e.target.value)}
               >
@@ -75,22 +73,25 @@ const [selectedAsset, setSelectedAsset] = useState("Ethereum (ETH)");
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Amount</label>
+              <label className="text-sm font-medium text-defi-gray">Amount</label>
               <Input
                 type="number"
                 placeholder="0.00"
                 value={depositAmount}
                 onChange={handleDepositAmountChange}
+                className="border-defi-purple/20 bg-white/50 backdrop-blur-sm"
               />
             </div>
             <Button
               onClick={handleDeposit}
               disabled={loading || depositAmount <= 0}
+              className="bg-gradient-to-r from-defi-purple to-defi-blue hover:opacity-90 transition-opacity"
             >
               {loading ? "Processing..." : "Continue Deposit"}
             </Button>
           </div>
         </TabsContent>
+
         <TabsContent value="withdraw" className="space-y-4 pt-4">
           <div className="grid gap-4">
             <div className="space-y-2">

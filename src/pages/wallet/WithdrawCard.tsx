@@ -22,7 +22,7 @@ const WithdrawCard = () => {
 
     try {
       setLoading(true);
-      // API call for withdrawal
+      // API call to withdraw funds
       setLoading(false);
     } catch (err) {
       setLoading(false);
@@ -30,10 +30,11 @@ const WithdrawCard = () => {
   };
 
   return (
-    <Card className="glass-card">
+    <Card className="glass-card overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-defi-pink/5 to-defi-purple/5" />
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ArrowDownRight className="h-5 w-5 text-destructive" />
+        <CardTitle className="flex items-center gap-2 text-defi-pink">
+          <ArrowDownRight className="h-5 w-5" />
           Quick Withdraw
         </CardTitle>
       </CardHeader>
@@ -43,15 +44,17 @@ const WithdrawCard = () => {
             placeholder="Enter withdrawal address"
             value={withdrawAddress}
             onChange={handleWithdrawAddressChange}
+            className="border-defi-purple/20 bg-white/50 backdrop-blur-sm"
           />
           <Input
             type="number"
             placeholder="Amount"
             value={withdrawAmount}
             onChange={handleWithdrawAmountChange}
+            className="border-defi-purple/20 bg-white/50 backdrop-blur-sm"
           />
           <Button
-            className="w-full"
+            className="w-full bg-gradient-to-r from-defi-purple to-defi-pink hover:opacity-90 transition-opacity"
             onClick={handleWithdraw}
             disabled={loading}
           >
