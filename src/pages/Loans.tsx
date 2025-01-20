@@ -2,7 +2,6 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, Calculator, Info, AlertCircle } from "lucide-react";
 import {
   Tooltip,
@@ -10,46 +9,44 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 const Loans = () => {
   const [loanAmount, setLoanAmount] = useState<string>("");
   const [collateralAmount, setCollateralAmount] = useState<string>("");
   const [loanTerm, setLoanTerm] = useState<string>("30");
-  const [loanType, setLoanType] = useState<string>("ETH");
 
-  const calculateMinCollateral = (amount: number) => {
-    // Typically DeFi loans require 150% collateralization
-    return amount * 1.5;
-  };
+  // Hypothetical ETH price in USD for calculation purposes
+  const ETH_PRICE_USD = 3000;
+  const REQUIRED_COLLATERAL_RATIO = 1.5;
+
+  useEffect(() => {
+    if (loanAmount) {
+      // Calculate required USDT collateral based on ETH loan amount
+      const ethAmount = parseFloat(loanAmount);
+      const ethValueInUSD = ethAmount * ETH_PRICE_USD;
+      const requiredCollateral = (ethValueInUSD * REQUIRED_COLLATERAL_RATIO).toFixed(2);
+      setCollateralAmount(requiredCollateral);
+    } else {
+      setCollateralAmount("");
+    }
+  }, [loanAmount]);
 
   const calculateAPR = (collateralRatio: number) => {
-    // Base APR is 12%, decreases with higher collateral ratio
     const baseAPR = 12;
-    const ratio = collateralRatio - 1.5; // Subtract minimum ratio
-    const reduction = Math.min(ratio * 2, 4); // Max 4% reduction
-    return Math.max(baseAPR - reduction, 8); // Minimum 8% APR
+    const ratio = collateralRatio - 1.5;
+    const reduction = Math.min(ratio * 2, 4);
+    return Math.max(baseAPR - reduction, 8);
   };
 
   const handleApply = () => {
     const loanAmountNum = parseFloat(loanAmount);
-    const collateralAmountNum = parseFloat(collateralAmount);
 
-    if (!loanAmountNum || !collateralAmountNum) {
+    if (!loanAmountNum) {
       toast({
         title: "Validation Error",
-        description: "Please enter valid loan and collateral amounts",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const minCollateral = calculateMinCollateral(loanAmountNum);
-    if (collateralAmountNum < minCollateral) {
-      toast({
-        title: "Insufficient Collateral",
-        description: `Minimum collateral required: ${minCollateral} ${loanType}`,
+        description: "Please enter a valid loan amount",
         variant: "destructive",
       });
       return;
@@ -84,45 +81,20 @@ const Loans = () => {
 
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Apply for a Loan</CardTitle>
+            <CardTitle>Apply for ETH Loan</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
-                  Asset Type
+                  Loan Amount (ETH)
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Select the asset you want to borrow</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </label>
-                <select 
-                  className="w-full rounded-md border bg-transparent px-3 py-2"
-                  value={loanType}
-                  onChange={(e) => setLoanType(e.target.value)}
-                >
-                  <option value="ETH">Ethereum (ETH)</option>
-                  <option value="USDC">USD Coin (USDC)</option>
-                  <option value="DAI">DAI Stablecoin</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  Loan Amount
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Amount you want to borrow in {loanType}</p>
+                        <p>Enter the amount of ETH you want to borrow</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -137,29 +109,27 @@ const Loans = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
-                  Collateral Amount
+                  Required Collateral (USDT)
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
                         <AlertCircle className="h-4 w-4 text-defi-orange" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Minimum 150% of loan amount required</p>
+                        <p>Required USDT collateral based on current ETH price</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </label>
                 <Input 
-                  type="number" 
-                  placeholder="0.00"
-                  value={collateralAmount}
-                  onChange={(e) => setCollateralAmount(e.target.value)}
+                  type="text" 
+                  value={collateralAmount ? `${collateralAmount} USDT` : ""}
+                  disabled
+                  className="bg-gray-100"
                 />
-                {loanAmount && (
-                  <p className="text-sm text-muted-foreground">
-                    Minimum required: {calculateMinCollateral(parseFloat(loanAmount))} {loanType}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  Current ETH Price: ${ETH_PRICE_USD} USD
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -181,16 +151,16 @@ const Loans = () => {
                   <span className="text-sm font-medium">Loan Summary</span>
                 </div>
                 {loanAmount && collateralAmount && (
-                  <>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-muted-foreground">Collateral Ratio:</span>
-                      <span>{((parseFloat(collateralAmount) / parseFloat(loanAmount)) * 100).toFixed(0)}%</span>
-                      <span className="text-muted-foreground">APR:</span>
-                      <span>{calculateAPR(parseFloat(collateralAmount) / parseFloat(loanAmount))}%</span>
-                      <span className="text-muted-foreground">Repayment Amount:</span>
-                      <span>{(parseFloat(loanAmount) * (1 + calculateAPR(parseFloat(collateralAmount) / parseFloat(loanAmount)) / 100 * parseInt(loanTerm) / 365)).toFixed(4)} {loanType}</span>
-                    </div>
-                  </>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <span className="text-muted-foreground">Collateral Ratio:</span>
+                    <span>150%</span>
+                    <span className="text-muted-foreground">APR:</span>
+                    <span>{calculateAPR(1.5)}%</span>
+                    <span className="text-muted-foreground">Repayment Amount:</span>
+                    <span>
+                      {(parseFloat(loanAmount) * (1 + calculateAPR(1.5) / 100 * parseInt(loanTerm) / 365)).toFixed(4)} ETH
+                    </span>
+                  </div>
                 )}
               </div>
 
