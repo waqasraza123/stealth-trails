@@ -14,6 +14,12 @@ export const LoanSummary = ({ loanAmount, collateralAmount, loanTerm }: LoanSumm
     return Math.max(baseAPR - reduction, 8);
   };
 
+  const calculateLiquidationPrice = () => {
+    if (!loanAmount || !collateralAmount) return 0;
+    const loanValue = parseFloat(loanAmount) * 3000; // ETH price
+    return (loanValue / (parseFloat(collateralAmount) * 0.8)).toFixed(2);
+  };
+
   return (
     <div className="rounded-lg bg-defi-light-purple/10 p-4 space-y-2">
       <div className="flex items-center gap-2">
@@ -26,6 +32,8 @@ export const LoanSummary = ({ loanAmount, collateralAmount, loanTerm }: LoanSumm
           <span>150%</span>
           <span className="text-muted-foreground">APR:</span>
           <span>{calculateAPR(1.5)}%</span>
+          <span className="text-muted-foreground">Liquidation Price:</span>
+          <span>${calculateLiquidationPrice()} USD</span>
           <span className="text-muted-foreground">Repayment Amount:</span>
           <span>
             {(parseFloat(loanAmount) * (1 + calculateAPR(1.5) / 100 * parseInt(loanTerm) / 365)).toFixed(4)} ETH
