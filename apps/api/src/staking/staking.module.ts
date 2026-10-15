@@ -15,5 +15,6 @@ import { StakingService } from "./staking.service";
     StakingPoolGovernanceService,
     PrismaService,
   ],
+  exports: [StakingService],
 })
 export class StakingPoolModule {}

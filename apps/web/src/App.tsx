@@ -26,6 +26,7 @@ const Yield = lazy(() => import("./pages/Yield"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const TrustCenter = lazy(() => import("./pages/TrustCenter"));
 const ProofVerification = lazy(() => import("./pages/ProofVerification"));
+const WealthBrief = lazy(() => import("./pages/WealthBrief"));
 const SignIn = lazy(() => import("./pages/auth/SignIn"));
 const SignUp = lazy(() => import("./pages/auth/SignUp"));
 
@@ -122,6 +123,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     {withRouteBoundary(<ProofVerification />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wealth-brief"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<WealthBrief />)}
                   </ProtectedRoute>
                 }
               />

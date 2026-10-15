@@ -8,6 +8,8 @@ import {
 
 const DEFAULT_PRODUCT_CHAIN_ID = 8453;
 const DEFAULT_API_PORT = 9001;
+const DEFAULT_AI_WEALTH_BRIEF_REQUEST_TIMEOUT_MS = 12_000;
+const DEFAULT_AI_WEALTH_BRIEF_MAX_OUTPUT_TOKENS = 700;
 const DEFAULT_LOCAL_CORS_ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -1144,6 +1146,19 @@ export type ProductChainRuntimeConfig = {
 
 export type ApiRuntimeEnvironment = "development" | "test" | "production";
 
+export type AiWealthBriefProvider = "disabled" | "openai_compatible";
+
+export type AiWealthBriefRuntimeConfig = {
+  provider: AiWealthBriefProvider;
+  endpoint: string | null;
+  apiKey: string | null;
+  model: string | null;
+  requestTimeoutMs: number;
+  maxOutputTokens: number;
+  allowedProviderHosts: readonly string[];
+  localProviderExceptionEnabled: boolean;
+};
+
 export type ApiServerRuntimeConfig = {
   readonly environment: ApiRuntimeEnvironment;
   readonly port: number;
@@ -1816,6 +1831,303 @@ export function loadProductChainRuntimeConfig(
       configuredProductChainId,
       "PRODUCT_CHAIN_ID",
     ),
+  };
+}
+
+const AI_WEALTH_BRIEF_IPV4_HOSTNAME_PATTERN = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+const AI_WEALTH_BRIEF_HOSTNAME_ENTRY_PATTERN = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
+const AI_WEALTH_BRIEF_IPV6_ENTRY_PATTERN = /^\[[0-9a-f:]+\]$/;
+const AI_WEALTH_BRIEF_INTERNAL_HOSTNAME_SUFFIXES = [
+  ".localhost",
+  ".local",
+  ".internal",
+  ".lan",
+  ".home",
+  ".corp",
+] as const;
+
+function isAiWealthBriefIpLiteralHostname(hostname: string): boolean {
+  // WHATWG URL parsing normalizes decimal/hex/octal IPv4 forms (for example
+  // "2130706433" or "0x7f000001") to dotted decimal, and IPv6 hosts keep
+  // brackets, so these two shapes cover the encoded-IP bypass family.
+  return (
+    AI_WEALTH_BRIEF_IPV4_HOSTNAME_PATTERN.test(hostname) ||
+    hostname.startsWith("[")
+  );
+}
+
+function expandAiWealthBriefIpv6Groups(hostname: string): number[] | null {
+  const value = hostname.replace(/^\[/, "").replace(/\]$/, "").toLowerCase();
+  if (!/^[0-9a-f:]+$/u.test(value) || !value.includes(":")) {
+    return null;
+  }
+
+  const halves = value.split("::");
+  if (halves.length > 2) {
+    return null;
+  }
+
+  const parseHalf = (half: string): number[] | null => {
+    if (!half) {
+      return [];
+    }
+    const groups = half.split(":").map((group) => {
+      if (!/^[0-9a-f]{1,4}$/u.test(group)) {
+        return null;
+      }
+      return Number.parseInt(group, 16);
+    });
+    return groups.some((group) => group === null) ? null : (groups as number[]);
+  };
+
+  const head = parseHalf(halves[0] ?? "");
+  const tail = parseHalf(halves[1] ?? "");
+  if (head === null || tail === null) {
+    return null;
+  }
+
+  if (halves.length === 1) {
+    return head.length === 8 ? head : null;
+  }
+
+  const missing = 8 - head.length - tail.length;
+  if (missing < 1) {
+    return null;
+  }
+  return [...head, ...new Array<number>(missing).fill(0), ...tail];
+}
+
+function isAiWealthBriefLoopbackHostname(hostname: string): boolean {
+  const normalized = hostname.toLowerCase().replace(/\.$/, "");
+  if (normalized === "localhost" || normalized.endsWith(".localhost")) {
+    return true;
+  }
+  if (AI_WEALTH_BRIEF_IPV4_HOSTNAME_PATTERN.test(normalized)) {
+    return normalized.split(".")[0] === "127";
+  }
+  if (!normalized.startsWith("[")) {
+    return false;
+  }
+
+  const groups = expandAiWealthBriefIpv6Groups(normalized);
+  if (!groups) {
+    return false;
+  }
+
+  if (groups.slice(0, 7).every((group) => group === 0) && groups[7] === 1) {
+    return true;
+  }
+
+  // IPv4-mapped IPv6 (::ffff:a.b.c.d) is normalized by the URL parser to hex
+  // groups, so detect the mapped prefix and classify the embedded IPv4 octets.
+  const isMapped =
+    groups.slice(0, 5).every((group) => group === 0) && groups[5] === 0xffff;
+  if (!isMapped) {
+    return false;
+  }
+  return (groups[6] ?? 0) >> 8 === 127;
+}
+
+function isAiWealthBriefInternalHostname(hostname: string): boolean {
+  const normalized = hostname.toLowerCase().replace(/\.$/, "");
+  if (isAiWealthBriefLoopbackHostname(normalized)) {
+    return true;
+  }
+  if (!normalized.includes(".")) {
+    return true;
+  }
+  return AI_WEALTH_BRIEF_INTERNAL_HOSTNAME_SUFFIXES.some((suffix) =>
+    normalized.endsWith(suffix),
+  );
+}
+
+function parseAiWealthBriefAllowedHosts(value: string): string[] {
+  const hosts = parseCommaSeparatedValues(
+    value,
+    "AI_WEALTH_BRIEF_ALLOWED_HOSTS",
+  );
+
+  for (const host of hosts) {
+    if (
+      !AI_WEALTH_BRIEF_HOSTNAME_ENTRY_PATTERN.test(host) &&
+      !AI_WEALTH_BRIEF_IPV6_ENTRY_PATTERN.test(host)
+    ) {
+      throw new Error(
+        `AI_WEALTH_BRIEF_ALLOWED_HOSTS entry "${host}" must be a bare hostname or bracketed IPv6 literal without a scheme, path, port, wildcard, or credentials.`,
+      );
+    }
+  }
+
+  return hosts;
+}
+
+// SSRF defense for the configurable OpenAI-compatible endpoint. Validation is
+// fail-closed at config load: the endpoint host must be an exact member of the
+// operator-managed allow-list, HTTPS is required, and IP literals, loopback,
+// and internal hostnames are rejected unless the explicit development-only
+// exception is enabled.
+//
+// Known limitation: validation is hostname-based at configuration time. The
+// HTTP client does not pin resolved IP addresses, so a hostile DNS rebinding
+// of an allow-listed hostname could still direct the request elsewhere.
+// Treat the allow-list as a set of trusted, fixed provider hosts and operate
+// DNS accordingly; do not allow-list hosts you do not control or trust.
+function normalizeAiWealthBriefEndpoint(
+  value: string,
+  allowedHosts: readonly string[],
+  localProviderExceptionEnabled: boolean,
+): string {
+  let parsedEndpoint: URL;
+
+  try {
+    parsedEndpoint = new URL(value);
+  } catch {
+    throw new Error("AI_WEALTH_BRIEF_ENDPOINT must be a valid absolute URL.");
+  }
+
+  if (parsedEndpoint.username || parsedEndpoint.password) {
+    throw new Error(
+      "AI_WEALTH_BRIEF_ENDPOINT must not embed credentials. Configure the API key via AI_WEALTH_BRIEF_API_KEY.",
+    );
+  }
+
+  if (parsedEndpoint.search || parsedEndpoint.hash) {
+    throw new Error(
+      "AI_WEALTH_BRIEF_ENDPOINT must not contain a query string or fragment.",
+    );
+  }
+
+  const hostname = parsedEndpoint.hostname.toLowerCase().replace(/\.$/, "");
+  const isLoopbackHost = isAiWealthBriefLoopbackHostname(hostname);
+
+  if (parsedEndpoint.protocol !== "https:") {
+    if (
+      parsedEndpoint.protocol !== "http:" ||
+      !localProviderExceptionEnabled ||
+      !isLoopbackHost
+    ) {
+      throw new Error(
+        "AI_WEALTH_BRIEF_ENDPOINT must use HTTPS. Plain HTTP is only allowed for a loopback host with AI_WEALTH_BRIEF_ALLOW_LOCAL_PROVIDER=true outside production.",
+      );
+    }
+  }
+
+  if (!localProviderExceptionEnabled) {
+    if (isAiWealthBriefIpLiteralHostname(hostname)) {
+      throw new Error(
+        "AI_WEALTH_BRIEF_ENDPOINT must not use an IP literal host. Allow-list a trusted provider hostname instead.",
+      );
+    }
+    if (isAiWealthBriefInternalHostname(hostname)) {
+      throw new Error(
+        "AI_WEALTH_BRIEF_ENDPOINT must not target a loopback, single-label, or internal hostname outside the development-only local provider exception.",
+      );
+    }
+  }
+
+  if (!allowedHosts.includes(hostname)) {
+    throw new Error(
+      "AI_WEALTH_BRIEF_ENDPOINT host is not present in AI_WEALTH_BRIEF_ALLOWED_HOSTS.",
+    );
+  }
+
+  return parsedEndpoint.toString();
+}
+
+export function loadAiWealthBriefRuntimeConfig(
+  env: RuntimeEnvShape = getNodeRuntimeEnv(),
+): AiWealthBriefRuntimeConfig {
+  const configuredProvider =
+    readOptionalRuntimeEnv(env, "AI_WEALTH_BRIEF_PROVIDER") ?? "disabled";
+
+  if (
+    configuredProvider !== "disabled" &&
+    configuredProvider !== "openai_compatible"
+  ) {
+    throw new Error(
+      "AI_WEALTH_BRIEF_PROVIDER must be one of: disabled, openai_compatible.",
+    );
+  }
+
+  const requestTimeoutValue = readOptionalRuntimeEnv(
+    env,
+    "AI_WEALTH_BRIEF_REQUEST_TIMEOUT_MS",
+  );
+  const maxOutputTokensValue = readOptionalRuntimeEnv(
+    env,
+    "AI_WEALTH_BRIEF_MAX_OUTPUT_TOKENS",
+  );
+  const requestTimeoutMs = requestTimeoutValue
+    ? parsePositiveInteger(
+        requestTimeoutValue,
+        "AI_WEALTH_BRIEF_REQUEST_TIMEOUT_MS",
+      )
+    : DEFAULT_AI_WEALTH_BRIEF_REQUEST_TIMEOUT_MS;
+  const maxOutputTokens = maxOutputTokensValue
+    ? parsePositiveInteger(
+        maxOutputTokensValue,
+        "AI_WEALTH_BRIEF_MAX_OUTPUT_TOKENS",
+      )
+    : DEFAULT_AI_WEALTH_BRIEF_MAX_OUTPUT_TOKENS;
+
+  if (requestTimeoutMs > 30_000) {
+    throw new Error("AI_WEALTH_BRIEF_REQUEST_TIMEOUT_MS must not exceed 30000.");
+  }
+  if (maxOutputTokens > 1_500) {
+    throw new Error("AI_WEALTH_BRIEF_MAX_OUTPUT_TOKENS must not exceed 1500.");
+  }
+
+  if (configuredProvider === "disabled") {
+    return {
+      provider: "disabled",
+      endpoint: null,
+      apiKey: null,
+      model: null,
+      requestTimeoutMs,
+      maxOutputTokens,
+      allowedProviderHosts: [],
+      localProviderExceptionEnabled: false,
+    };
+  }
+
+  const environment = parseApiRuntimeEnvironment(
+    readOptionalRuntimeEnv(env, "NODE_ENV"),
+  );
+  const localProviderExceptionValue = readOptionalRuntimeEnv(
+    env,
+    "AI_WEALTH_BRIEF_ALLOW_LOCAL_PROVIDER",
+  );
+  const localProviderExceptionEnabled = localProviderExceptionValue
+    ? parseBoolean(
+        localProviderExceptionValue,
+        "AI_WEALTH_BRIEF_ALLOW_LOCAL_PROVIDER",
+      )
+    : false;
+
+  if (localProviderExceptionEnabled && environment === "production") {
+    throw new Error(
+      "AI_WEALTH_BRIEF_ALLOW_LOCAL_PROVIDER must not be enabled when NODE_ENV=production.",
+    );
+  }
+
+  const allowedProviderHosts = parseAiWealthBriefAllowedHosts(
+    readRequiredRuntimeEnv(env, "AI_WEALTH_BRIEF_ALLOWED_HOSTS"),
+  );
+  const endpoint = normalizeAiWealthBriefEndpoint(
+    readRequiredRuntimeEnv(env, "AI_WEALTH_BRIEF_ENDPOINT"),
+    allowedProviderHosts,
+    localProviderExceptionEnabled,
+  );
+
+  return {
+    provider: configuredProvider,
+    endpoint,
+    apiKey: readRequiredRuntimeEnv(env, "AI_WEALTH_BRIEF_API_KEY"),
+    model: readRequiredRuntimeEnv(env, "AI_WEALTH_BRIEF_MODEL"),
+    requestTimeoutMs,
+    maxOutputTokens,
+    allowedProviderHosts,
+    localProviderExceptionEnabled,
   };
 }
 

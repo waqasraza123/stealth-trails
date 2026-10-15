@@ -1,5 +1,6 @@
 export {
   loadApiServerRuntimeConfig,
+  loadAiWealthBriefRuntimeConfig,
   loadAccountHoldPolicyRuntimeConfig,
   loadBlockchainContractReadRuntimeConfig,
   loadOptionalBlockchainContractReadRuntimeConfig,
@@ -36,6 +37,8 @@ export {
   loadSharedLoginBootstrapRuntimeConfig,
   loadWorkerRuntimeConfig,
   type ApiRuntimeEnvironment,
+  type AiWealthBriefRuntimeConfig,
+  type AiWealthBriefProvider,
   type ApiServerRuntimeConfig,
   type AccountHoldPolicyRuntimeConfig,
   type BlockchainContractReadRuntimeConfig,

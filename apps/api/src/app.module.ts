@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { AiModule } from "./ai/ai.module";
 import { AuditEventsModule } from "./audit-events/audit-events.module";
 import { AuthModule } from "./auth/auth.module";
 import { BalanceTransfersModule } from "./balance-transfers/balance-transfers.module";
@@ -29,6 +30,7 @@ import { UserModule } from "./user/user.module";
 @Module({
   imports: [
     HealthModule,
+    AiModule,
     AuditEventsModule,
     AuthModule,
     BalanceTransfersModule,

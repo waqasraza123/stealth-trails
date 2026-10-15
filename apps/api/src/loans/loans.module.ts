@@ -21,6 +21,7 @@ import { WorkerLoansController } from "./worker-loans.controller";
     LedgerService,
     PrismaService,
     InternalWorkerApiKeyGuard
-  ]
+  ],
+  exports: [LoansService]
 })
 export class LoansModule {}

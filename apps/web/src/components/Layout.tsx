@@ -43,6 +43,10 @@ export const Layout = ({ children }: LayoutProps) => {
     },
     { label: locale === "ar" ? "العائد" : "Yield", path: "/yield" },
     { label: t("navigation.transactions"), path: "/transactions" },
+    {
+      label: locale === "ar" ? "موجز الثروة" : "Wealth Brief",
+      path: "/wealth-brief"
+    },
     { label: t("navigation.profile"), path: "/profile" }
   ];
 
