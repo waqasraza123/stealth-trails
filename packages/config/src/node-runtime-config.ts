@@ -1259,10 +1259,11 @@ export type CustomerMfaPolicyRuntimeConfig = {
   readonly sessionRiskEscalationAllowedOperatorRoles: readonly string[];
 };
 
-export type CustomerMfaEmailDeliveryMode = "preview" | "webhook";
+export type CustomerMfaEmailDeliveryMode = "preview" | "resend" | "webhook";
 
 export type CustomerMfaEmailDeliveryRuntimeConfig = {
   readonly mode: CustomerMfaEmailDeliveryMode;
+  readonly resendApiKey: string | null;
   readonly webhookUrl: string | null;
   readonly bearerToken: string | null;
   readonly requestTimeoutMs: number;
@@ -2761,9 +2762,17 @@ export function loadCustomerMfaEmailDeliveryRuntimeConfig(
     readOptionalRuntimeEnv(env, "CUSTOMER_MFA_EMAIL_DELIVERY_MODE") ??
     "preview";
 
-  if (mode !== "preview" && mode !== "webhook") {
+  if (mode !== "preview" && mode !== "resend" && mode !== "webhook") {
     throw new Error(
-      "CUSTOMER_MFA_EMAIL_DELIVERY_MODE must be one of: preview, webhook.",
+      "CUSTOMER_MFA_EMAIL_DELIVERY_MODE must be one of: preview, resend, webhook.",
+    );
+  }
+
+  const resendApiKey = readOptionalRuntimeEnv(env, "RESEND_API_KEY");
+
+  if (mode === "resend" && !resendApiKey) {
+    throw new Error(
+      "RESEND_API_KEY is required when CUSTOMER_MFA_EMAIL_DELIVERY_MODE=resend.",
     );
   }
 
@@ -2780,6 +2789,7 @@ export function loadCustomerMfaEmailDeliveryRuntimeConfig(
 
   return {
     mode,
+    resendApiKey: resendApiKey?.trim() ?? null,
     webhookUrl: webhookUrl?.trim() ?? null,
     bearerToken:
       readOptionalRuntimeEnv(env, "CUSTOMER_MFA_EMAIL_DELIVERY_BEARER_TOKEN") ??

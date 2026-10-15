@@ -14,6 +14,7 @@ jest.mock("axios");
 jest.mock("@stealth-trails-bank/config/api", () => ({
   loadCustomerMfaEmailDeliveryRuntimeConfig: jest.fn(() => ({
     mode: "preview",
+    resendApiKey: null,
     webhookUrl: null,
     bearerToken: null,
     requestTimeoutMs: 5000,
@@ -57,6 +58,7 @@ describe("CustomerMfaEmailDeliveryService", () => {
   it("returns a preview code in preview mode and records success", async () => {
     (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue({
       mode: "preview",
+      resendApiKey: null,
       webhookUrl: null,
       bearerToken: null,
       requestTimeoutMs: 5000,
@@ -101,6 +103,7 @@ describe("CustomerMfaEmailDeliveryService", () => {
   it("delivers through the configured webhook and records success", async () => {
     (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue({
       mode: "webhook",
+      resendApiKey: null,
       webhookUrl: "https://mailer.example.com/mfa",
       bearerToken: "secret-token",
       requestTimeoutMs: 5000,
@@ -154,9 +157,67 @@ describe("CustomerMfaEmailDeliveryService", () => {
     });
   });
 
+  it("delivers directly through Resend and records its email id", async () => {
+    (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue({
+      mode: "resend",
+      resendApiKey: "re_test",
+      webhookUrl: null,
+      bearerToken: null,
+      requestTimeoutMs: 5000,
+      fromEmail: "security@auth.waqasraza.dev",
+      fromName: "Stealth Trails Bank Security",
+    });
+    const { service, prismaService } = createService();
+    (axios.post as jest.Mock).mockResolvedValue({
+      status: 200,
+      data: { id: "resend_email_1" },
+    });
+    (prismaService.auditEvent.create as jest.Mock).mockResolvedValue({
+      id: "audit_1",
+    });
+    (prismaService.platformAlert.findUnique as jest.Mock).mockResolvedValue(
+      null,
+    );
+
+    const result = await service.sendCode({
+      customerId: "customer_1",
+      actorId: "customer_actor_1",
+      email: "ada@example.com",
+      challengeId: "challenge_1",
+      purpose: "primary_email_verification",
+      code: "12345678",
+      expiresAt: "2026-10-16T04:00:00.000Z",
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      "https://api.resend.com/emails",
+      {
+        from: "Stealth Trails Bank Security <security@auth.waqasraza.dev>",
+        to: ["ada@example.com"],
+        subject: "Verify your Stealth Trails Bank email",
+        text: expect.stringContaining("12345678"),
+      },
+      {
+        timeout: 5000,
+        headers: {
+          Authorization: "Bearer re_test",
+          "Content-Type": "application/json",
+          "Idempotency-Key": "challenge_1",
+        },
+      },
+    );
+    expect(result).toEqual({
+      deliveryChannel: "email",
+      previewCode: null,
+      backendType: "resend",
+      backendReference: "resend_email_1",
+    });
+  });
+
   it("raises a platform alert and throws when webhook delivery fails", async () => {
     (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue({
       mode: "webhook",
+      resendApiKey: null,
       webhookUrl: "https://mailer.example.com/mfa",
       bearerToken: "secret-token",
       requestTimeoutMs: 5000,

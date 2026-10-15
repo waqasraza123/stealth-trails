@@ -38,7 +38,7 @@ type SendCustomerMfaEmailInput = {
 type SendCustomerMfaEmailResult = {
   deliveryChannel: "email";
   previewCode: string | null;
-  backendType: "preview" | "webhook";
+  backendType: "preview" | "resend" | "webhook";
   backendReference: string | null;
 };
 
@@ -101,7 +101,7 @@ export class CustomerMfaEmailDeliveryService {
     challengeId: string;
     purpose: CustomerMfaEmailPurpose;
     expiresAt: string;
-    backendType: "preview" | "webhook";
+    backendType: "preview" | "resend" | "webhook";
     backendReference?: string | null;
     httpStatus?: number | null;
     failureReason?: string | null;
@@ -140,6 +140,33 @@ export class CustomerMfaEmailDeliveryService {
         metadata: input.metadata,
       },
     });
+  }
+
+  private buildResendContent(input: SendCustomerMfaEmailInput): {
+    subject: string;
+    text: string;
+  } {
+    const subjectByPurpose: Record<CustomerMfaEmailPurpose, string> = {
+      primary_email_verification: "Verify your Stealth Trails Bank email",
+      password_recovery: "Your password recovery code",
+      email_enrollment: "Verify your backup email",
+      email_recovery: "Your account recovery code",
+      withdrawal_step_up: "Confirm your withdrawal",
+      password_step_up: "Confirm your password change",
+      session_trust_verification: "Confirm your sign-in",
+    };
+
+    return {
+      subject: subjectByPurpose[input.purpose],
+      text: [
+        `Your verification code is: ${input.code}`,
+        "",
+        `This code expires at ${input.expiresAt}.`,
+        "If you did not request this code, you can ignore this email.",
+        "",
+        "Stealth Trails Bank Security",
+      ].join("\n"),
+    };
   }
 
   private async resolveFailureAlert(dedupeKey: string): Promise<void> {
@@ -273,48 +300,69 @@ export class CustomerMfaEmailDeliveryService {
       };
     }
 
+    const backendType = this.runtimeConfig.mode;
+
     try {
-      const response = await axios.post(
-        this.runtimeConfig.webhookUrl!,
-        {
-          type:
-            input.purpose === "primary_email_verification"
-              ? "customer_primary_email_verification"
-              : input.purpose === "password_recovery"
-                ? "customer_password_recovery"
-                : "customer_mfa_email_otp",
-          from: {
-            email: this.runtimeConfig.fromEmail,
-            name: this.runtimeConfig.fromName,
-          },
-          recipient: {
-            email: input.email,
-          },
-          challenge: {
-            id: input.challengeId,
-            purpose: input.purpose,
-            expiresAt: input.expiresAt,
-            code: input.code,
-          },
-        },
-        {
-          timeout: this.runtimeConfig.requestTimeoutMs,
-          headers: {
-            ...(this.runtimeConfig.bearerToken
-              ? {
-                  Authorization: `Bearer ${this.runtimeConfig.bearerToken}`,
-                }
-              : {}),
-          },
-        },
-      );
+      const response =
+        backendType === "resend"
+          ? await axios.post(
+              "https://api.resend.com/emails",
+              {
+                from: `${this.runtimeConfig.fromName} <${this.runtimeConfig.fromEmail}>`,
+                to: [input.email],
+                ...this.buildResendContent(input),
+              },
+              {
+                timeout: this.runtimeConfig.requestTimeoutMs,
+                headers: {
+                  Authorization: `Bearer ${this.runtimeConfig.resendApiKey}`,
+                  "Content-Type": "application/json",
+                  "Idempotency-Key": input.challengeId,
+                },
+              },
+            )
+          : await axios.post(
+              this.runtimeConfig.webhookUrl!,
+              {
+                type:
+                  input.purpose === "primary_email_verification"
+                    ? "customer_primary_email_verification"
+                    : input.purpose === "password_recovery"
+                      ? "customer_password_recovery"
+                      : "customer_mfa_email_otp",
+                from: {
+                  email: this.runtimeConfig.fromEmail,
+                  name: this.runtimeConfig.fromName,
+                },
+                recipient: {
+                  email: input.email,
+                },
+                challenge: {
+                  id: input.challengeId,
+                  purpose: input.purpose,
+                  expiresAt: input.expiresAt,
+                  code: input.code,
+                },
+              },
+              {
+                timeout: this.runtimeConfig.requestTimeoutMs,
+                headers: {
+                  ...(this.runtimeConfig.bearerToken
+                    ? {
+                        Authorization: `Bearer ${this.runtimeConfig.bearerToken}`,
+                      }
+                    : {}),
+                },
+              },
+            );
 
       const backendReference =
         response.data &&
         typeof response.data === "object" &&
         !Array.isArray(response.data) &&
-        typeof response.data["deliveryId"] === "string"
-          ? response.data["deliveryId"]
+        typeof response.data[backendType === "resend" ? "id" : "deliveryId"] ===
+          "string"
+          ? response.data[backendType === "resend" ? "id" : "deliveryId"]
           : null;
 
       await this.appendAuditEvent({
@@ -326,7 +374,7 @@ export class CustomerMfaEmailDeliveryService {
           challengeId: input.challengeId,
           purpose: input.purpose,
           expiresAt: input.expiresAt,
-          backendType: "webhook",
+          backendType,
           backendReference,
           httpStatus: response.status,
           previewCodeExposed: false,
@@ -338,7 +386,7 @@ export class CustomerMfaEmailDeliveryService {
       return {
         deliveryChannel: "email",
         previewCode: null,
-        backendType: "webhook",
+        backendType,
         backendReference,
       };
     } catch (error) {
@@ -364,7 +412,7 @@ export class CustomerMfaEmailDeliveryService {
           challengeId: input.challengeId,
           purpose: input.purpose,
           expiresAt: input.expiresAt,
-          backendType: "webhook",
+          backendType,
           httpStatus: responseStatus,
           failureReason,
           previewCodeExposed: false,

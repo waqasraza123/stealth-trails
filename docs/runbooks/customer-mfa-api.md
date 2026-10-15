@@ -11,6 +11,7 @@
 - `CUSTOMER_MFA_RECOVERY_REQUEST_ALLOWED_OPERATOR_ROLES`
 - `CUSTOMER_MFA_RECOVERY_APPROVER_ALLOWED_OPERATOR_ROLES`
 - `CUSTOMER_MFA_EMAIL_DELIVERY_MODE`
+- `RESEND_API_KEY`
 - `CUSTOMER_MFA_EMAIL_DELIVERY_WEBHOOK_URL`
 - `CUSTOMER_MFA_EMAIL_DELIVERY_BEARER_TOKEN`
 - `CUSTOMER_MFA_EMAIL_DELIVERY_REQUEST_TIMEOUT_MS`
@@ -28,6 +29,7 @@
   - automatic reset of failed-attempt state after successful verification
 - Email OTP delivery now supports:
   - `preview` mode for local/non-production testing
+  - `resend` mode for direct delivery through the Resend Email API
   - `webhook` mode for real provider-backed delivery
   - audit events for delivery success and failure
   - platform alert creation when provider-backed delivery fails
@@ -60,9 +62,9 @@
   - set `CUSTOMER_MFA_EMAIL_DELIVERY_MODE=preview`
   - non-production responses may include `previewCode`
 - For production-like environments:
-  - set `CUSTOMER_MFA_EMAIL_DELIVERY_MODE=webhook`
-  - configure `CUSTOMER_MFA_EMAIL_DELIVERY_WEBHOOK_URL`
-  - optionally configure `CUSTOMER_MFA_EMAIL_DELIVERY_BEARER_TOKEN`
+  - prefer `CUSTOMER_MFA_EMAIL_DELIVERY_MODE=resend` and configure `RESEND_API_KEY`
+  - configure a verified `CUSTOMER_MFA_EMAIL_DELIVERY_FROM_EMAIL`
+  - alternatively, use `webhook` mode with `CUSTOMER_MFA_EMAIL_DELIVERY_WEBHOOK_URL` and an optional bearer token
   - delivery failures will raise an open operations platform alert with code `customer_mfa_email_delivery_failed`
 
 ## Verification Paths
