@@ -58,7 +58,7 @@ const SignUp = () => {
 
   useEffect(() => {
     if (token) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [navigate, token]);
 

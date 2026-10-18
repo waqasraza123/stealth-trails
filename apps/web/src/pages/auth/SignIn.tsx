@@ -21,7 +21,7 @@ export default function SignIn() {
   const [useRecovery, setUseRecovery] = useState(false);
 
   useEffect(() => {
-    if (token) navigate("/", { replace: true });
+    if (token) navigate("/dashboard", { replace: true });
   }, [navigate, token]);
 
   async function continueFlow(next: LoginFlowResult) {

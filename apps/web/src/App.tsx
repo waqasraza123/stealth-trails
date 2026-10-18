@@ -16,7 +16,8 @@ import {
 } from "@/lib/observability";
 import { routerFuture } from "@/lib/router-future";
 
-const Index = lazy(() => import("./pages/Index"));
+const Landing = lazy(() => import("./pages/Landing"));
+const Dashboard = lazy(() => import("./pages/Index"));
 const Transactions = lazy(() => import("./pages/Transactions"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const RetirementVault = lazy(() => import("./pages/RetirementVault"));
@@ -72,10 +73,11 @@ const App = () => (
                 element={withRouteBoundary(<TrustCenter />)}
               />
 
+              <Route path="/" element={withRouteBoundary(<Landing />)} />
               <Route
-                path="/"
+                path="/dashboard"
                 element={
-                  <ProtectedRoute>{withRouteBoundary(<Index />)}</ProtectedRoute>
+                  <ProtectedRoute>{withRouteBoundary(<Dashboard />)}</ProtectedRoute>
                 }
               />
               <Route

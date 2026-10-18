@@ -1021,6 +1021,7 @@ export default function OpportunityHunter() {
                         >
                           {scenario.returnRangePercent[0]}–
                           {scenario.returnRangePercent[1]}%
+                        </p>
                       </div>
                     ))}
                   </div>

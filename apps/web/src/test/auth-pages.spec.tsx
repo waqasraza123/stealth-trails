@@ -86,7 +86,7 @@ describe("auth pages", () => {
     renderWithRouter(<SignIn />);
     renderWithRouter(<SignUp />);
 
-    expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith("/dashboard", { replace: true });
   });
 
   it("does not crash when a persisted signed-in user is missing newer mfa fields", () => {
@@ -104,6 +104,6 @@ describe("auth pages", () => {
 
     renderWithRouter(<SignIn />);
 
-    expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith("/dashboard", { replace: true });
   });
 });

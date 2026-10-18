@@ -148,7 +148,26 @@ describe("app routing", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the public homepage at the root route", async () => {
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /a private bank, built around you/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^sign in$/i })).toHaveAttribute(
+      "href",
+      "/auth/sign-in",
+    );
+    expect(screen.getByRole("link", { name: /open account/i })).toHaveAttribute(
+      "href",
+      "/auth/sign-up",
+    );
+  });
+
   it("renders the lazy dashboard route for authenticated users", async () => {
+    window.history.pushState({}, "", "/dashboard");
     useUserStore.setState({
       token: "test-token",
       user: {

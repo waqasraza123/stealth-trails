@@ -35,7 +35,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const user = useUserStore((state) => state.user);
 
   const navItems = [
-    { label: t("navigation.dashboard"), path: "/" },
+    { label: t("navigation.dashboard"), path: "/dashboard" },
     { label: t("navigation.wallet"), path: "/wallet" },
     {
       label: locale === "ar" ? "قبو التقاعد" : "Retirement Vault",
