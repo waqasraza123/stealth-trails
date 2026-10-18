@@ -940,6 +940,7 @@ export class LoansService {
         fundedAt: agreement.fundedAt?.toISOString() ?? null,
         activatedAt: agreement.activatedAt?.toISOString() ?? null,
         gracePeriodEndsAt: agreement.gracePeriodEndsAt?.toISOString() ?? null,
+        updatedAt: agreement.updatedAt.toISOString(),
         statementReferences: agreement.statements.map((statement) => ({
           id: statement.id,
           referenceId: statement.referenceId,

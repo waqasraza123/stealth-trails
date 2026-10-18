@@ -44,7 +44,10 @@ async function createApiApp() {
       "Permissions-Policy",
       "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
     );
-    if (request.url?.startsWith("/auth")) {
+    if (
+      request.url?.startsWith("/auth") ||
+      request.url?.startsWith("/ai/documents")
+    ) {
       response.setHeader("Cache-Control", "no-store");
       response.setHeader("Pragma", "no-cache");
     }

@@ -13,6 +13,10 @@ export function setWebCsrfToken(value: string | null) {
   csrfToken = value;
 }
 
+export function getWebCsrfToken(): string | null {
+  return csrfToken;
+}
+
 axios.defaults.withCredentials = true;
 axios.interceptors.request.use((config) => {
   if (

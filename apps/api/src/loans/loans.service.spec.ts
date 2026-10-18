@@ -140,6 +140,46 @@ describe("LoansService", () => {
     jest.clearAllMocks();
   });
 
+  it("exposes persisted agreement updatedAt in the customer dashboard", async () => {
+    const { service, prismaService, authService } = createService();
+    mockEligibleCustomerContext({ prismaService, authService });
+    (prismaService.loanApplication.findMany as jest.Mock).mockResolvedValue([]);
+    (prismaService.loanAgreement.findMany as jest.Mock).mockResolvedValue([
+      {
+        id: "loan_agreement_1",
+        applicationId: "loan_application_1",
+        status: "active",
+        jurisdiction: "usa",
+        principalAmount: new Prisma.Decimal("100"),
+        collateralAmount: new Prisma.Decimal("0.2"),
+        serviceFeeAmount: new Prisma.Decimal("5"),
+        outstandingPrincipalAmount: new Prisma.Decimal("100"),
+        outstandingServiceFeeAmount: new Prisma.Decimal("5"),
+        outstandingTotalAmount: new Prisma.Decimal("105"),
+        installmentAmount: new Prisma.Decimal("21"),
+        installmentCount: 5,
+        termMonths: 5,
+        autopayEnabled: true,
+        borrowAsset: { symbol: "USDC", displayName: "USD Coin" },
+        collateralAsset: { symbol: "ETH", displayName: "Ether" },
+        nextDueAt: null,
+        fundedAt: null,
+        activatedAt: null,
+        gracePeriodEndsAt: null,
+        updatedAt: new Date("2026-10-11T08:00:00.000Z"),
+        statements: [],
+        collateralPositions: [],
+        installments: [],
+        liquidationCases: [],
+        events: [],
+      },
+    ]);
+
+    const dashboard = await service.getCustomerDashboard("supabase_user_1");
+
+    expect(dashboard.agreements[0]?.updatedAt).toBe("2026-10-11T08:00:00.000Z");
+  });
+
   it("builds a managed lending quote using the jurisdiction policy pack", async () => {
     const { service, prismaService, authService } = createService();
     mockEligibleCustomerContext({ prismaService, authService });

@@ -102,6 +102,7 @@ function arrangeCompleteSources(context: ReturnType<typeof createService>) {
         autopayEnabled: true,
         nextDueAt: "2026-11-01T00:00:00.000Z",
         gracePeriodEndsAt: null,
+        updatedAt: "2026-10-11T08:00:00.000Z",
         collateralPositions: [{ latestLtvBps: 4500 }],
       },
       {
@@ -115,6 +116,7 @@ function arrangeCompleteSources(context: ReturnType<typeof createService>) {
         autopayEnabled: false,
         nextDueAt: null,
         gracePeriodEndsAt: null,
+        updatedAt: "2026-10-10T08:00:00.000Z",
         collateralPositions: [],
       },
     ],
@@ -175,6 +177,12 @@ describe("WealthSnapshotService", () => {
       expect.objectContaining({ assetSymbol: "ETH", availableBalance: "2.5" }),
     ]);
     expect(snapshot.outstandingLoans).toHaveLength(1);
+    expect(snapshot.outstandingLoans[0]?.updatedAt).toBe(
+      "2026-10-11T08:00:00.000Z",
+    );
+    expect(snapshot.sources.find((source) => source.id === "loans")?.asOf).toBe(
+      "2026-10-11T08:00:00.000Z",
+    );
     expect(snapshot.solvency?.liabilities).toEqual([
       { assetSymbol: "ETH", totalLiabilityAmount: "3.35" },
     ]);
@@ -205,6 +213,203 @@ describe("WealthSnapshotService", () => {
     expect(snapshot.stakingPositions).toEqual([]);
     expect(snapshot.sources.find((source) => source.id === "solvency")).toEqual(
       expect.objectContaining({ status: "unavailable", recordCount: 0 }),
+    );
+    expect(snapshot.sources.find((source) => source.id === "staking")).toEqual(
+      expect.objectContaining({
+        status: "partial",
+        asOf: null,
+        recordCount: 0,
+      }),
+    );
+  });
+
+  it("distinguishes valid empty sources from missing arrays", async () => {
+    const context = createService();
+    arrangeCompleteSources(context);
+    context.balances.listMyBalances.mockResolvedValue({ balances: [] });
+    context.transactions.listMyTransactionIntents.mockResolvedValue({
+      intents: [],
+    });
+    context.staking.getMySnapshot.mockResolvedValue({
+      status: "success",
+      message: "ok",
+      data: { pools: [] },
+    });
+    context.loans.getCustomerDashboard.mockResolvedValue({ agreements: [] });
+    context.vaults.listMyRetirementVaults.mockResolvedValue({ vaults: [] });
+    context.solvency.getCustomerLiabilityInclusionProof.mockResolvedValue({
+      snapshot: {
+        status: "healthy",
+        evidenceFreshness: "fresh",
+        generatedAt: "2026-10-15T07:00:00.000Z",
+        policyActionsTriggered: false,
+      },
+      report: { publishedAt: "2026-10-15T07:01:00.000Z" },
+      proofs: [],
+    });
+
+    const snapshot = await context.service.collect("authenticated-customer-a");
+
+    expect(snapshot.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "balances",
+          status: "available_empty",
+          asOf: null,
+        }),
+        expect.objectContaining({
+          id: "transactions",
+          status: "available_empty",
+          asOf: null,
+        }),
+        expect.objectContaining({
+          id: "staking",
+          status: "available_empty",
+          asOf: null,
+        }),
+        expect.objectContaining({
+          id: "loans",
+          status: "available_empty",
+          asOf: null,
+        }),
+        expect.objectContaining({
+          id: "retirement_vaults",
+          status: "available_empty",
+          asOf: null,
+        }),
+        expect.objectContaining({
+          id: "solvency",
+          status: "available_empty",
+          asOf: "2026-10-15T07:00:00.000Z",
+        }),
+      ]),
+    );
+
+    context.balances.listMyBalances.mockResolvedValue({
+      customerAccountId: "account",
+    });
+    const missingArraySnapshot = await context.service.collect(
+      "authenticated-customer-a",
+    );
+    expect(missingArraySnapshot.balances).toEqual([]);
+    expect(
+      missingArraySnapshot.sources.find((source) => source.id === "balances"),
+    ).toEqual(
+      expect.objectContaining({
+        status: "partial",
+        asOf: null,
+        recordCount: 0,
+      }),
+    );
+  });
+
+  it("retains valid records but marks partially malformed collections partial", async () => {
+    const context = createService();
+    arrangeCompleteSources(context);
+    const complete = await context.balances.listMyBalances();
+    context.balances.listMyBalances.mockResolvedValue({
+      balances: [
+        ...complete.balances,
+        {
+          asset: { symbol: "USDC", displayName: "USD Coin", chainId: 8453 },
+          // A missing availableBalance must not be normalized to zero.
+          pendingBalance: "0",
+          updatedAt: "2026-10-15T07:00:00.000Z",
+        },
+      ],
+    });
+
+    const snapshot = await context.service.collect("authenticated-customer-a");
+
+    expect(snapshot.balances).toHaveLength(1);
+    expect(
+      snapshot.balances.some((balance) => balance.assetSymbol === "USDC"),
+    ).toBe(false);
+    expect(snapshot.sources.find((source) => source.id === "balances")).toEqual(
+      expect.objectContaining({
+        status: "partial",
+        asOf: null,
+        recordCount: 1,
+      }),
+    );
+  });
+
+  it("uses a conservative collection timestamp when all record timestamps are known", async () => {
+    const context = createService();
+    arrangeCompleteSources(context);
+    const complete = await context.balances.listMyBalances();
+    context.balances.listMyBalances.mockResolvedValue({
+      balances: [
+        ...complete.balances,
+        {
+          ...complete.balances[0],
+          asset: {
+            ...complete.balances[0].asset,
+            symbol: "WETH",
+            displayName: "Wrapped Ether",
+          },
+          updatedAt: "2026-10-14T08:00:00.000Z",
+        },
+      ],
+    });
+
+    const snapshot = await context.service.collect("authenticated-customer-a");
+
+    expect(
+      snapshot.sources.find((source) => source.id === "balances")?.asOf,
+    ).toBe("2026-10-14T08:00:00.000Z");
+  });
+
+  it("does not claim collection freshness when timestamp availability is mixed", async () => {
+    const context = createService();
+    arrangeCompleteSources(context);
+    const complete = await context.balances.listMyBalances();
+    const { updatedAt: _missingTimestamp, ...withoutTimestamp } =
+      complete.balances[0];
+    context.balances.listMyBalances.mockResolvedValue({
+      balances: [complete.balances[0], withoutTimestamp],
+    });
+
+    const snapshot = await context.service.collect("authenticated-customer-a");
+
+    expect(snapshot.balances).toHaveLength(1);
+    expect(snapshot.sources.find((source) => source.id === "balances")).toEqual(
+      expect.objectContaining({ status: "partial", asOf: null }),
+    );
+  });
+
+  it("represents unreadable staking positions as partial without fabricated zero balances", async () => {
+    const context = createService();
+    arrangeCompleteSources(context);
+    context.staking.getMySnapshot.mockResolvedValue({
+      status: "success",
+      message: "ok",
+      data: {
+        pools: [
+          {
+            poolStatus: "active",
+            updatedAt: "2026-10-13T08:00:00.000Z",
+            position: {
+              stakedBalance: "0.0",
+              pendingReward: "0.0",
+              canReadPosition: false,
+            },
+          },
+        ],
+      },
+    });
+
+    const snapshot = await context.service.collect("authenticated-customer-a");
+
+    expect(snapshot.stakingPositions).toEqual([
+      expect.objectContaining({
+        canReadPosition: false,
+        stakedBalance: null,
+        pendingReward: null,
+      }),
+    ]);
+    expect(snapshot.sources.find((source) => source.id === "staking")).toEqual(
+      expect.objectContaining({ status: "partial", asOf: null }),
     );
   });
 });

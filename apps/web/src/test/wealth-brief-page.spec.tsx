@@ -5,18 +5,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import WealthBrief from "@/pages/WealthBrief";
 import { renderWithRouter } from "@/test/render-with-router";
 import { useUserStore } from "@/stores/userStore";
+import { webLocaleStorageKey } from "@/i18n/provider";
+import type { WealthBriefResult } from "@/hooks/ai/useWealthBrief";
 
 vi.mock("axios");
 const mockAxios = vi.mocked(axios, true);
 
-function buildBrief() {
+function buildBrief(): WealthBriefResult {
   return {
     mode: "deterministic_preview",
     generatedAt: "2026-10-15T08:01:00.000Z",
     dataAsOf: "2026-10-15T08:00:00.000Z",
     summary: "This deterministic preview contains one balance record.",
     observations: [
-      { text: "One asset balance record is available.", sourceIds: ["balances"] },
+      {
+        text: "One asset balance record is available.",
+        sourceIds: ["balances"],
+      },
     ],
     riskFlags: [],
     researchQuestions: ["Which balances are available versus pending?"],
@@ -73,6 +78,7 @@ describe("AI Wealth Brief page", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    localStorage.clear();
     useUserStore.setState({ token: null, user: null });
   });
 
@@ -95,7 +101,9 @@ describe("AI Wealth Brief page", () => {
     } as never);
 
     renderWithRouter(<WealthBrief />, { initialEntries: ["/wealth-brief"] });
-    expect(await screen.findByText(/no external ai provider is configured/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/no external ai provider is configured/i),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /generate brief/i }));
 
@@ -106,7 +114,9 @@ describe("AI Wealth Brief page", () => {
         expect.anything(),
       ),
     );
-    expect(await screen.findByText("Deterministic preview")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Deterministic preview"),
+    ).toBeInTheDocument();
     expect(screen.getByText(/one balance record/i)).toBeInTheDocument();
     expect(screen.getByText("2.5 ETH")).toBeInTheDocument();
     expect(screen.getByText("Account and asset balances")).toBeInTheDocument();
@@ -151,5 +161,93 @@ describe("AI Wealth Brief page", () => {
         expect.anything(),
       );
     });
+  });
+
+  it("renders partial, empty, and unknown-freshness source states", async () => {
+    const user = userEvent.setup();
+    const brief = buildBrief();
+    brief.dataAsOf = null;
+    brief.sources = [
+      {
+        id: "balances",
+        label: "Account and asset balances",
+        status: "partial",
+        asOf: null,
+        recordCount: 1,
+        note: "Some records could not be included safely.",
+      },
+      {
+        id: "transactions",
+        label: "Recent transaction activity",
+        status: "available_empty",
+        asOf: null,
+        recordCount: 0,
+        note: null,
+      },
+    ];
+    mockAxios.get.mockResolvedValue({
+      data: {
+        status: "success",
+        message: "ok",
+        data: {
+          externalAiAvailable: false,
+          providerName: null,
+          model: null,
+          disclosure: [],
+        },
+      },
+    } as never);
+    mockAxios.post.mockResolvedValue({
+      data: { status: "success", message: "ok", data: brief },
+    } as never);
+
+    renderWithRouter(<WealthBrief />, { initialEntries: ["/wealth-brief"] });
+    await screen.findByText(/no external ai provider is configured/i);
+    await user.click(screen.getByRole("button", { name: /generate brief/i }));
+
+    expect(await screen.findByText("Partial")).toBeInTheDocument();
+    expect(screen.getByText("Available empty")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Record freshness unknown", { exact: false }).length,
+    ).toBeGreaterThan(1);
+    expect(
+      screen.getByText(/some records could not be included safely/i),
+    ).toBeInTheDocument();
+  });
+
+  it("renders unknown freshness in Arabic", async () => {
+    const user = userEvent.setup();
+    const brief = buildBrief();
+    brief.dataAsOf = null;
+    brief.sources[0]!.asOf = null;
+    localStorage.setItem(webLocaleStorageKey, "ar");
+    mockAxios.get.mockResolvedValue({
+      data: {
+        status: "success",
+        message: "ok",
+        data: {
+          externalAiAvailable: false,
+          providerName: null,
+          model: null,
+          disclosure: [],
+        },
+      },
+    } as never);
+    mockAxios.post.mockResolvedValue({
+      data: { status: "success", message: "ok", data: brief },
+    } as never);
+
+    renderWithRouter(<WealthBrief />, { initialEntries: ["/wealth-brief"] });
+    await user.click(
+      await screen.findByRole("button", { name: /إنشاء الموجز/i }),
+    );
+
+    expect(
+      (
+        await screen.findAllByText("حداثة البيانات غير معروفة", {
+          exact: false,
+        })
+      ).length,
+    ).toBeGreaterThan(1);
   });
 });

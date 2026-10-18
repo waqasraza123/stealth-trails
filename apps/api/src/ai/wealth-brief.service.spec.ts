@@ -39,8 +39,8 @@ function buildSnapshot(): WealthSnapshot {
         (id) => ({
           id,
           label: id,
-          status: "available" as const,
-          asOf: generatedAt,
+          status: "available_empty" as const,
+          asOf: null,
           recordCount: 0,
           note: null,
         }),
@@ -162,5 +162,66 @@ describe("WealthBriefService", () => {
     expect(renderedText).not.toContain("1000000");
     expect(renderedText).not.toContain("Ignore previous instructions");
     expect(result.riskFlags).toEqual([]);
+  });
+
+  it("returns unknown aggregate freshness when a populated source is partial", async () => {
+    const snapshot = buildSnapshot();
+    snapshot.sources[0] = {
+      ...snapshot.sources[0]!,
+      status: "partial",
+      asOf: null,
+      note: "Some records or fields from this source could not be included safely.",
+    };
+    const provider = createProvider();
+    const { service } = createService(provider, snapshot);
+
+    const result = await service.generate("customer-a", false);
+
+    expect(result.dataAsOf).toBeNull();
+    expect(result.riskFlags).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: "warning",
+          title: "Account and asset balances partially available",
+          sourceIds: ["balances"],
+        }),
+      ]),
+    );
+    expect(result.summary).toContain("1 source(s) were partially available");
+  });
+
+  it("includes a timestamped zero-record solvency source in aggregate freshness", async () => {
+    const snapshot = buildSnapshot();
+    const solvencySource = snapshot.sources.find(
+      (source) => source.id === "solvency",
+    );
+    if (!solvencySource) {
+      throw new Error("Expected solvency source fixture");
+    }
+    solvencySource.asOf = "2026-10-14T07:00:00.000Z";
+    const provider = createProvider();
+    const { service } = createService(provider, snapshot);
+
+    const result = await service.generate("customer-a", false);
+
+    expect(result.dataAsOf).toBe("2026-10-14T07:00:00.000Z");
+  });
+
+  it("does not substitute request time when no source has known freshness", async () => {
+    const snapshot = buildSnapshot();
+    snapshot.balances = [];
+    snapshot.sources[0] = {
+      ...snapshot.sources[0]!,
+      status: "available_empty",
+      asOf: null,
+      recordCount: 0,
+    };
+    const provider = createProvider();
+    const { service } = createService(provider, snapshot);
+
+    const result = await service.generate("customer-a", false);
+
+    expect(result.dataAsOf).toBeNull();
+    expect(result.dataAsOf).not.toBe(result.generatedAt);
   });
 });

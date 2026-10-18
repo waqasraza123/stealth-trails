@@ -1,309 +1,295 @@
-# Stealth Trails Bank
+<div align="center">
 
-![PNPM](https://img.shields.io/badge/pnpm-9.15.0-F69220?logo=pnpm&logoColor=fff)
-![Turborepo](https://img.shields.io/badge/Turborepo-2.x-EF4444?logo=turborepo&logoColor=fff)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=fff)
-![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?logo=playwright&logoColor=fff)
-![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?logo=ethereum&logoColor=fff)
-![Solidity](https://img.shields.io/badge/Solidity-363636?logo=solidity&logoColor=fff)
-![Blockchain](https://img.shields.io/badge/Blockchain-121D33?logo=blockchaindotcom&logoColor=fff)
-![Decentralized](https://img.shields.io/badge/Decentralized-Web3-6E56CF?logo=web3dotjs&logoColor=fff)
-![React Native](https://img.shields.io/badge/React%20Native-20232A?logo=react&logoColor=61DAFB)
-![Expo](https://img.shields.io/badge/Expo-SDK%2055-000020?logo=expo&logoColor=fff)
+# Stealth Trails AI Bank
 
-## Screenshots
+### AI-native Ethereum fintech infrastructure, built for governed money movement and trustworthy wealth intelligence.
 
-![alt text](.github/screenshots/mobile1.jpg) ![alt text](.github/screenshots/mobile2.jpg)
-![alt text](<.github/screenshots/Screenshot 2026-04-10 at 8.59.31 PM.jpg>) ![alt text](<.github/screenshots/Screenshot 2026-04-10 at 8.59.40 PM.jpg>)
-![alt text](.github/screenshots/mobile3.jpg) ![alt text](.github/screenshots/mobile4.jpg) ![alt text](.github/screenshots/mobile5.jpg) ![alt text](.github/screenshots/mobile6.jpg) ![alt text](.github/screenshots/mobile7.jpg) ![alt text](.github/screenshots/mobile8.jpg) ![alt text](.github/screenshots/mobile9.jpg) ![alt text](.github/screenshots/mobile10.jpg) ![alt text](.github/screenshots/mobile11.jpg)
-![alt text](<.github/screenshots/Screenshot 2026-04-10 at 8.58.46 PM.jpg>) ![alt text](<.github/screenshots/Screenshot 2026-04-10 at 8.59.50 PM.jpg>) ![alt text](<.github/screenshots/Screenshot 2026-04-10 at 9.00.14 PM.jpg>) ![alt text](<.github/screenshots/Screenshot 2026-04-10 at 9.00.32 PM.jpg>) ![alt text](<.github/screenshots/Screenshot 2026-04-10 at 9.00.47 PM.jpg>) ![alt text](<.github/screenshots/Screenshot 2026-04-10 at 9.00.57 PM.jpg>)
+[![CI](https://github.com/waqasraza123/stealth-trails-ai-bank/actions/workflows/monorepo-ci.yml/badge.svg)](https://github.com/waqasraza123/stealth-trails-ai-bank/actions/workflows/monorepo-ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=0B1220)](https://react.dev/)
+[![Ethereum](https://img.shields.io/badge/Ethereum-Ethers.js-627EEA?logo=ethereum&logoColor=white)](https://ethereum.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-Hardhat-363636?logo=solidity&logoColor=white)](https://hardhat.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0F766E.svg)](LICENSE)
+
+[Explore the architecture](#architecture) · [See what is implemented](#capabilities) · [Run locally](#local-development) · [View the roadmap](#roadmap)
+
+</div>
+
+---
 
 ## Overview
 
-Stealth Trails Bank is a monorepo for a blockchain-backed banking platform with:
+Stealth Trails AI Bank is a full-stack engineering portfolio for an Ethereum-connected fintech SaaS. It combines customer web and mobile experiences, a governed banking API, smart contracts, asynchronous chain execution, internal operations tooling, and a privacy-conscious AI wealth intelligence workflow.
 
-- customer web and mobile applications
-- a backend API with governed money-movement workflows
-- an internal admin console for operator controls
-- an async worker for blockchain execution and monitoring
-- shared packages for config, types, security, contracts, and i18n
+This repository demonstrates how AI can sit beside financial infrastructure without bypassing its controls. The implemented AI surface is read-only, bounded by server-verified facts, explicit about data sharing, and unable to approve or execute financial activity.
 
-The codebase is no longer a prototype shell. It already contains real customer account lifecycle, wallet ownership, deposit and withdrawal intent workflows, ledger-backed balance reads, internal review controls, worker execution paths, auditability, and release-readiness infrastructure.
+> [!IMPORTANT]
+> This is an engineering project, not a licensed bank, broker, financial adviser, or investment service. Nothing in the application or this repository is financial or investment advice.
 
-## Current status
+## Why this project stands out
 
-- Phase 1 is complete at the repo-boundary level.
-- Phases 2, 3, 6, 8, 9, and 10 are materially advanced or complete in live code.
-- Phase 11 observability and incident safety is materially advanced.
-- Phase 12 security hardening and release readiness has begun, but final staged proof remains outstanding.
+- **Real financial workflow boundaries** — ledger-backed balances, intent-based deposits and withdrawals, settlement tracking, reconciliation, and audit events.
+- **Governance before execution** — review queues, account restrictions, policy-controlled withdrawals, treasury controls, and release-readiness approvals.
+- **AI with constrained authority** — an opt-in Wealth Brief can prioritize only server-generated, evidence-linked statements; it cannot invent amounts, change severity, or move funds.
+- **Ethereum-native infrastructure** — ethers.js integrations, managed execution workers, Solidity contracts, deployment manifests, and solvency report anchoring.
+- **Portfolio-grade product surfaces** — responsive customer web, Expo mobile, an operator console, bilingual English/Arabic interfaces, and end-to-end tests.
+- **Operational depth** — health checks, metrics, notifications, alert routing, reconciliation scans, incident packages, rollback evidence, and scheduled worker jobs.
 
-Current execution frontier:
+## Product preview
 
-- Phase 11/12 boundary hardening
-- internal email transfer hardening is in place; dedicated end-to-end verification is deferred to a follow-up pass
-- unified notifications cutover is in place across API, web, admin, and mobile with websocket resume, matrix preferences, fresh-start inbox rollout, and release-readiness cutover proof
-- launch-closure packs now bind API and worker rollback drills to immutable deployment artifact manifests
-- rollback drill evidence now has an API-enforced deployment artifact payload gate before release approval
+### Customer web
 
-Immediate next step:
+| English dashboard | Arabic dashboard |
+| --- | --- |
+| ![Stealth Trails customer dashboard in English](.github/screenshots/Screenshot%202026-04-10%20at%208.59.31%E2%80%AFPM.jpg) | ![Stealth Trails customer dashboard in Arabic](.github/screenshots/Screenshot%202026-04-10%20at%208.59.40%E2%80%AFPM.jpg) |
 
-- run the remaining staged drills and release-readiness evidence flow for delivery-target SLOs, critical alert re-escalation, restore and rollback, notification cutover, secret handling, role review, solvency anchor registry deployment, and governed launch approval
+### Mobile banking
 
-## Implemented product surfaces
+<p align="center">
+  <img src=".github/screenshots/mobile6.jpg" alt="Mobile managed money overview" width="23%" />
+  <img src=".github/screenshots/mobile9.jpg" alt="Mobile deposit and withdrawal experience" width="23%" />
+  <img src=".github/screenshots/mobile1.jpg" alt="Mobile governed staking actions" width="23%" />
+  <img src=".github/screenshots/mobile5.jpg" alt="Arabic mobile sign-in experience" width="23%" />
+</p>
 
-- Customer web app with auth, dashboard, wallet, yield, transactions, profile, and lending surfaces
-- Customer mobile app in `apps/mobile` with Expo + React Native covering the same primary customer surfaces
-- Backend API for customer identity, balances, transaction intents, staking, loans, audit, and release-readiness workflows
-- Admin console for review queues, oversight, hold/release, reconciliation mismatch, governed export, treasury visibility, and audit-log workflows
-- Worker runtime with synthetic, monitor, and managed execution modes, heartbeat reporting, scheduled scans, and execution monitoring
+## Capabilities
 
-## Current workflow coverage
+### Implemented banking and fintech capabilities
 
-- customer auth and account lookup
-- managed wallet ownership and customer profile projection
-- customer and operator notification inboxes with websocket-backed unread state, replay sequencing, and category-by-channel preferences
-- supported assets and ledger-backed customer balances
-- deposit and withdrawal intent request flows with review and execution state
-- internal email-to-email balance transfer with MFA, session trust, masked recipient preview, and operator review thresholds
-- transaction history, reference IDs, and status timelines
-- staking/yield snapshot and governed mutation paths
-- customer loan dashboard, quote preview, application submission, and autopay preferences
-- internal review cases, oversight incidents, hold governance, governed exports, and release-approval workflows
-- durable audit trails, platform alerts, metrics surfaces, and release-readiness evidence tracking
+| Area | What exists in the codebase |
+| --- | --- |
+| Accounts and identity | Customer authentication, account lifecycle, managed wallet ownership, profile projection, MFA workflows, session trust, and account restrictions |
+| Money movement | Deposit and withdrawal intents, operator review, execution state, settlement evidence, replay controls, and email-to-email internal transfers |
+| Ledger and balances | Supported assets, double-entry ledger models, balance projections, transaction history, reconciliation scans, and repair tooling |
+| Lending | Quote previews, loan applications, agreements, collateral and valuation tracking, installments, autopay, default escalation, and liquidation review workflows |
+| Wealth products | Governed staking/yield operations and retirement vaults with release rules, strict mode, and protected balances |
+| Solvency | Snapshots, reserve evidence, liability inclusion proofs, public reports, policy actions, and on-chain report-hash anchoring |
+| Operations | Review cases, oversight incidents, audit trails, notifications, alerts, treasury visibility, governed exports, and release approvals |
+| Client experiences | React web app, Expo/React Native mobile app, internal React admin console, English/Arabic localization, and accessibility-aware UI primitives |
 
-## Repository layout
+### Implemented AI: Wealth Brief
 
-| Path                     | Purpose                                                                          |
-| ------------------------ | -------------------------------------------------------------------------------- |
-| `apps/admin`             | Internal operator console for review, oversight, and governed export workflows   |
-| `apps/web`               | Customer-facing web application                                                  |
-| `apps/mobile`            | Customer-facing mobile app (Expo + React Native)                                 |
-| `apps/api`               | Backend API, workflow orchestration, persistence, and internal operational paths |
-| `apps/worker`            | Async worker runtime for internal execution and blockchain monitoring            |
-| `packages/config`        | Shared runtime config loading and validation                                     |
-| `packages/contracts-sdk` | Shared ABI ownership, chain adapters, and contract integration helpers           |
-| `packages/db`            | Shared Prisma client access                                                      |
-| `packages/security`      | Shared header/auth hardening helpers and other reusable security utilities       |
-| `packages/types`         | Shared TypeScript contracts and types                                            |
-| `packages/contracts`     | Hardhat contracts package and contract tests                                     |
-| `docs/`                  | Architecture, ADRs, runbooks, and operational notes                              |
+The current AI feature is a customer-facing, read-only Wealth Brief available in the web application and through authenticated NestJS endpoints.
 
-## How the system is shaped
+It is deliberately narrow:
 
-At a high level:
+1. The API assembles a bounded snapshot from balances, transactions, staking positions, outstanding loans, retirement vaults, and solvency evidence.
+2. The server creates a catalog of deterministic observations, risk flags, severities, source references, and research questions.
+3. Without an external provider, the feature returns a clearly labeled deterministic preview.
+4. When an OpenAI-compatible provider is configured **and the customer opts in for that request**, the model may only select and rank catalog IDs.
+5. Unknown IDs, fabricated references, malformed output, or provider failures trigger a deterministic fallback.
 
-1. customers interact with the platform through the web app and API
-2. the API owns customer identity, wallet linkage, workflow state, and persistence
-3. internal operator paths review sensitive actions, manage holds, and govern exports
-4. internal worker paths monitor and move approved actions through execution state
-5. audit events provide a durable operational trail
-6. later slices extend this into confirmation, settlement, and broader accounting truth
+The provider receives no raw balances, amounts, names, emails, wallet addresses, account IDs, credentials, or signing material. Requests are authenticated and rate-limited. The result includes source status, timestamps, provider disclosure, generation mode, fallback reason, and a non-advice disclaimer.
 
-The direction of the repo is intentional:
+> [!NOTE]
+> AI agents, autonomous portfolio management, trade execution, personalized investment recommendations, and external ethical-investment research are **not implemented**. They are roadmap items and will remain human-governed if introduced.
 
-- workflow correctness first
-- durable persistence and auditability next
-- UI and operational visibility layered on top
-- correctness over speed in money-critical areas
+## Architecture
 
-## Quick start
+```mermaid
+flowchart LR
+    subgraph Clients["Product surfaces"]
+        Web["Customer Web\nReact + Vite"]
+        Mobile["Mobile\nExpo + React Native"]
+        Admin["Operator Console\nReact + Vite"]
+    end
 
-### 1. Install dependencies
+    subgraph Services["Application services"]
+        API["NestJS API\nidentity · workflows · AI"]
+        Worker["Async Worker\nexecution · scans · monitoring"]
+        DB[("PostgreSQL\nPrisma")]
+    end
+
+    subgraph Intelligence["Bounded intelligence"]
+        Catalog["Server-verified\nstatement catalog"]
+        Model["Optional OpenAI-compatible\nprovider"]
+    end
+
+    subgraph Ethereum["Ethereum layer"]
+        RPC["JSON-RPC"]
+        Contracts["Solidity contracts\nstaking · loans · policy · solvency"]
+    end
+
+    Web --> API
+    Mobile --> API
+    Admin --> API
+    API <--> DB
+    Worker <--> API
+    Worker --> RPC
+    API --> RPC
+    RPC --> Contracts
+    API --> Catalog
+    Catalog -. "explicit opt-in; IDs only" .-> Model
+    Model -. "validated selection" .-> API
+```
+
+The API owns customer identity, workflow state, ledger-facing operations, and policy decisions. Workers perform approved asynchronous execution and monitoring. Sensitive actions remain explicit, auditable state transitions instead of model-directed side effects.
+
+## Technology stack
+
+| Layer | Technologies |
+| --- | --- |
+| Monorepo | pnpm workspaces, Turborepo, TypeScript |
+| Customer web | React 18, Vite, React Router, TanStack Query, Tailwind CSS, Radix UI, Zustand |
+| Mobile | Expo 55, React Native, React Navigation, TanStack Query, Secure Store |
+| Admin | React 18, Vite, TanStack Query |
+| API | NestJS 10, Prisma 6, PostgreSQL, class-validator, Passport JWT, WebSockets |
+| AI | Provider-optional OpenAI-compatible chat-completions adapter, schema validation, deterministic fallback |
+| Ethereum | ethers.js, Solidity, Hardhat, OpenZeppelin, TypeChain, Ignition |
+| Quality | Jest, Vitest, Playwright, Testing Library, GitHub Actions |
+| Operations | Structured logging, health and metrics endpoints, scheduled workers, alerting, reconciliation, release evidence |
+
+## Repository map
+
+```text
+stealth-trails-ai-bank/
+├── apps/
+│   ├── api/           # NestJS domain API, persistence, workflows, and Wealth Brief
+│   ├── web/           # Customer React application
+│   ├── mobile/        # Expo / React Native customer application
+│   ├── admin/         # Internal operator console
+│   └── worker/        # Async execution, chain monitoring, and scheduled controls
+├── packages/
+│   ├── contracts/     # Solidity contracts, tests, and deployment manifests
+│   ├── contracts-sdk/ # Shared ABIs and Ethereum integration helpers
+│   ├── config/        # Typed runtime configuration
+│   ├── db/            # Shared Prisma client boundary
+│   ├── i18n/          # Localization infrastructure
+│   ├── security/      # Shared security helpers
+│   ├── types/         # Cross-application contracts
+│   └── ui-foundation/ # Shared design tokens and interaction primitives
+├── tests/e2e/         # Playwright customer and operator journeys
+└── docs/              # Architecture decisions, runbooks, roadmaps, and release plans
+```
+
+## Local development
+
+### Prerequisites
+
+- Node.js 20+
+- pnpm 9.15.0
+- PostgreSQL
+- An Ethereum JSON-RPC endpoint for chain-connected flows
+
+### 1. Clone and install
 
 ```bash
+git clone https://github.com/waqasraza123/stealth-trails-ai-bank.git
+cd stealth-trails-ai-bank
 pnpm install
 ```
 
-### 1a. Mobile app (React Native / Expo)
+### 2. Configure environment files
 
-The mobile app lives at `apps/mobile` and expects:
+Use the checked-in `.env.example` files for each application. The API requires values for its database, authentication, chain, and internal-service boundaries. Core variables include:
 
-- `EXPO_PUBLIC_API_BASE_URL` (see `apps/mobile/.env.example`)
-
-```bash
-pnpm dev:mobile
+```dotenv
+DATABASE_URL=
+DIRECT_URL=
+JWT_SECRET=
+JWT_EXPIRY_SECONDS=
+PRODUCT_CHAIN_ID=
+INTERNAL_OPERATOR_API_KEY=
+INTERNAL_WORKER_API_KEY=
+RPC_URL=
+ETHEREUM_PRIVATE_KEY=
 ```
 
-### 2. Prepare environment files
+For contract-connected staking flows, configure `STAKING_CONTRACT_ADDRESS`. Never use a production-funded private key in local development.
 
-Use the existing example env files inside each app or package where present.
+The mobile app reads `EXPO_PUBLIC_API_BASE_URL` from `apps/mobile/.env`.
 
-At minimum, the API needs working values for:
-
-- `DATABASE_URL`
-- `DIRECT_URL`
-- `JWT_SECRET`
-- `JWT_EXPIRY_SECONDS`
-- `PRODUCT_CHAIN_ID`
-- `INTERNAL_OPERATOR_API_KEY`
-- `INTERNAL_WORKER_API_KEY`
-
-For blockchain-connected flows you will also need:
-
-- `RPC_URL`
-- `ETHEREUM_PRIVATE_KEY`
-
-For contract-connected flows where relevant:
-
-- `STAKING_CONTRACT_ADDRESS`
-
-Frontend environment values should be configured from the web app env examples where present and pointed at the local or deployed API.
-
-For mobile development, create `apps/mobile/.env` from `apps/mobile/.env.example` and point it at a reachable API base URL for your simulator or device.
-
-### 3. Generate Prisma client and run database migrations
+### 3. Prepare the database
 
 ```bash
 pnpm --filter @stealth-trails-bank/api prisma:generate
 pnpm --filter @stealth-trails-bank/api prisma:migrate
 ```
 
-Notification cutover note:
-
-- the notifications migration is a fresh-start cutover; it clears existing notification feed/event rows and removes the legacy cursor projector state
-- deploy order is: Prisma migration, API, then web/admin/mobile clients
-- only post-deploy domain mutations will appear in the new inboxes
-
-### 4. Start local development
+### 4. Start the workspace
 
 ```bash
 pnpm dev
 ```
 
-`pnpm dev` now runs a repo-owned preflight first. It fails fast if the worker is pointed at the wrong local API URL or if your local API database is behind the checked-in Prisma migrations.
-
-Git hooks are also installed automatically on `pnpm install` through the repo `prepare` script. If the hooks drift or stop firing, run:
+The repository preflight checks local API/worker wiring and Prisma migration state before startup. To start mobile development separately:
 
 ```bash
-pnpm setup:hooks
+pnpm dev:mobile
 ```
 
-If that preflight blocks startup, the usual recovery path is:
+### Optional external AI provider
 
-```bash
-pnpm --filter @stealth-trails-bank/api prisma:deploy
-```
+External model use is disabled by default. The deterministic Wealth Brief works without it. To enable the opt-in provider path, configure the AI wealth-brief runtime variables, including an HTTPS endpoint, an explicit hostname allow-list, API key, and model. See `packages/config/src/node-runtime-config.ts` and the API environment example for the complete validated configuration.
 
-## Common commands
+Production external AI remains disabled and must not be enabled until DNS/IP-level outbound security controls are implemented and verified.
 
-Run these from the repository root unless noted otherwise.
+## Validation commands
 
-### Root commands
+| Command | Purpose |
+| --- | --- |
+| `pnpm build` | Build all workspace packages with build scripts |
+| `pnpm lint` | Run configured workspace lint tasks |
+| `pnpm test:unit` | Run API, worker, web, and admin unit tests |
+| `pnpm test:integration` | Run API integration and Solidity contract tests |
+| `pnpm test:e2e` | Run Playwright customer and operator journeys |
+| `pnpm test:coverage` | Run workspace coverage gates |
+| `pnpm mobile:verify` | Type-check, test, and export the mobile app |
+| `pnpm api:smoke:local` | Exercise the compiled API handler, health endpoints, and CORS |
+| `pnpm verify:push` | Run the repository's mandatory local push gate |
 
-| Command                                   | Purpose                                                              |
-| ----------------------------------------- | -------------------------------------------------------------------- |
-| `pnpm dev`                                | Start repo development tasks                                         |
-| `pnpm dev:preflight`                      | Validate local dev wiring and Prisma migration state before startup  |
-| `pnpm build`                              | Build workspace packages that define a build script                  |
-| `pnpm test`                               | Run workspace tests                                                  |
-| `pnpm lint`                               | Run lint tasks where defined                                         |
-| `pnpm compile`                            | Run compile tasks where defined                                      |
-| `pnpm release:readiness:probe -- --help`  | Run a Phase 12 drill probe and optionally record evidence            |
-| `pnpm release:readiness:verify -- --help` | Run Phase 12 automated proof suites or manual review attestations    |
-| `pnpm release:solvency-anchor-proof -- --help` | Build release evidence from the solvency anchor registry manifest |
-| `pnpm dev:mobile`                         | Start the Expo mobile app                                            |
-| `pnpm mobile:ios`                         | Open the Expo app in an iOS simulator                                |
-| `pnpm mobile:android`                     | Open the Expo app in an Android emulator                             |
-| `pnpm mobile:typecheck`                   | Typecheck the React Native app                                       |
-| `pnpm mobile:test`                        | Run the mobile Jest suite                                            |
-| `pnpm mobile:export`                      | Export the Expo web bundle used as a CI bundle gate                  |
-| `pnpm mobile:verify`                      | Run the production mobile verification gate                          |
-| `pnpm api:smoke:local`                    | Exercise the compiled API Vercel handler, health endpoints, and CORS |
-| `pnpm verify:push`                        | Run the mandatory local push gate                                    |
-| `pnpm push`                               | Run local verification, then push with hooks already satisfied       |
-| `pnpm safe-push`                          | Alias for `pnpm push`                                                |
-| `pnpm setup:hooks`                        | Reinstall the repo-managed Git hook path                             |
+## Security and trust model
 
-### Package-scoped examples
+- Financial mutations use explicit workflow states and policy checks.
+- Operator and worker interfaces have separate internal authentication boundaries.
+- High-risk actions produce durable audit evidence and support recovery workflows.
+- External AI use is disabled by default, request-scoped, disclosed, minimized, validated, and read-only.
+- Smart-contract deployments are represented by validated manifests.
+- Solvency evidence and report anchoring are modeled independently from customer-facing claims.
+- Secrets, real private keys, and production credentials must never be committed.
 
-```bash
-pnpm --filter @stealth-trails-bank/web dev
-pnpm --filter @stealth-trails-bank/api start:dev
-pnpm --filter @stealth-trails-bank/api prisma:generate
-pnpm --filter @stealth-trails-bank/api prisma:migrate
-pnpm --filter @stealth-trails-bank/api prisma:deploy
-```
+Read [SECURITY.md](SECURITY.md) before reporting vulnerabilities or working with sensitive configuration.
 
-## Documentation map
+## Roadmap
 
-Use these docs first when working in the repo:
+Roadmap items are directional and **not claims of current functionality**.
 
-- `docs/architecture/target-system.md`
-- `docs/runbooks/notifications-platform-cutover.md`
-- `docs/architecture/production-roadmap.md`
-- `docs/architecture/critical-feature-e2e-plan.md`
-- `docs/roadmaps/email-balance-transfer/README.md`
-- `docs/architecture/data-model-target.md`
-- `docs/architecture/schema-transition-plan.md`
-- `docs/mobile/react-native-product-spec.md`
-- `docs/mobile/react-native-implementation-plan.md`
-- `docs/mobile/development-and-validation.md`
+### Near term
 
-Use the runbooks when operating or verifying implemented flows:
+- [ ] Complete staged release-readiness drills and governed launch evidence
+- [ ] Expand Wealth Brief end-to-end coverage across degraded-source and provider-failure paths
+- [ ] Add mobile parity for the read-only Wealth Brief
+- [ ] Publish stronger demo data and portfolio walkthroughs without exposing real customer information
 
-- wallet projection and repair runbooks under `docs/runbooks/`
-- deposit intent request, operator review, and execution runbooks
-- manual review and audit summary runbooks
-- release readiness evidence, release-candidate verification, launch approval, and rollback drill runbooks
-- `docs/release/phase-12-completion-checklist.md` for the ordered launch path, or `pnpm release:launch-closure -- checklist`
+### Planned AI engineering
 
-## Engineering standards for this repo
+- [ ] Evidence-cited ethical investment research workspace with source freshness and conflict checks
+- [ ] Human-approved operations agents for reconciliation triage, incident summaries, and runbook suggestions
+- [ ] Policy-bound financial scenario modeling that cannot execute transactions or alter account state
+- [ ] Evaluation suites for groundedness, prompt-injection resistance, privacy leakage, and financial-safety regressions
+- [ ] Provider abstraction with cost, latency, availability, and data-residency controls
 
-The project is being developed with a production-grade bias.
+### Platform evolution
 
-That means contributions should aim for:
+- [ ] Broaden contract deployment proofs and public verification tooling
+- [ ] Deepen disaster-recovery, rollback, and notification-delivery evidence
+- [ ] Continue accessibility, localization, and cross-platform experience parity
 
-- small focused modules
-- descriptive names
-- strong typing
-- explicit validation
-- durable auditability for important state changes
-- safe idempotent workflow behavior
-- no hidden magic around money state
-- readable code over clever code
+Detailed plans and status live under [`docs/`](docs/), including architecture decisions, production roadmaps, mobile plans, and operational runbooks.
 
-For money-moving or state-critical changes, always prefer:
+## Contributing
 
-- explicit state transitions
-- durable persistence
-- audit visibility
-- recovery-safe behavior
-
-## Production posture
-
-This repository should be treated as a product codebase, not a demo template.
-
-A change is not production-grade here just because it works locally. It should also be:
-
-- reviewable
-- testable
-- recoverable
-- operationally understandable
-- safe to extend later
-
-For that reason, some parts of the repo will look more deliberate than move fast prototypes. That is by design.
-
-## Security note
-
-This repo contains financial workflow logic and blockchain-connected code.
-
-Do not:
-
-- commit secrets
-- commit real private keys
-- expose internal operator or worker keys
-- treat prototype defaults as production-safe settings
-
-Please read `SECURITY.md` before reporting issues or handling sensitive findings.
-
-## Collaboration
-
-Please read these files before opening major changes:
-
-- `CONTRIBUTING.md`
-- `CODE_OF_CONDUCT.md`
-- `SECURITY.md`
+Contributions should preserve explicit state transitions, durable auditability, recovery-safe behavior, and human control over money-critical actions. Start with [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [SECURITY.md](SECURITY.md).
 
 ## License
 
-This repository is distributed under the MIT License. See `LICENSE`.
+Distributed under the [MIT License](LICENSE).
+
+---
+
+<div align="center">
+
+**Stealth Trails AI Bank** — governed Ethereum fintech infrastructure with AI that stays inside the lines.
+
+</div>

@@ -39,13 +39,18 @@ export type WealthBriefSelection = {
   researchQuestionIds: string[];
 };
 
-function isPositiveDecimal(value: string): boolean {
+function isPositiveDecimal(value: string | null): boolean {
+  if (value === null) {
+    return false;
+  }
   return !/^[-+]?0*(?:\.0*)?$/u.test(value.trim());
 }
 
 function assertEvidence(sourceIds: WealthBriefSourceId[], id: string): void {
   if (sourceIds.length === 0) {
-    throw new Error(`Wealth brief catalog statement "${id}" has no evidence references.`);
+    throw new Error(
+      `Wealth brief catalog statement "${id}" has no evidence references.`,
+    );
   }
 }
 
@@ -61,17 +66,25 @@ export function buildWealthBriefStatementCatalog(
   const riskFlags: WealthBriefCatalogRiskFlag[] = [];
 
   for (const source of snapshot.sources) {
-    if (source.status !== "unavailable") {
-      continue;
+    if (source.status === "partial") {
+      riskFlags.push({
+        id: `risk.source_partial.${source.id}`,
+        severity: "warning",
+        title: `${source.label} partially available`,
+        detail:
+          "Only usable validated data from this source was included. Conclusions may be incomplete.",
+        sourceIds: [source.id],
+      });
+    } else if (source.status === "unavailable") {
+      riskFlags.push({
+        id: `risk.source_unavailable.${source.id}`,
+        severity: "info",
+        title: `${source.label} unavailable`,
+        detail:
+          "This source could not be included. No conclusion was drawn from the missing data.",
+        sourceIds: [source.id],
+      });
     }
-    riskFlags.push({
-      id: `risk.source_unavailable.${source.id}`,
-      severity: "info",
-      title: `${source.label} unavailable`,
-      detail:
-        "This source could not be included. No conclusion was drawn from the missing data.",
-      sourceIds: [source.id],
-    });
   }
 
   if (snapshot.balances.length > 0) {
@@ -117,7 +130,11 @@ export function buildWealthBriefStatementCatalog(
     });
   }
 
-  if (snapshot.balances.some((balance) => isPositiveDecimal(balance.pendingBalance))) {
+  if (
+    snapshot.balances.some((balance) =>
+      isPositiveDecimal(balance.pendingBalance),
+    )
+  ) {
     riskFlags.push({
       id: "risk.balances.pending",
       severity: "info",
@@ -128,8 +145,9 @@ export function buildWealthBriefStatementCatalog(
     });
   }
 
-  const attentionTransactions = snapshot.recentTransactions.filter((transaction) =>
-    ["failed", "review_required", "requested"].includes(transaction.status),
+  const attentionTransactions = snapshot.recentTransactions.filter(
+    (transaction) =>
+      ["failed", "review_required", "requested"].includes(transaction.status),
   );
   if (attentionTransactions.length > 0) {
     riskFlags.push({
@@ -156,11 +174,7 @@ export function buildWealthBriefStatementCatalog(
     });
   }
 
-  if (
-    snapshot.stakingPositions.some(
-      (position) => !position.canReadPosition && isPositiveDecimal(position.stakedBalance),
-    )
-  ) {
+  if (snapshot.stakingPositions.some((position) => !position.canReadPosition)) {
     riskFlags.push({
       id: "risk.staking.unreadable",
       severity: "warning",
@@ -179,7 +193,8 @@ export function buildWealthBriefStatementCatalog(
   ) {
     riskFlags.push({
       id: "risk.solvency.review",
-      severity: snapshot.solvency.status === "critical" ? "critical" : "warning",
+      severity:
+        snapshot.solvency.status === "critical" ? "critical" : "warning",
       title: "Solvency status should be reviewed",
       detail:
         "The included solvency status, evidence freshness, or policy-action state is not fully clear and healthy.",
@@ -233,7 +248,10 @@ function buildSnapshotSummary(snapshot: WealthSnapshot): string {
   const unavailableSources = snapshot.sources.filter(
     (source) => source.status === "unavailable",
   );
-  return `This brief contains ${snapshot.balances.length} balance record(s), ${snapshot.recentTransactions.length} recent transaction record(s), ${snapshot.stakingPositions.length} staking position(s), ${snapshot.outstandingLoans.length} outstanding loan(s), and ${snapshot.retirementVaults.length} retirement vault position(s). ${unavailableSources.length} source(s) were unavailable.`;
+  const partialSources = snapshot.sources.filter(
+    (source) => source.status === "partial",
+  );
+  return `This brief contains ${snapshot.balances.length} balance record(s), ${snapshot.recentTransactions.length} recent transaction record(s), ${snapshot.stakingPositions.length} staking position(s), ${snapshot.outstandingLoans.length} outstanding loan(s), and ${snapshot.retirementVaults.length} retirement vault position(s). ${partialSources.length} source(s) were partially available and ${unavailableSources.length} source(s) were unavailable.`;
 }
 
 // Deterministic preview: the full eligible catalog, rendered without any
@@ -271,7 +289,9 @@ export function renderSelectedInterpretation(
   const observations = selection.observationIds.map((id) => {
     const entry = catalog.observationById.get(id);
     if (!entry) {
-      throw new Error(`Wealth brief selection references unknown observation "${id}".`);
+      throw new Error(
+        `Wealth brief selection references unknown observation "${id}".`,
+      );
     }
     return { text: entry.text, sourceIds: entry.sourceIds };
   });
@@ -279,7 +299,9 @@ export function renderSelectedInterpretation(
   const riskFlags = selection.riskFlagIds.map((id) => {
     const entry = catalog.riskFlagById.get(id);
     if (!entry) {
-      throw new Error(`Wealth brief selection references unknown risk flag "${id}".`);
+      throw new Error(
+        `Wealth brief selection references unknown risk flag "${id}".`,
+      );
     }
     return {
       severity: entry.severity,
@@ -292,7 +314,9 @@ export function renderSelectedInterpretation(
   const researchQuestions = selection.researchQuestionIds.map((id) => {
     const entry = catalog.researchQuestionById.get(id);
     if (!entry) {
-      throw new Error(`Wealth brief selection references unknown research question "${id}".`);
+      throw new Error(
+        `Wealth brief selection references unknown research question "${id}".`,
+      );
     }
     return entry.text;
   });

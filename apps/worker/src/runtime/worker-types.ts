@@ -298,6 +298,14 @@ export type WorkerIterationMetrics = {
   solvencyReportAnchorFailedCount: number;
 };
 
+export type WealthGuardianScheduleResult = {
+  evaluatedCustomerCount: number;
+  dueCustomerCount: number;
+  generatedReportCount: number;
+  skippedCustomerCount: number;
+  failedCustomerCount: number;
+};
+
 export type SweepRetirementVaultReleaseRequestsResult = {
   limit: number;
   readyForReleaseCount: number;

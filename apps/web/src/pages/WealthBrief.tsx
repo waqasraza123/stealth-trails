@@ -30,6 +30,27 @@ function formatDate(value: string, locale: string): string {
   }).format(new Date(value));
 }
 
+function freshnessLabel(value: string | null, locale: string): string {
+  return value
+    ? formatDate(value, locale)
+    : locale === "ar"
+      ? "حداثة البيانات غير معروفة"
+      : "Record freshness unknown";
+}
+
+function sourceStatusLabel(
+  status: WealthBriefResult["sources"][number]["status"],
+  locale: string
+): string {
+  const labels = {
+    available: locale === "ar" ? "متاح" : "Available",
+    available_empty: locale === "ar" ? "متاح دون سجلات" : "Available empty",
+    partial: locale === "ar" ? "متاح جزئياً" : "Partial",
+    unavailable: locale === "ar" ? "غير متاح" : "Unavailable"
+  } as const;
+  return labels[status];
+}
+
 function formatAmount(value: string): string {
   return value;
 }
@@ -39,7 +60,7 @@ function SourcePills({ sourceIds }: { sourceIds: string[] }) {
     <div className="mt-3 flex flex-wrap gap-2">
       {sourceIds.map((sourceId) => (
         <Badge key={sourceId} variant="outline" className="bg-white/70 text-[11px]">
-          {sourceId.replaceAll("_", " ")}
+          {sourceId.split("_").join(" ")}
         </Badge>
       ))}
     </div>
@@ -217,7 +238,7 @@ export default function WealthBrief() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Clock3 className="h-4 w-4" />
-                  {locale === "ar" ? "البيانات حتى" : "Data as of"} {formatDate(brief.dataAsOf, locale)}
+                  {locale === "ar" ? "البيانات حتى" : "Data as of"} {freshnessLabel(brief.dataAsOf, locale)}
                 </div>
               </div>
               {brief.fallbackReason ? (
@@ -287,9 +308,22 @@ export default function WealthBrief() {
                     <div key={source.id} className="rounded-[1.2rem] border border-slate-200 bg-white/70 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-sm font-semibold text-slate-950">{source.label}</p>
-                        <Badge variant="outline" className={source.status === "available" ? "text-emerald-700" : "text-amber-700"}>{source.status}</Badge>
+                        <Badge
+                          variant="outline"
+                          className={
+                            source.status === "available"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : source.status === "available_empty"
+                                ? "border-slate-200 bg-slate-50 text-slate-600"
+                                : "border-amber-200 bg-amber-50 text-amber-700"
+                          }
+                        >
+                          {sourceStatusLabel(source.status, locale)}
+                        </Badge>
                       </div>
-                      <p className="mt-2 text-xs text-slate-500">{source.recordCount} record(s) · {formatDate(source.asOf, locale)}</p>
+                      <p className="mt-2 text-xs text-slate-500">
+                        {source.recordCount} record(s) · {freshnessLabel(source.asOf, locale)}
+                      </p>
                       {source.note ? <p className="mt-2 text-xs leading-5 text-slate-600">{source.note}</p> : null}
                     </div>
                   ))}

@@ -75,6 +75,90 @@ model Customer {
   notificationPreferences NotificationPreference[]
   notificationRecipientState NotificationRecipientState?
   notificationSocketSessions NotificationSocketSession[]
+  financialDocuments FinancialDocument[]
+  financialDocumentTraces FinancialDocumentTrace[]
+}
+
+model FinancialDocument {
+  id              String                  @id @default(cuid())
+  customerId      String
+  customer        Customer                @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  fileName        String
+  mimeType        String
+  sizeBytes       Int
+  sha256          String
+  status          String                  @default("uploaded")
+  pageCount       Int                     @default(0)
+  chunkCount      Int                     @default(0)
+  embeddingModel  String?
+  errorCode       String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  fileObject      FinancialDocumentFile?
+  pages           FinancialDocumentPage[]
+  chunks          FinancialDocumentChunk[]
+  traces          FinancialDocumentTrace[]
+
+  @@index([customerId, createdAt])
+  @@index([customerId, status])
+  @@unique([customerId, sha256])
+}
+
+model FinancialDocumentFile {
+  documentId String            @id
+  document   FinancialDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    Bytes
+  createdAt  DateTime          @default(now())
+}
+
+model FinancialDocumentPage {
+  id         String            @id @default(cuid())
+  documentId String
+  customerId String
+  document   FinancialDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  pageNumber Int
+  content    String
+  createdAt  DateTime          @default(now())
+
+  @@unique([documentId, pageNumber])
+  @@index([customerId, documentId, pageNumber])
+}
+
+model FinancialDocumentChunk {
+  id                  String            @id @default(cuid())
+  documentId          String
+  customerId          String
+  document            FinancialDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  pageNumber           Int
+  chunkIndex          Int
+  content             String
+  tokenEstimate       Int
+  embeddingModel      String?
+  embeddingDimensions Int?
+  embedding           Unsupported("vector(1536)")?
+  createdAt           DateTime          @default(now())
+
+  @@unique([documentId, chunkIndex])
+  @@index([customerId, documentId, pageNumber])
+}
+
+model FinancialDocumentTrace {
+  id             String             @id @default(cuid())
+  customerId     String
+  customer       Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  documentId     String?
+  document       FinancialDocument? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  operation      String
+  status         String
+  durationMs     Int
+  chunkCount     Int?
+  provider       String?
+  model          String?
+  failureCode    String?
+  createdAt      DateTime           @default(now())
+
+  @@index([customerId, createdAt])
+  @@index([customerId, operation, status])
 }
 
 model CustomerTrustedContact {

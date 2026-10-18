@@ -83,4 +83,24 @@ describe("AiController", () => {
       true,
     );
   });
+
+  it("does not generate a brief when asynchronous rate limiting fails", async () => {
+    rateLimitService.assertAllowed.mockRejectedValueOnce(
+      new (await import("@nestjs/common")).HttpException(
+        {
+          code: "AI_WEALTH_BRIEF_RATE_LIMITED",
+          retryAfter: 60,
+        },
+        429,
+      ),
+    );
+
+    await request(app.getHttpServer())
+      .post("/ai/wealth-brief")
+      .set("Authorization", "Bearer session-token")
+      .send({ externalAiOptIn: false })
+      .expect(429);
+
+    expect(wealthBriefService.generate).not.toHaveBeenCalled();
+  });
 });

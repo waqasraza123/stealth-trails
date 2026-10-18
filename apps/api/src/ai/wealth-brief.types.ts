@@ -9,8 +9,8 @@ export type WealthBriefSourceId =
 export type WealthBriefSource = {
   id: WealthBriefSourceId;
   label: string;
-  status: "available" | "unavailable";
-  asOf: string;
+  status: "available" | "available_empty" | "partial" | "unavailable";
+  asOf: string | null;
   recordCount: number;
   note: string | null;
 };
@@ -36,8 +36,8 @@ export type WealthSnapshot = {
   }>;
   stakingPositions: Array<{
     poolStatus: string;
-    stakedBalance: string;
-    pendingReward: string;
+    stakedBalance: string | null;
+    pendingReward: string | null;
     canReadPosition: boolean;
     updatedAt: string;
   }>;
@@ -53,6 +53,7 @@ export type WealthSnapshot = {
     autopayEnabled: boolean;
     nextDueAt: string | null;
     gracePeriodEndsAt: string | null;
+    updatedAt: string;
   }>;
   retirementVaults: Array<{
     status: string;
@@ -100,7 +101,7 @@ export type WealthBriefMode = "ai_generated" | "deterministic_preview";
 export type WealthBriefResult = WealthBriefInterpretation & {
   mode: WealthBriefMode;
   generatedAt: string;
-  dataAsOf: string;
+  dataAsOf: string | null;
   financialPosition: Omit<WealthSnapshot, "sources">;
   sources: WealthBriefSource[];
   externalDataShared: boolean;
@@ -110,6 +111,11 @@ export type WealthBriefResult = WealthBriefInterpretation & {
     model: string | null;
   };
   fallbackReason: "provider_failure" | "invalid_provider_output" | null;
+  providerUsage: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  } | null;
   disclaimer: string;
 };
 

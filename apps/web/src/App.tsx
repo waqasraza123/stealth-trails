@@ -27,6 +27,13 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const TrustCenter = lazy(() => import("./pages/TrustCenter"));
 const ProofVerification = lazy(() => import("./pages/ProofVerification"));
 const WealthBrief = lazy(() => import("./pages/WealthBrief"));
+const OpportunityHunter = lazy(() => import("./pages/OpportunityHunter"));
+const WealthGuardian = lazy(() => import("./pages/WealthGuardian"));
+const FinancialCopilot = lazy(() => import("./pages/FinancialCopilot"));
+const ResearchPlanStudio = lazy(() => import("./pages/ResearchPlanStudio"));
+const PortfolioRiskLab = lazy(() => import("./pages/PortfolioRiskLab"));
+const AgentObservatory = lazy(() => import("./pages/AgentObservatory"));
+const DocumentIntelligence = lazy(() => import("./pages/DocumentIntelligence"));
 const SignIn = lazy(() => import("./pages/auth/SignIn"));
 const SignUp = lazy(() => import("./pages/auth/SignUp"));
 
@@ -131,6 +138,62 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     {withRouteBoundary(<WealthBrief />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/opportunities"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<OpportunityHunter />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wealth-guardian"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<WealthGuardian />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/copilot"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<FinancialCopilot />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/research-plans"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<ResearchPlanStudio />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/portfolio-risk"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<PortfolioRiskLab />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<DocumentIntelligence />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ai-observatory"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<AgentObservatory />)}
                   </ProtectedRoute>
                 }
               />

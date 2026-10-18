@@ -31,7 +31,7 @@ export type WealthBriefCapabilities = {
 export type WealthBriefResult = {
   mode: "ai_generated" | "deterministic_preview";
   generatedAt: string;
-  dataAsOf: string;
+  dataAsOf: string | null;
   summary: string;
   observations: Array<{
     text: string;
@@ -65,8 +65,8 @@ export type WealthBriefResult = {
     }>;
     stakingPositions: Array<{
       poolStatus: string;
-      stakedBalance: string;
-      pendingReward: string;
+      stakedBalance: string | null;
+      pendingReward: string | null;
       canReadPosition: boolean;
       updatedAt: string;
     }>;
@@ -82,6 +82,7 @@ export type WealthBriefResult = {
       autopayEnabled: boolean;
       nextDueAt: string | null;
       gracePeriodEndsAt: string | null;
+      updatedAt: string;
     }>;
     retirementVaults: Array<{
       status: string;
@@ -106,8 +107,8 @@ export type WealthBriefResult = {
   sources: Array<{
     id: WealthBriefSourceId;
     label: string;
-    status: "available" | "unavailable";
-    asOf: string;
+    status: "available" | "available_empty" | "partial" | "unavailable";
+    asOf: string | null;
     recordCount: number;
     note: string | null;
   }>;

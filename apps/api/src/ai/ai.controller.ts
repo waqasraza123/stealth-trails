@@ -8,6 +8,8 @@ import type {
   WealthBriefCapabilities,
   WealthBriefResult,
 } from "./wealth-brief.types";
+import { AgentObservatoryService } from "./agent-observatory.service";
+import { summarizeWealthBriefRun } from "./agent-observatory.summaries";
 
 type AuthenticatedRequest = {
   user: {
@@ -21,6 +23,7 @@ export class AiController {
   constructor(
     private readonly wealthBriefService: WealthBriefService,
     private readonly rateLimitService: WealthBriefRateLimitService,
+    private readonly observatory: AgentObservatoryService,
   ) {}
 
   @Get("capabilities")
@@ -37,11 +40,18 @@ export class AiController {
     @Request() request: AuthenticatedRequest,
     @Body() dto: GenerateWealthBriefDto,
   ): Promise<CustomJsonResponse<WealthBriefResult>> {
-    this.rateLimitService.assertAllowed(request.user.id);
-    const result = await this.wealthBriefService.generate(
-      request.user.id,
-      dto.externalAiOptIn === true,
-    );
+    const result = await this.observatory.observeCustomer(request.user.id, {
+      agentId: "wealth-brief",
+      workflow: "generate_wealth_brief",
+      execute: async () => {
+        await this.rateLimitService.assertAllowed(request.user.id);
+        return this.wealthBriefService.generate(
+          request.user.id,
+          dto.externalAiOptIn === true,
+        );
+      },
+      summarize: summarizeWealthBriefRun,
+    });
 
     return {
       status: "success",

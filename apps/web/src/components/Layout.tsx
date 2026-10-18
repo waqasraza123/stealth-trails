@@ -47,6 +47,34 @@ export const Layout = ({ children }: LayoutProps) => {
       label: locale === "ar" ? "موجز الثروة" : "Wealth Brief",
       path: "/wealth-brief"
     },
+    {
+      label: locale === "ar" ? "فرص البحث" : "Opportunities",
+      path: "/opportunities"
+    },
+    {
+      label: locale === "ar" ? "حارس الثروة" : "Wealth Guardian",
+      path: "/wealth-guardian"
+    },
+    {
+      label: locale === "ar" ? "المساعد المالي" : "AI Copilot",
+      path: "/copilot"
+    },
+    {
+      label: locale === "ar" ? "ذكاء المستندات" : "Documents",
+      path: "/documents"
+    },
+    {
+      label: locale === "ar" ? "خطط البحث" : "Plan Studio",
+      path: "/research-plans"
+    },
+    {
+      label: locale === "ar" ? "مختبر المخاطر" : "Risk Lab",
+      path: "/portfolio-risk"
+    },
+    {
+      label: locale === "ar" ? "مرصد الوكلاء" : "AI Observatory",
+      path: "/ai-observatory"
+    },
     { label: t("navigation.profile"), path: "/profile" }
   ];
 

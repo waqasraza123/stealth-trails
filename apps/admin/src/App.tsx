@@ -32,6 +32,7 @@ import {
 import { useOperatorSession } from "@/state/operator-session";
 import { OperatorSessionProvider } from "@/state/operator-session";
 import { AlertsPage } from "@/pages/AlertsPage";
+import { AgentObservatoryPage } from "@/pages/AgentObservatoryPage";
 import { AuditPage } from "@/pages/AuditPage";
 import { AccountsPage } from "@/pages/AccountsPage";
 import { CustomerSessionRiskPage } from "@/pages/CustomerSessionRiskPage";
@@ -57,6 +58,7 @@ const queryClient = createAdminQueryClient();
 
 const navItems = [
   { label: "Operations Overview", path: "/operations" },
+  { label: "AI Agent Observatory", path: "/ai-observatory" },
   { label: "Notifications", path: "/notifications" },
   { label: "Queues", path: "/queues" },
   { label: "Vaults", path: "/vaults" },
@@ -202,6 +204,7 @@ function AdminConsole() {
       <Routes>
         <Route path="/" element={<Navigate to="/operations" replace />} />
         <Route path="/operations" element={<OperationsPage />} />
+        <Route path="/ai-observatory" element={<AgentObservatoryPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/queues" element={<QueuesPage />} />
         <Route path="/vaults" element={<VaultsPage />} />

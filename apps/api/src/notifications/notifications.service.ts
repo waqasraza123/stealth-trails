@@ -1255,6 +1255,10 @@ export class NotificationsService {
       return "loans";
     }
 
+    if (action.startsWith("wealth_guardian.")) {
+      return "yield";
+    }
+
     return "product";
   }
 
@@ -1276,6 +1280,7 @@ export class NotificationsService {
       action.includes("escalated") ||
       action.includes("requested") ||
       action.includes("queued") ||
+      action.includes("attention_required") ||
       action.includes("mutation_blocked")
     ) {
       return "high";
@@ -1307,6 +1312,7 @@ export class NotificationsService {
       .replace(/^release_readiness\./, "")
       .replace(/^ledger_reconciliation\./, "")
       .replace(/^loan\./, "")
+      .replace(/^wealth_guardian\./, "")
       .replace(/\./g, " ")
       .replace(/_/g, " ");
 
@@ -1365,6 +1371,16 @@ export class NotificationsService {
         webPath: "/loans",
         adminPath: null,
         mobileRoute: "Loans",
+        mobileParams: null,
+      };
+    }
+
+    if (action.startsWith("wealth_guardian.")) {
+      return {
+        label: "Open Wealth Guardian",
+        webPath: "/wealth-guardian",
+        adminPath: null,
+        mobileRoute: null,
         mobileParams: null,
       };
     }
@@ -1513,7 +1529,8 @@ export class NotificationsService {
         action.startsWith("transaction_intent.") ||
         action.startsWith("retirement_vault.") ||
         action.startsWith("staking.") ||
-        action.startsWith("loan."));
+        action.startsWith("loan.") ||
+        action.startsWith("wealth_guardian."));
 
     if (customerRelevant && event.customerId) {
       const customerRecipientIds = [event.customerId];
@@ -1559,7 +1576,9 @@ export class NotificationsService {
               ? "Your retirement vault status changed."
               : action.startsWith("staking.")
                 ? "Your yield activity changed."
-                : "Your notification feed has a new event.",
+                : action.startsWith("wealth_guardian.")
+                  ? "Your Wealth Guardian research briefing is ready."
+                  : "Your notification feed has a new event.",
         body:
           typeof (event.metadata as Record<string, unknown> | null)?.[
             "note"
@@ -1567,7 +1586,12 @@ export class NotificationsService {
             ? ((event.metadata as Record<string, unknown>)["note"] as string)
             : null,
         deepLink: this.buildCustomerDeepLink(action, event.targetId),
-        metadata: event.metadata,
+        metadata: action.startsWith("wealth_guardian.")
+          ? ({
+              reportId: event.id,
+              attentionRequired: action.endsWith("attention_required"),
+            } as Prisma.JsonObject)
+          : event.metadata,
         sourceType: NotificationSourceType.audit_event,
         sourceId: event.id,
         sourceCreatedAt: event.createdAt,

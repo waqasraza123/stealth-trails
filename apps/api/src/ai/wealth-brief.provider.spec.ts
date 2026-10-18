@@ -15,6 +15,17 @@ import type { WealthSnapshot } from "./wealth-brief.types";
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+// Mirrors the production SOURCE_LABELS mapping in wealth-snapshot.service.ts
+// so unavailable-source risk flag titles match what customers actually see.
+const SOURCE_LABELS = {
+  balances: "Account and asset balances",
+  transactions: "Recent transaction activity",
+  staking: "Staking and yield positions",
+  loans: "Outstanding loans",
+  retirement_vaults: "Retirement vault positions",
+  solvency: "Customer solvency information",
+} as const;
+
 function buildSnapshot(): WealthSnapshot {
   const generatedAt = "2026-10-15T08:00:00.000Z";
   return {
@@ -46,9 +57,9 @@ function buildSnapshot(): WealthSnapshot {
       ...(["transactions", "staking", "loans", "retirement_vaults", "solvency"] as const).map(
         (id) => ({
           id,
-          label: id,
+          label: SOURCE_LABELS[id],
           status: "unavailable" as const,
-          asOf: generatedAt,
+          asOf: null,
           recordCount: 0,
           note: "This source was unavailable when the brief was generated.",
         }),

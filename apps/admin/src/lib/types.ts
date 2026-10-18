@@ -3023,3 +3023,93 @@ export type IncidentPackageSnapshot = {
     timelineLimit: number;
   };
 };
+
+export type AgentTraceStatus = "succeeded" | "failed" | "fallback";
+
+export type AgentExecutionTrace = {
+  id: string;
+  agentId: string;
+  agentName: string;
+  workflow: string;
+  mode: "deterministic" | "llm_opt_in" | "hybrid" | "scheduled_deterministic" | "unavailable";
+  status: AgentTraceStatus;
+  actorType: "customer" | "worker" | "system";
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+  steps: Array<{
+    id: string;
+    label: string;
+    kind: "workflow" | "tool" | "decision" | "persistence";
+    status: AgentTraceStatus;
+    durationMs: number | null;
+    toolName: string | null;
+    outputSummary: string;
+    evidenceIds: string[];
+    failureReason: string | null;
+  }>;
+  providerUsage: {
+    providerName: string | null;
+    model: string | null;
+    inputTokens: number | null;
+    outputTokens: number | null;
+    totalTokens: number | null;
+    estimatedCostUsd: number | null;
+    costNote: string;
+  };
+  evidence: Array<{
+    evidenceId: string;
+    sourceLabel: string;
+    sourceType: string;
+    observedAt: string | null;
+    synthetic: boolean;
+    groundingDecision: "used" | "available" | "rejected";
+  }>;
+  fallbackReason: string | null;
+  failureReason: string | null;
+};
+
+export type AgentObservatoryDashboard = {
+  scope: "customer" | "operator";
+  registry: Array<{
+    id: string;
+    name: string;
+    description: string;
+    capabilities: string[];
+    executionModes: AgentExecutionTrace["mode"][];
+    tools: string[];
+    operationalStatus: "operational" | "degraded" | "no_recorded_activity";
+    lastExecutionAt: string | null;
+    customerVisible: boolean;
+    externalAiProductionDisabled: true;
+  }>;
+  metrics: {
+    recordedExecutionCount: number;
+    succeededCount: number;
+    failedCount: number;
+    fallbackCount: number;
+    errorRatePercent: number;
+    averageLatencyMs: number | null;
+    p95LatencyMs: number | null;
+    tokenUsage: {
+      executionsWithUsage: number;
+      inputTokens: number | null;
+      outputTokens: number | null;
+      totalTokens: number | null;
+      estimatedCostUsd: number | null;
+      note: string;
+    };
+  };
+  trends: Array<{
+    bucket: string;
+    executions: number;
+    failures: number;
+    fallbacks: number;
+    averageLatencyMs: number | null;
+  }>;
+  errors: Array<{ category: string; count: number; latestAt: string }>;
+  traces: AgentExecutionTrace[];
+  generatedAt: string;
+  retentionNote: string;
+  securityNote: string;
+};

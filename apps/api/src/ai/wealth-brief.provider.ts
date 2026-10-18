@@ -8,6 +8,10 @@ import type {
   WealthBriefSelection,
   WealthBriefStatementCatalog,
 } from "./wealth-brief-catalog";
+import {
+  attachProviderUsage,
+  readOpenAiCompatibleUsage,
+} from "./ai-provider-usage";
 
 export const WEALTH_BRIEF_PROVIDER = Symbol("WEALTH_BRIEF_PROVIDER");
 
@@ -116,6 +120,11 @@ type OpenAiCompatibleResponse = {
       content?: string;
     };
   }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
 };
 
 export class OpenAiCompatibleWealthBriefProvider implements WealthBriefProvider {
@@ -197,7 +206,10 @@ export class OpenAiCompatibleWealthBriefProvider implements WealthBriefProvider 
       throw new InvalidWealthBriefProviderOutputError();
     }
 
-    return validateWealthBriefSelection(parsed, catalog);
+    return attachProviderUsage(
+      validateWealthBriefSelection(parsed, catalog),
+      readOpenAiCompatibleUsage(response.data),
+    );
   }
 }
 

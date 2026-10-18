@@ -328,6 +328,26 @@ export class WorkerOrchestrator {
       metrics
     );
 
+    const runScheduledWealthGuardianResearch =
+      this.deps.internalApiClient.runScheduledWealthGuardianResearch;
+    if (typeof runScheduledWealthGuardianResearch === "function") {
+      try {
+        const wealthGuardian = await runScheduledWealthGuardianResearch();
+        if (
+          wealthGuardian.dueCustomerCount > 0 ||
+          wealthGuardian.failedCustomerCount > 0
+        ) {
+          this.deps.logger.info("wealth_guardian_scheduled_research_completed", {
+            ...wealthGuardian
+          });
+        }
+      } catch (error) {
+        this.deps.logger.error("wealth_guardian_scheduled_research_failed", {
+          error
+        });
+      }
+    }
+
     return metrics;
   }
 

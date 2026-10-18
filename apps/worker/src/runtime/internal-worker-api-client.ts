@@ -32,6 +32,7 @@ import type {
   StartManagedWithdrawalExecutionPayload,
   StartManagedWithdrawalExecutionResult,
   TrackedLedgerReconciliationScanResult,
+  WealthGuardianScheduleResult,
   WorkerHeartbeatPayload
 } from "./worker-types";
 
@@ -587,6 +588,15 @@ export function createInternalWorkerApiClient(runtime: WorkerRuntime) {
       return readResponseData(
         httpClient.post<ApiEnvelope<GeneratedSolvencySnapshotResult>>(
           "/solvency/internal/worker/snapshots/run"
+        ),
+        baseUrl
+      );
+    },
+
+    async runScheduledWealthGuardianResearch(): Promise<WealthGuardianScheduleResult> {
+      return readResponseData(
+        httpClient.post<ApiEnvelope<WealthGuardianScheduleResult>>(
+          "/ai/wealth-guardian/internal/worker/run-scheduled"
         ),
         baseUrl
       );

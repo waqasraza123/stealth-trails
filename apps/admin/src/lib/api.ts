@@ -9,6 +9,7 @@ import type {
 import { reportAdminApiError } from "./observability";
 import type {
   AccountHoldList,
+  AgentObservatoryDashboard,
   AccountReleaseReviewMutationResult,
   AccountHoldSummary,
   AccountReleaseReviewList,
@@ -94,6 +95,22 @@ import type {
   TreasuryOverview,
   WorkerRuntimeHealthList
 } from "./types";
+
+export async function getAgentObservatory(
+  session: OperatorSession,
+  params: {
+    hours?: number;
+    limit?: number;
+    agentId?: string;
+    status?: "succeeded" | "failed" | "fallback";
+  } = {}
+): Promise<AgentObservatoryDashboard> {
+  return requestData(session, {
+    method: "GET",
+    url: "/ai/observatory/internal",
+    params
+  });
+}
 
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/+$/, "");
