@@ -1,9 +1,10 @@
+import { useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { MotionSurface, ScreenTransition } from "@/components/motion/primitives";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InlineLoader } from "@/components/ui/loading-panel";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useT } from "@/i18n/use-t";
 import { useLocale } from "@/i18n/use-locale";
 import { useMyBalances } from "@/hooks/balances/useMyBalances";
@@ -20,6 +21,7 @@ import { LockKeyhole, ShieldCheck } from "lucide-react";
 const Wallet = () => {
   const t = useT();
   const { locale } = useLocale();
+  const location = useLocation();
   const user = useUserStore((state) => state.user);
   const supportedAssetsQuery = useSupportedAssets();
   const balancesQuery = useMyBalances();
@@ -38,12 +40,21 @@ const Wallet = () => {
     .map((vault) => vault.unlockAt)
     .sort((left, right) => Date.parse(left) - Date.parse(right))[0];
 
+  useEffect(() => {
+    if (!location.hash) {
+      return;
+    }
+
+    const target = document.getElementById(location.hash.slice(1));
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location.hash]);
+
   return (
     <Layout>
       <ScreenTransition className="stb-page-stack">
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <MotionSurface className="stb-pressable-shell">
-            <Card className="stb-surface stb-reveal rounded-[2rem] border-0 p-6">
+            <Card className="stb-surface stb-wallet-overview stb-reveal rounded-[2rem] border-0 p-6">
             <div className="space-y-4">
               <div>
                 <p className="stb-section-kicker">
@@ -60,34 +71,43 @@ const Wallet = () => {
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-[1.4rem] bg-white/80 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <div className="stb-financial-grid">
+                <div className="stb-financial-card">
+                  <p className="stb-financial-label">
                     {locale === "ar" ? "الأصول المدعومة" : "Supported assets"}
                   </p>
-                  <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  <strong className="stb-financial-value">
                     {supportedAssetsQuery.isLoading ? (
                       <InlineLoader label={locale === "ar" ? "جارٍ التحميل" : "Loading"} />
                     ) : (
                       supportedAssetsQuery.data?.assets.length ?? 0
                     )}
-                  </p>
+                  </strong>
+                  <span className="stb-financial-detail">
+                    {locale === "ar" ? "متاحة للإيداع والتحويل" : "Available for deposit and transfer"}
+                  </span>
                 </div>
-                <div className="rounded-[1.4rem] bg-white/80 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <div className="stb-financial-card">
+                  <p className="stb-financial-label">
                     {locale === "ar" ? "أصول ممولة" : "Funded assets"}
                   </p>
-                  <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  <strong className="stb-financial-value">
                     {balances.filter((balance) => Number(balance.availableBalance) > 0).length}
-                  </p>
+                  </strong>
+                  <span className="stb-financial-detail">
+                    {locale === "ar" ? "برصيد متاح حالياً" : "With spendable balance now"}
+                  </span>
                 </div>
-                <div className="rounded-[1.4rem] bg-slate-950 p-4 text-white">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                <div className="stb-financial-card stb-financial-card--primary stb-inverse-metric">
+                  <p className="stb-financial-label">
                     {locale === "ar" ? "مرجع المحفظة" : "Wallet reference"}
                   </p>
-                  <p className="stb-ref mt-3 text-sm font-medium text-white">
+                  <p className="stb-ref mt-4 break-all text-sm font-medium leading-6">
                     <bdi>{user?.ethereumAddress ?? t("layout.noWallet")}</bdi>
                   </p>
+                  <span className="stb-financial-detail">
+                    {locale === "ar" ? "مرجع مُدار قابل للتتبع" : "Traceable managed reference"}
+                  </span>
                 </div>
               </div>
 
@@ -138,17 +158,27 @@ const Wallet = () => {
                   {balances.map((balance) => (
                     <div
                       key={balance.asset.id}
-                      className="stb-section-frame p-4"
+                      className="stb-section-frame stb-asset-card p-4"
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-slate-950">
-                          {balance.asset.displayName}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="stb-asset-mark" aria-hidden="true">
+                            {balance.asset.symbol.slice(0, 3)}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-950">
+                              {balance.asset.displayName}
+                            </p>
+                            <p className="mt-1 text-xs uppercase tracking-[0.12em] text-slate-500">
+                              {balance.asset.symbol}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="stb-page-title text-2xl font-semibold text-slate-950">
+                          {formatTokenAmount(balance.availableBalance, locale)}
                         </p>
-                        <span className="text-xs uppercase tracking-[0.12em] text-slate-500">
-                          {balance.asset.symbol}
-                        </span>
                       </div>
-                      <div className="mt-4 grid gap-2 text-sm text-slate-600">
+                      <div className="mt-4 grid gap-2 rounded-[1rem] bg-white/60 p-3 text-sm text-slate-600">
                         <div className="flex justify-between gap-3">
                           <span>{locale === "ar" ? "متاح" : "Available"}</span>
                           <span className="font-semibold text-slate-950">
@@ -304,61 +334,84 @@ const Wallet = () => {
           </Card>
         </MotionSurface>
 
-        <div className="grid gap-6 xl:grid-cols-3">
-          <DepositCard
-            walletAddress={user?.ethereumAddress ?? null}
-            assets={supportedAssetsQuery.data?.assets ?? []}
-            isAssetsLoading={supportedAssetsQuery.isLoading}
-            assetsErrorMessage={
-              supportedAssetsQuery.isError
-                ? supportedAssetsQuery.error instanceof Error
-                  ? supportedAssetsQuery.error.message
-                  : t("wallet.supportedAssetsError")
-                : null
-            }
-          />
-          <WithdrawCard
-            walletAddress={user?.ethereumAddress ?? null}
-            assets={supportedAssetsQuery.data?.assets ?? []}
-            balances={balances}
-            isAssetsLoading={supportedAssetsQuery.isLoading}
-            isBalancesLoading={balancesQuery.isLoading}
-            assetsErrorMessage={
-              supportedAssetsQuery.isError
-                ? supportedAssetsQuery.error instanceof Error
-                  ? supportedAssetsQuery.error.message
-                  : t("wallet.supportedAssetsError")
-                : null
-            }
-            balancesErrorMessage={
-              balancesQuery.isError
-                ? balancesQuery.error instanceof Error
-                  ? balancesQuery.error.message
-                  : t("wallet.balancesError")
-                : null
-            }
-          />
-          <InternalTransferCard
-            assets={supportedAssetsQuery.data?.assets ?? []}
-            balances={balances}
-            isAssetsLoading={supportedAssetsQuery.isLoading}
-            isBalancesLoading={balancesQuery.isLoading}
-            assetsErrorMessage={
-              supportedAssetsQuery.isError
-                ? supportedAssetsQuery.error instanceof Error
-                  ? supportedAssetsQuery.error.message
-                  : t("wallet.supportedAssetsError")
-                : null
-            }
-            balancesErrorMessage={
-              balancesQuery.isError
-                ? balancesQuery.error instanceof Error
-                  ? balancesQuery.error.message
-                  : t("wallet.balancesError")
-                : null
-            }
-          />
-        </div>
+        <section aria-labelledby="wallet-transfer-heading">
+          <div className="stb-transfer-header">
+            <div>
+              <p className="stb-section-kicker">
+                {locale === "ar" ? "حركة الأموال" : "Money movement"}
+              </p>
+              <h2 className="stb-page-title mt-2 text-2xl font-semibold text-slate-950" id="wallet-transfer-heading">
+                {locale === "ar" ? "إيداع وسحب وتحويل بثقة" : "Deposit, withdraw, and transfer with confidence"}
+              </h2>
+              <p>
+                {locale === "ar"
+                  ? "كل مسار يحتفظ بالتحقق، والمعاينة، والمرجع، والخط الزمني نفسها—مع تقديم أوضح للخطوة التالية."
+                  : "Each rail keeps the same verification, preview, reference, and timeline behavior—presented with a clearer next step."}
+              </p>
+            </div>
+          </div>
+          <div className="stb-transfer-grid mt-5">
+            <div className="stb-transfer-slot" id="deposit">
+              <DepositCard
+                walletAddress={user?.ethereumAddress ?? null}
+                assets={supportedAssetsQuery.data?.assets ?? []}
+                isAssetsLoading={supportedAssetsQuery.isLoading}
+                assetsErrorMessage={
+                  supportedAssetsQuery.isError
+                    ? supportedAssetsQuery.error instanceof Error
+                      ? supportedAssetsQuery.error.message
+                      : t("wallet.supportedAssetsError")
+                    : null
+                }
+              />
+            </div>
+            <div className="stb-transfer-slot" id="withdraw">
+              <WithdrawCard
+                walletAddress={user?.ethereumAddress ?? null}
+                assets={supportedAssetsQuery.data?.assets ?? []}
+                balances={balances}
+                isAssetsLoading={supportedAssetsQuery.isLoading}
+                isBalancesLoading={balancesQuery.isLoading}
+                assetsErrorMessage={
+                  supportedAssetsQuery.isError
+                    ? supportedAssetsQuery.error instanceof Error
+                      ? supportedAssetsQuery.error.message
+                      : t("wallet.supportedAssetsError")
+                    : null
+                }
+                balancesErrorMessage={
+                  balancesQuery.isError
+                    ? balancesQuery.error instanceof Error
+                      ? balancesQuery.error.message
+                      : t("wallet.balancesError")
+                    : null
+                }
+              />
+            </div>
+            <div className="stb-transfer-slot" id="transfer">
+              <InternalTransferCard
+                assets={supportedAssetsQuery.data?.assets ?? []}
+                balances={balances}
+                isAssetsLoading={supportedAssetsQuery.isLoading}
+                isBalancesLoading={balancesQuery.isLoading}
+                assetsErrorMessage={
+                  supportedAssetsQuery.isError
+                    ? supportedAssetsQuery.error instanceof Error
+                      ? supportedAssetsQuery.error.message
+                      : t("wallet.supportedAssetsError")
+                    : null
+                }
+                balancesErrorMessage={
+                  balancesQuery.isError
+                    ? balancesQuery.error instanceof Error
+                      ? balancesQuery.error.message
+                      : t("wallet.balancesError")
+                    : null
+                }
+              />
+            </div>
+          </div>
+        </section>
       </ScreenTransition>
     </Layout>
   );

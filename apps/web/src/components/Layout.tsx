@@ -1,238 +1,216 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import type { ReactNode } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
+  Activity,
+  ArrowLeftRight,
+  ArrowUpRight,
+  Bot,
   CircleHelp,
+  FileText,
+  Fingerprint,
   Landmark,
+  LayoutDashboard,
+  LineChart,
+  ListChecks,
+  LockKeyhole,
+  Search,
+  Scale,
   ShieldCheck,
+  TrendingUp,
   UserRound,
   Wallet
 } from "lucide-react";
+import { useBranding } from "@/branding/BrandingProvider";
 import { CustomerNotificationBell } from "@/components/notifications/CustomerNotificationBell";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import {
-  HeroItem,
-  HeroReveal,
-  MotionSurface,
-  StaggerGrid,
-  StaggerItem
-} from "@/components/motion/primitives";
 import { Logo } from "@/components/ui/logo";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { useLocale } from "@/i18n/use-locale";
 import { useT } from "@/i18n/use-t";
+import { formatShortAddress } from "@/lib/customer-finance";
 import { useUserStore } from "@/stores/userStore";
-import { formatDateLabel, formatShortAddress } from "@/lib/customer-finance";
 
 type LayoutProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const { locale } = useLocale();
+  const { branding } = useBranding();
   const t = useT();
   const user = useUserStore((state) => state.user);
 
-  const navItems = [
-    { label: t("navigation.dashboard"), path: "/dashboard" },
-    { label: t("navigation.wallet"), path: "/wallet" },
+  const navGroups = [
     {
-      label: locale === "ar" ? "قبو التقاعد" : "Retirement Vault",
-      path: "/vault"
-    },
-    { label: locale === "ar" ? "العائد" : "Yield", path: "/yield" },
-    { label: t("navigation.transactions"), path: "/transactions" },
-    {
-      label: locale === "ar" ? "موجز الثروة" : "Wealth Brief",
-      path: "/wealth-brief"
-    },
-    {
-      label: locale === "ar" ? "فرص البحث" : "Opportunities",
-      path: "/opportunities"
+      label: locale === "ar" ? "الخدمات اليومية" : "Everyday banking",
+      items: [
+        { label: t("navigation.dashboard"), path: "/dashboard", icon: LayoutDashboard },
+        { label: t("navigation.wallet"), path: "/wallet", icon: Wallet },
+        {
+          label: t("navigation.transactions"),
+          path: "/transactions",
+          icon: ArrowLeftRight
+        }
+      ]
     },
     {
-      label: locale === "ar" ? "حارس الثروة" : "Wealth Guardian",
-      path: "/wealth-guardian"
+      label: locale === "ar" ? "النمو والحماية" : "Grow & protect",
+      items: [
+        {
+          label: locale === "ar" ? "قبو التقاعد" : "Retirement Vault",
+          path: "/vault",
+          icon: LockKeyhole
+        },
+        {
+          label: locale === "ar" ? "العائد" : "Yield",
+          path: "/yield",
+          icon: TrendingUp
+        },
+        { label: t("navigation.loans"), path: "/loans", icon: Landmark }
+      ]
     },
     {
-      label: locale === "ar" ? "المساعد المالي" : "AI Copilot",
-      path: "/copilot"
+      label: locale === "ar" ? "الذكاء المالي" : "AI intelligence",
+      items: [
+        {
+          label: locale === "ar" ? "موجز الثروة" : "Wealth Brief",
+          path: "/wealth-brief",
+          icon: FileText
+        },
+        {
+          label: locale === "ar" ? "فرص البحث" : "Opportunities",
+          path: "/opportunities",
+          icon: Search
+        },
+        {
+          label: locale === "ar" ? "حارس الثروة" : "Wealth Guardian",
+          path: "/wealth-guardian",
+          icon: ShieldCheck
+        },
+        {
+          label: locale === "ar" ? "المساعد المالي" : "AI Copilot",
+          path: "/copilot",
+          icon: Bot
+        },
+        {
+          label: locale === "ar" ? "ذكاء المستندات" : "Documents",
+          path: "/documents",
+          icon: FileText
+        },
+        {
+          label: locale === "ar" ? "خطط البحث" : "Plan Studio",
+          path: "/research-plans",
+          icon: ListChecks
+        },
+        {
+          label: locale === "ar" ? "مختبر المخاطر" : "Risk Lab",
+          path: "/portfolio-risk",
+          icon: LineChart
+        },
+        {
+          label: locale === "ar" ? "لجنة الاستثمار" : "Investment Committee",
+          path: "/investment-committee",
+          icon: Scale
+        },
+        {
+          label: locale === "ar" ? "مرصد الوكلاء" : "AI Observatory",
+          path: "/ai-observatory",
+          icon: Activity
+        }
+      ]
     },
     {
-      label: locale === "ar" ? "ذكاء المستندات" : "Documents",
-      path: "/documents"
-    },
-    {
-      label: locale === "ar" ? "خطط البحث" : "Plan Studio",
-      path: "/research-plans"
-    },
-    {
-      label: locale === "ar" ? "مختبر المخاطر" : "Risk Lab",
-      path: "/portfolio-risk"
-    },
-    {
-      label: locale === "ar" ? "مرصد الوكلاء" : "AI Observatory",
-      path: "/ai-observatory"
-    },
-    { label: t("navigation.profile"), path: "/profile" }
+      label: locale === "ar" ? "الحساب" : "Account",
+      items: [
+        { label: t("navigation.profile"), path: "/profile", icon: UserRound },
+        {
+          label: locale === "ar" ? "إثباتي" : "My proof",
+          path: "/proofs/me",
+          icon: Fingerprint
+        }
+      ]
+    }
   ];
 
+  const navItems = navGroups.flatMap((group) => group.items);
   const currentSection =
     navItems.find((item) => item.path === location.pathname)?.label ??
-    (location.pathname === "/loans"
-      ? t("navigation.loans")
-      : locale === "ar"
-        ? "منصة العميل"
-        : "Customer workspace");
+    (locale === "ar" ? "منصة العميل" : "Customer workspace");
+  const currentGroup =
+    navGroups.find((group) =>
+      group.items.some((item) => item.path === location.pathname)
+    )?.label ?? (locale === "ar" ? "مساحة آمنة" : "Secure workspace");
+  const accountInitial = (user?.firstName || user?.email || "C").charAt(0).toUpperCase();
 
   return (
-    <div className="stb-shell-bg min-h-screen text-slate-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-4 pb-8 pt-4 sm:px-6 lg:px-8">
-        <header className="stb-inverse-surface stb-reveal relative overflow-hidden rounded-[2.25rem] px-5 py-5 sm:px-6 sm:py-6">
-          <div className="stb-grid-lines absolute inset-0 opacity-30" aria-hidden="true" />
-          <div className="stb-ambient-orb stb-ambient-orb--emerald absolute left-[-4rem] top-[4rem] h-40 w-40" />
-          <div className="stb-ambient-orb stb-ambient-orb--indigo absolute right-[2rem] top-[3rem] h-44 w-44" />
-          <div
-            aria-hidden="true"
-            className="absolute inset-y-0 right-0 w-[34rem] bg-[radial-gradient(circle_at_top_right,rgba(114,233,212,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(91,115,217,0.16),transparent_30%)]"
-          />
-
-          <HeroReveal className="relative z-10 flex flex-col gap-6">
-            <HeroItem>
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-4">
-                  <Logo size="md" tone="light" />
-                  <div className="stb-control-ribbon">
-                    <span className="stb-section-kicker !text-[rgba(114,233,212,0.88)]">
-                      {locale === "ar" ? "نظام مُدار" : "Managed system"}
-                    </span>
-                    <span className="inline-flex items-center gap-2 text-sm">
-                      <ShieldCheck className="h-4 w-4 text-emerald-300" />
-                      {locale === "ar"
-                        ? "الضوابط والمراجعة مرئية"
-                        : "Controls and review are visible"}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <LanguageSwitcher tone="light" />
-                  <CustomerNotificationBell />
-                  <div className="stb-data-chip border-white/12 bg-white/6 text-white/84">
-                    <CircleHelp className="h-4 w-4 text-white/70" />
-                    <span>{locale === "ar" ? "المساعدة والأمان" : "Help & safety"}</span>
-                  </div>
-                </div>
-              </div>
-            </HeroItem>
-
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-              <HeroItem className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300/90">
-                  {locale === "ar" ? "الخدمات المصرفية على إيثيريوم" : "Ethereum banking workspace"}
-                </p>
-                <h1 className="stb-page-title max-w-3xl text-3xl font-semibold text-white sm:text-4xl">
-                  {currentSection}
-                </h1>
-                <p className="max-w-3xl text-sm leading-7 text-white/70 sm:text-base">
-                  {locale === "ar"
-                    ? "ملخص واضح للأموال والحالة والخطوة التالية. يتم إبقاء تفاصيل السلسلة متاحة عند الحاجة فقط."
-                    : "A clear summary of money, status, and next steps. Chain-level detail stays available when you need it, not before."}
-                </p>
-              </HeroItem>
-
-              <StaggerGrid className="grid gap-3 sm:grid-cols-3" delay={0.16}>
-                <StaggerItem>
-                  <div className="stb-hero-stat">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/54">
-                      <Wallet className="h-3.5 w-3.5" />
-                      {locale === "ar" ? "مرجع المحفظة" : "Wallet reference"}
-                    </div>
-                    <strong className="stb-ref text-sm font-medium text-white">
-                      <bdi>{formatShortAddress(user?.ethereumAddress, t("layout.noWallet"))}</bdi>
-                    </strong>
-                  </div>
-                </StaggerItem>
-                <StaggerItem>
-                  <div className="stb-hero-stat">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/54">
-                      <Landmark className="h-3.5 w-3.5" />
-                      {locale === "ar" ? "الحساب" : "Account"}
-                    </div>
-                    <strong className="text-sm font-medium text-white">
-                      {user?.email ?? (locale === "ar" ? "غير متاح" : "Not available")}
-                    </strong>
-                  </div>
-                </StaggerItem>
-                <StaggerItem>
-                  <div className="stb-hero-stat">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/54">
-                      <UserRound className="h-3.5 w-3.5" />
-                      {locale === "ar" ? "آخر تحديث" : "Last updated"}
-                    </div>
-                    <strong className="text-sm font-medium text-white">
-                      {formatDateLabel(new Date().toISOString(), locale)}
-                    </strong>
-                  </div>
-                </StaggerItem>
-              </StaggerGrid>
-            </div>
-          </HeroReveal>
-        </header>
-
-        <div className="stb-reveal mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between" data-delay="1">
-          <MotionSurface className="stb-pressable-shell">
-            <nav className="stb-surface rounded-[1.4rem] p-2">
-              <div className="flex flex-wrap items-center gap-2">
-                {navItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={cn(
-                        "rounded-[1rem] px-4 py-3 text-sm font-semibold transition-[background-color,color,transform,box-shadow] duration-200",
-                        isActive
-                          ? "bg-slate-950 text-white shadow-[0_14px_34px_rgba(10,18,28,0.18)]"
-                          : "text-slate-600 hover:bg-white/75 hover:text-slate-950"
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </nav>
-          </MotionSurface>
-
-          <StaggerGrid className="flex flex-wrap items-center gap-3" delay={0.12}>
-            <StaggerItem>
-              <Button
-                asChild
-                variant="outline"
-                className="border-slate-200 bg-white/80 px-5"
-              >
-                <Link to="/proofs/me">
-                  {locale === "ar" ? "إثباتي" : "My proof"}
-                </Link>
-              </Button>
-            </StaggerItem>
-            <StaggerItem>
-              <Button
-                asChild
-                variant="outline"
-                className="border-slate-200 bg-white/80 px-5"
-              >
-                <Link to="/loans">
-                  {locale === "ar" ? "القروض المُدارة" : "Managed loans"}
-                </Link>
-              </Button>
-            </StaggerItem>
-          </StaggerGrid>
+    <div className="stb-app-shell">
+      <aside className="stb-app-sidebar">
+        <div className="stb-app-brand">
+          <Link to="/dashboard" aria-label={`${branding.productName} dashboard`}>
+            <Logo size="md" />
+          </Link>
+          <p>{branding.tagline}</p>
         </div>
 
-        <main className="mt-6 flex-1">{children}</main>
+        <nav className="stb-app-nav" aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
+          {navGroups.map((group) => (
+            <section className="stb-app-nav-group" key={group.label}>
+              <h2>{group.label}</h2>
+              <div className="stb-app-nav-items">
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      isActive ? "stb-app-nav-link active" : "stb-app-nav-link"
+                    }
+                  >
+                    <item.icon aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </section>
+          ))}
+        </nav>
+
+        <div className="stb-app-sidebar-footer">
+          <Link className="stb-app-trust-link" to="/trust/solvency">
+            <ShieldCheck aria-hidden="true" />
+            <span>{locale === "ar" ? "مركز الثقة" : "Trust center"}</span>
+            <ArrowUpRight aria-hidden="true" />
+          </Link>
+          <Link className="stb-app-account" to="/profile">
+            <span className="stb-app-avatar" aria-hidden="true">{accountInitial}</span>
+            <span className="stb-app-account-copy">
+              <strong>{user?.firstName || (locale === "ar" ? "حسابك" : "Your account")}</strong>
+              <bdi>{formatShortAddress(user?.ethereumAddress, t("layout.noWallet"))}</bdi>
+            </span>
+            <ArrowUpRight aria-hidden="true" />
+          </Link>
+        </div>
+      </aside>
+
+      <div className="stb-app-workspace">
+        <header className="stb-app-topbar">
+          <div className="stb-app-page-context">
+            <p>{currentGroup}</p>
+            <strong>{currentSection}</strong>
+          </div>
+          <div className="stb-app-top-actions">
+            <Link className="stb-app-help" to="/trust/solvency">
+              <CircleHelp aria-hidden="true" />
+              <span>{locale === "ar" ? "المساعدة والأمان" : "Help & safety"}</span>
+            </Link>
+            <CustomerNotificationBell />
+            <LanguageSwitcher />
+            <Link className="stb-app-mobile-avatar" to="/profile" aria-label={t("navigation.profile")}>
+              {accountInitial}
+            </Link>
+          </div>
+        </header>
+
+        <main className="stb-app-content">{children}</main>
       </div>
     </div>
   );

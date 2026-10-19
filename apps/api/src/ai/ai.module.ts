@@ -55,6 +55,10 @@ import {
   createDocumentIntelligenceProvider,
   DOCUMENT_INTELLIGENCE_PROVIDER,
 } from "./document-intelligence.provider";
+import { InvestmentCommitteeController } from "./investment-committee.controller";
+import { InvestmentCommitteeService } from "./investment-committee.service";
+import { InvestmentCommitteeLlmService } from "./investment-committee.llm.service";
+import { InvestmentCommitteeTools } from "./investment-committee.tools";
 
 @Module({
   imports: [
@@ -75,6 +79,7 @@ import {
     PortfolioRiskController,
     AgentObservatoryController,
     DocumentIntelligenceController,
+    InvestmentCommitteeController,
   ],
   providers: [
     WealthSnapshotService,
@@ -88,6 +93,9 @@ import {
     AgentObservatoryService,
     DocumentIntelligenceService,
     DocumentTextExtractor,
+    InvestmentCommitteeService,
+    InvestmentCommitteeLlmService,
+    InvestmentCommitteeTools,
     InternalWorkerApiKeyGuard,
     {
       provide: MARKET_DATA_CONFIG,

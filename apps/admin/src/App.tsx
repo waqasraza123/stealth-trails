@@ -18,6 +18,8 @@ import { OperatorNotificationBell } from "@/components/console/OperatorNotificat
 import { SessionCard } from "@/components/console/SessionCard";
 import { AdminErrorBoundary } from "@/components/system/AdminErrorBoundary";
 import { AdminI18nProvider } from "@/i18n/provider";
+import { BrandingProvider } from "@/branding/BrandingProvider";
+import { BrandingStudio } from "@/branding/BrandingStudio";
 import { useLocale } from "@/i18n/use-locale";
 import { useT } from "@/i18n/use-t";
 import {
@@ -58,6 +60,7 @@ const queryClient = createAdminQueryClient();
 
 const navItems = [
   { label: "Operations Overview", path: "/operations" },
+  { label: "Branding Studio", path: "/branding" },
   { label: "AI Agent Observatory", path: "/ai-observatory" },
   { label: "Notifications", path: "/notifications" },
   { label: "Queues", path: "/queues" },
@@ -81,21 +84,23 @@ const navItems = [
 function App() {
   return (
     <AdminI18nProvider>
-      <AdminErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <OperatorSessionProvider serverUrl={runtimeConfig.serverUrl}>
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true
-              }}
-            >
-              <AdminObservabilityBridge />
-              <AdminConsole />
-            </BrowserRouter>
-          </OperatorSessionProvider>
-        </QueryClientProvider>
-      </AdminErrorBoundary>
+      <BrandingProvider>
+        <AdminErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <OperatorSessionProvider serverUrl={runtimeConfig.serverUrl}>
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true
+                }}
+              >
+                <AdminObservabilityBridge />
+                <AdminConsole />
+              </BrowserRouter>
+            </OperatorSessionProvider>
+          </QueryClientProvider>
+        </AdminErrorBoundary>
+      </BrandingProvider>
     </AdminI18nProvider>
   );
 }
@@ -204,6 +209,15 @@ function AdminConsole() {
       <Routes>
         <Route path="/" element={<Navigate to="/operations" replace />} />
         <Route path="/operations" element={<OperationsPage />} />
+        <Route
+          path="/branding"
+          element={
+            <BrandingStudio
+              authorized={operatorSessionQuery.isSuccess}
+              verifying={Boolean(configuredSession) && operatorSessionQuery.isPending}
+            />
+          }
+        />
         <Route path="/ai-observatory" element={<AgentObservatoryPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/queues" element={<QueuesPage />} />

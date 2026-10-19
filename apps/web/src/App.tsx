@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import { WebErrorBoundary } from "@/components/system/WebErrorBoundary";
 import { WebI18nProvider } from "@/i18n/provider";
+import { BrandingProvider } from "@/branding/BrandingProvider";
 import { useT } from "@/i18n/use-t";
 import { LoadingPanel } from "@/components/ui/loading-panel";
 import {
@@ -34,6 +35,7 @@ const FinancialCopilot = lazy(() => import("./pages/FinancialCopilot"));
 const ResearchPlanStudio = lazy(() => import("./pages/ResearchPlanStudio"));
 const PortfolioRiskLab = lazy(() => import("./pages/PortfolioRiskLab"));
 const AgentObservatory = lazy(() => import("./pages/AgentObservatory"));
+const InvestmentCommittee = lazy(() => import("./pages/InvestmentCommittee"));
 const DocumentIntelligence = lazy(() => import("./pages/DocumentIntelligence"));
 const SignIn = lazy(() => import("./pages/auth/SignIn"));
 const SignUp = lazy(() => import("./pages/auth/SignUp"));
@@ -60,7 +62,8 @@ const withRouteBoundary = (element: ReactNode) => (
 
 const App = () => (
   <WebI18nProvider>
-    <WebErrorBoundary>
+    <BrandingProvider>
+      <WebErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BrowserRouter future={routerFuture}>
@@ -192,6 +195,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/investment-committee"
+                element={
+                  <ProtectedRoute>
+                    {withRouteBoundary(<InvestmentCommittee />)}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/ai-observatory"
                 element={
                   <ProtectedRoute>
@@ -211,7 +222,8 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-    </WebErrorBoundary>
+      </WebErrorBoundary>
+    </BrandingProvider>
   </WebI18nProvider>
 );
 

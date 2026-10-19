@@ -7,6 +7,7 @@ import {
   AdminStagger,
   AdminStaggerItem
 } from "@/components/motion/primitives";
+import { useBranding } from "@/branding/BrandingProvider";
 
 type ConsoleShellProps = {
   navItems: Array<{ label: string; path: string }>;
@@ -37,6 +38,8 @@ export function ConsoleShell({
   sidebar,
   children
 }: ConsoleShellProps) {
+  const { branding } = useBranding();
+
   return (
     <div className="admin-shell-bg">
       <div className="admin-shell relative">
@@ -44,7 +47,20 @@ export function ConsoleShell({
         <div className="admin-ambient-orb admin-ambient-orb--indigo right-[10rem] top-[3rem] h-44 w-44" />
         <AdminReveal className="admin-sidebar">
           <div className="admin-brand">
-            <p className="admin-kicker">Stealth Trails Bank</p>
+            <div className="admin-brand-lockup">
+              <span className="admin-brand-mark" aria-hidden="true">
+                {branding.logoUrl ? (
+                  <img src={branding.logoUrl} alt="" />
+                ) : (
+                  branding.productName.slice(0, 1).toUpperCase()
+                )}
+              </span>
+              <span>
+                <strong>{branding.productName}</strong>
+                <small>{branding.tagline}</small>
+              </span>
+            </div>
+            <p className="admin-kicker">Operator console</p>
             <h1>{heading}</h1>
             <p className="admin-copy">{description}</p>
           </div>

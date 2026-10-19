@@ -1,48 +1,55 @@
 :root {
-  --stb-bg: #0f1722;
-  --stb-bg-soft: #152131;
-  --stb-panel: rgba(255, 255, 255, 0.82);
-  --stb-panel-soft: rgba(255, 255, 255, 0.66);
-  --stb-panel-strong: #ffffff;
-  --stb-panel-inverse: rgba(12, 19, 30, 0.84);
-  --stb-ink: #12202d;
-  --stb-ink-soft: #4b5a6a;
-  --stb-ink-faint: #6f7f8f;
-  --stb-line: rgba(18, 32, 45, 0.1);
-  --stb-line-strong: rgba(18, 32, 45, 0.16);
+  --brand-primary: #0f766e;
+  --brand-primary-foreground: #ffffff;
+  --brand-primary-soft: #e8f4f2;
+  --brand-accent: #2dd4bf;
+  --brand-accent-soft: #e9fbf8;
+  --brand-canvas: #f3f8f7;
+  --brand-surface: #ffffff;
+  --brand-ink: #102a2a;
+  --brand-muted: #607574;
+  --brand-line: rgba(16, 42, 42, 0.1);
+  --brand-line-strong: rgba(16, 42, 42, 0.16);
+  --brand-font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --brand-font-display: "Space Grotesk", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --stb-bg: var(--brand-ink);
+  --stb-bg-soft: var(--brand-primary-soft);
+  --stb-panel: var(--brand-surface);
+  --stb-panel-soft: color-mix(in srgb, var(--brand-surface) 84%, var(--brand-canvas));
+  --stb-panel-strong: var(--brand-surface);
+  --stb-panel-inverse: var(--brand-ink);
+  --stb-ink: var(--brand-ink);
+  --stb-ink-soft: var(--brand-muted);
+  --stb-ink-faint: color-mix(in srgb, var(--brand-ink) 52%, var(--brand-canvas));
+  --stb-line: var(--brand-line);
+  --stb-line-strong: var(--brand-line-strong);
   --stb-line-soft: rgba(255, 255, 255, 0.46);
-  --stb-emerald: #11806a;
-  --stb-emerald-soft: #e7f7f1;
-  --stb-indigo: #5b73d9;
-  --stb-indigo-soft: #edf1ff;
+  --stb-emerald: var(--brand-primary);
+  --stb-emerald-soft: var(--brand-primary-soft);
+  --stb-indigo: #387c8c;
+  --stb-indigo-soft: var(--brand-accent-soft);
   --stb-amber: #9d6400;
   --stb-amber-soft: #fff3dc;
   --stb-crimson: #a13838;
   --stb-crimson-soft: #ffebea;
-  --stb-shadow-xl: 0 38px 120px rgba(10, 18, 28, 0.16);
-  --stb-shadow-lg: 0 30px 90px rgba(10, 18, 28, 0.14);
-  --stb-shadow-md: 0 18px 50px rgba(10, 18, 28, 0.1);
-  --stb-shadow-sm: 0 10px 26px rgba(10, 18, 28, 0.08);
+  --stb-shadow-xl: 0 24px 70px rgba(16, 42, 42, 0.1);
+  --stb-shadow-lg: 0 14px 40px rgba(16, 42, 42, 0.07);
+  --stb-shadow-md: 0 8px 24px rgba(16, 42, 42, 0.055);
+  --stb-shadow-sm: 0 3px 12px rgba(16, 42, 42, 0.045);
   --stb-radius-xl: 28px;
   --stb-radius-lg: 20px;
   --stb-radius-md: 14px;
-  --stb-focus-ring: 0 0 0 4px rgba(17, 128, 106, 0.14);
-  --stb-focus-ring-strong: 0 0 0 5px rgba(17, 128, 106, 0.18);
+  --stb-focus-ring: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  --stb-focus-ring-strong: 0 0 0 5px color-mix(in srgb, var(--brand-primary) 18%, transparent);
   --stb-motion-fast: 120ms;
   --stb-motion-base: 160ms;
   --stb-motion-slow: 240ms;
   --stb-motion-page: 360ms;
-  --stb-premium-gradient:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.18));
+  --stb-premium-gradient: var(--brand-surface);
 }
 
 .stb-shell-bg {
-  background:
-    radial-gradient(circle at top left, rgba(91, 115, 217, 0.14), transparent 28rem),
-    radial-gradient(circle at 88% 2%, rgba(17, 128, 106, 0.14), transparent 24rem),
-    radial-gradient(circle at bottom center, rgba(255, 255, 255, 0.8), transparent 26rem),
-    linear-gradient(180deg, #f9f7f2 0%, #edf1f5 48%, #e7edf4 100%);
+  background: var(--brand-canvas);
 }
 
 .stb-ambient-orb {
@@ -56,11 +63,11 @@
 }
 
 .stb-ambient-orb--emerald {
-  background: radial-gradient(circle, rgba(114, 233, 212, 0.28), rgba(17, 128, 106, 0));
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand-accent) 28%, transparent), transparent);
 }
 
 .stb-ambient-orb--indigo {
-  background: radial-gradient(circle, rgba(123, 147, 255, 0.26), rgba(91, 115, 217, 0));
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent);
   animation-delay: -4s;
 }
 
@@ -75,13 +82,10 @@
   isolation: isolate;
   border: 1px solid var(--stb-line);
   background: var(--stb-panel);
-  box-shadow: var(--stb-shadow-lg);
-  backdrop-filter: blur(18px);
+  box-shadow: var(--stb-shadow-md);
   transition:
-    transform var(--stb-motion-base) ease,
-    box-shadow var(--stb-motion-base) ease,
     border-color var(--stb-motion-fast) ease,
-    background-color var(--stb-motion-fast) ease;
+    box-shadow var(--stb-motion-base) ease;
 }
 
 .stb-surface::before,
@@ -91,17 +95,12 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.86), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 34%);
-  opacity: 0.82;
 }
 
 .stb-surface:hover,
 .stb-surface:focus-within {
   border-color: var(--stb-line-strong);
-  box-shadow: var(--stb-shadow-xl);
-  transform: translateY(-1px);
+  box-shadow: var(--stb-shadow-lg);
 }
 
 .stb-surface-strong {
@@ -112,16 +111,14 @@
   background: var(--stb-panel-strong);
   box-shadow: var(--stb-shadow-md);
   transition:
-    transform var(--stb-motion-base) ease,
-    box-shadow var(--stb-motion-base) ease,
-    border-color var(--stb-motion-fast) ease;
+    border-color var(--stb-motion-fast) ease,
+    box-shadow var(--stb-motion-base) ease;
 }
 
 .stb-surface-strong:hover,
 .stb-surface-strong:focus-within {
-  border-color: rgba(18, 32, 45, 0.22);
+  border-color: var(--stb-line-strong);
   box-shadow: var(--stb-shadow-lg);
-  transform: translateY(-1px);
 }
 
 .stb-inverse-surface {
@@ -130,26 +127,16 @@
   isolation: isolate;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--stb-panel-inverse);
-  box-shadow: 0 40px 120px rgba(4, 10, 20, 0.38);
-  color: #f4f6f8;
-  transition:
-    box-shadow var(--stb-motion-base) ease,
-    transform var(--stb-motion-base) ease;
-}
-
-.stb-inverse-surface:hover,
-.stb-inverse-surface:focus-within {
-  transform: translateY(-1px);
-  box-shadow: 0 48px 140px rgba(4, 10, 20, 0.42);
+  box-shadow: 0 24px 70px rgba(4, 20, 20, 0.2);
+  color: #f4faf9;
 }
 
 .stb-section-frame {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--stb-line);
-  border-radius: calc(var(--stb-radius-lg) + 4px);
-  background: var(--stb-premium-gradient);
-  box-shadow: var(--stb-shadow-md);
+  border-radius: var(--stb-radius-lg);
+  background: var(--stb-panel-soft);
 }
 
 .stb-section-frame::before {
@@ -157,9 +144,6 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at top right, rgba(91, 115, 217, 0.12), transparent 24rem),
-    radial-gradient(circle at bottom left, rgba(17, 128, 106, 0.1), transparent 24rem);
 }
 
 .stb-trust-note {
@@ -409,6 +393,433 @@
 .stb-timeline-item:hover {
   transform: translateY(-1px);
   box-shadow: var(--stb-shadow-md);
+}
+
+.stb-financial-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .stb-financial-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stb-financial-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 9.5rem;
+  border: 1px solid var(--brand-line);
+  border-radius: 1.45rem;
+  background: var(--brand-surface);
+  padding: 1.1rem;
+  color: var(--brand-ink);
+  box-shadow: var(--stb-shadow-sm);
+}
+
+.stb-financial-card::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -3.5rem;
+  top: -4rem;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-accent) 13%, transparent);
+}
+
+.stb-financial-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.stb-financial-card--primary {
+  border-color: color-mix(in srgb, var(--brand-primary) 28%, transparent);
+  background: var(--brand-ink);
+  color: var(--brand-primary-foreground);
+}
+
+.stb-financial-card--primary .stb-financial-label,
+.stb-financial-card--primary .stb-financial-detail {
+  color: color-mix(in srgb, var(--brand-primary-foreground) 68%, transparent);
+}
+
+.stb-financial-card--primary::after {
+  background: color-mix(in srgb, var(--brand-accent) 24%, transparent);
+}
+
+.stb-financial-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--brand-muted);
+  font-size: 0.69rem;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.stb-financial-label svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--brand-accent);
+}
+
+.stb-financial-value {
+  display: block;
+  margin-top: 1.1rem;
+  font-family: var(--brand-font-display);
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.stb-financial-detail {
+  display: block;
+  margin-top: 0.65rem;
+  color: var(--brand-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.stb-quick-actions {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 720px) {
+  .stb-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  .stb-quick-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.stb-quick-action {
+  position: relative;
+  display: flex;
+  min-height: 7.5rem;
+  align-items: flex-start;
+  gap: 0.9rem;
+  overflow: hidden;
+  border: 1px solid var(--brand-line);
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--brand-surface) 92%, var(--brand-canvas));
+  padding: 1rem;
+  color: var(--brand-ink);
+  text-decoration: none;
+  box-shadow: var(--stb-shadow-sm);
+  transition:
+    transform var(--stb-motion-fast) ease,
+    border-color var(--stb-motion-fast) ease,
+    box-shadow var(--stb-motion-fast) ease,
+    background-color var(--stb-motion-fast) ease;
+}
+
+.stb-quick-action:hover,
+.stb-quick-action:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--brand-line-strong);
+  background: var(--brand-surface);
+  box-shadow: var(--stb-shadow-md);
+}
+
+.stb-quick-action:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 3px;
+}
+
+.stb-quick-action-icon {
+  display: inline-flex;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.95rem;
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+}
+
+.stb-quick-action-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.stb-quick-action strong,
+.stb-quick-action span {
+  display: block;
+}
+
+.stb-quick-action strong {
+  font-family: var(--brand-font-display);
+  font-size: 0.98rem;
+  letter-spacing: -0.025em;
+}
+
+.stb-quick-action span:not(.stb-quick-action-icon) {
+  margin-top: 0.45rem;
+  color: var(--brand-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.stb-ai-panel {
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--brand-accent) 12%, transparent), transparent 22rem),
+    var(--brand-surface);
+}
+
+.stb-ai-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stb-ai-icon {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.1rem;
+  background: var(--brand-primary);
+  color: var(--brand-primary-foreground);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+}
+
+.stb-ai-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.stb-ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  padding: 0.42rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.stb-ai-status::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.stb-ai-copy {
+  max-width: 50rem;
+  margin-top: 1.1rem;
+  color: var(--brand-muted);
+  font-size: 0.94rem;
+  line-height: 1.75;
+}
+
+.stb-ai-insight-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+}
+
+@media (min-width: 760px) {
+  .stb-ai-insight-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stb-ai-insight {
+  border: 1px solid var(--brand-line);
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, var(--brand-surface) 82%, var(--brand-canvas));
+  padding: 0.9rem;
+}
+
+.stb-ai-insight strong,
+.stb-ai-insight span {
+  display: block;
+}
+
+.stb-ai-insight strong {
+  font-size: 0.82rem;
+  color: var(--brand-ink);
+}
+
+.stb-ai-insight span {
+  margin-top: 0.35rem;
+  color: var(--brand-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.stb-ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.stb-asset-mark {
+  display: inline-flex;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--brand-line);
+  border-radius: 1rem;
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  font-family: var(--brand-font-display);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stb-asset-card {
+  transition:
+    transform var(--stb-motion-fast) ease,
+    border-color var(--stb-motion-fast) ease,
+    background-color var(--stb-motion-fast) ease;
+}
+
+.stb-asset-card:hover,
+.stb-asset-card:focus-within {
+  transform: translateY(-1px);
+  border-color: var(--brand-line-strong);
+  background: var(--brand-surface);
+}
+
+.stb-wallet-overview {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-accent) 10%, transparent), transparent 24rem),
+    var(--brand-surface);
+}
+
+.stb-inverse-metric {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--brand-accent) 22%, transparent), transparent 12rem),
+    var(--brand-ink) !important;
+}
+
+.stb-transfer-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.stb-transfer-header p {
+  max-width: 45rem;
+  margin: 0.5rem 0 0;
+  color: var(--brand-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.stb-transfer-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1280px) {
+  .stb-transfer-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stb-transfer-slot {
+  min-width: 0;
+  scroll-margin-top: 7rem;
+}
+
+.stb-transaction-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.stb-transaction-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--brand-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-surface) 86%, var(--brand-canvas));
+  padding: 0.5rem 0.8rem;
+  color: var(--brand-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.stb-transaction-summary strong {
+  color: var(--brand-ink);
+  font-family: var(--brand-font-display);
+}
+
+.stb-clear-filter {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--brand-line);
+  border-radius: 1rem;
+  background: var(--brand-surface);
+  padding: 0 0.95rem;
+  color: var(--brand-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition:
+    border-color var(--stb-motion-fast) ease,
+    color var(--stb-motion-fast) ease,
+    background-color var(--stb-motion-fast) ease;
+}
+
+.stb-clear-filter:hover,
+.stb-clear-filter:focus-visible {
+  border-color: var(--brand-line-strong);
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+}
+
+.stb-clear-filter svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.stb-transaction-detail-hero {
+  border-color: var(--brand-line) !important;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--brand-accent) 11%, transparent), transparent 18rem),
+    var(--brand-surface) !important;
+}
+
+.stb-transaction-detail-amount {
+  font-family: var(--brand-font-display);
+  font-size: clamp(1.8rem, 4vw, 2.5rem) !important;
+  font-weight: 650;
+  letter-spacing: -0.05em;
 }
 
 @keyframes stb-fade-up {

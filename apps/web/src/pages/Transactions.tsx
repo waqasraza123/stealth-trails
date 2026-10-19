@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { Filter, Search } from "lucide-react";
+import {
+  ArrowDownToLine,
+  ArrowRightLeft,
+  ArrowUpFromLine,
+  ArrowUpRight,
+  Search,
+  X
+} from "lucide-react";
 import { Layout } from "@/components/Layout";
 import {
   FilterReveal,
@@ -93,6 +100,22 @@ function mapHistoryToRows(
   });
 }
 
+function TransactionTypeIcon({ intentType }: { intentType: string }) {
+  if (intentType === "deposit") {
+    return <ArrowDownToLine aria-hidden="true" />;
+  }
+
+  if (intentType === "withdrawal") {
+    return <ArrowUpFromLine aria-hidden="true" />;
+  }
+
+  if (intentType === "balance_transfer") {
+    return <ArrowRightLeft aria-hidden="true" />;
+  }
+
+  return <ArrowUpRight aria-hidden="true" />;
+}
+
 const Transactions = () => {
   const t = useT();
   const { locale } = useLocale();
@@ -129,6 +152,16 @@ const Transactions = () => {
 
     return matchesSearch && matchesType && matchesStatus;
   });
+  const activeCount = filteredTransactions.filter(
+    (tx) => tx.statusTone === "warning" || tx.statusTone === "technical"
+  ).length;
+  const settledCount = filteredTransactions.filter(
+    (tx) => tx.statusTone === "positive"
+  ).length;
+  const exceptionCount = filteredTransactions.filter(
+    (tx) => tx.statusTone === "critical"
+  ).length;
+  const filtersApplied = Boolean(filters.search || filters.type || filters.status);
 
   return (
     <Layout>
@@ -146,8 +179,22 @@ const Transactions = () => {
                   ? "اعرض الحالة الحالية، وتحقق من المراجع، وافتح الخط الزمني الكامل لكل طلب عند الحاجة."
                   : "Review the current state, verify references, and open the full timeline for any request when needed."}
               </p>
+              <div className="stb-transaction-summary" aria-label={locale === "ar" ? "ملخص الحركة" : "Movement summary"}>
+                <span>
+                  <strong>{activeCount}</strong>
+                  {locale === "ar" ? "قيد المتابعة" : "In progress"}
+                </span>
+                <span>
+                  <strong>{settledCount}</strong>
+                  {locale === "ar" ? "مكتملة" : "Settled"}
+                </span>
+                <span>
+                  <strong>{exceptionCount}</strong>
+                  {locale === "ar" ? "تحتاج انتباهاً" : "Needs attention"}
+                </span>
+              </div>
             </div>
-            <FilterReveal className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px_180px]">
+            <FilterReveal className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px_180px_auto]">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -187,6 +234,15 @@ const Transactions = () => {
                   </option>
                 ))}
               </select>
+              <button
+                className="stb-clear-filter disabled:cursor-not-allowed disabled:opacity-45"
+                disabled={!filtersApplied}
+                onClick={() => setFilters({ ...emptyFilters })}
+                type="button"
+              >
+                <X aria-hidden="true" />
+                {locale === "ar" ? "مسح" : "Clear"}
+              </button>
             </FilterReveal>
           </div>
           </Card>
@@ -194,7 +250,53 @@ const Transactions = () => {
 
         <MotionSurface className="stb-pressable-shell">
           <Card className="stb-surface stb-reveal rounded-[2rem] border-0 p-3 sm:p-4" data-delay="1">
-          <div className="overflow-x-auto">
+          <div className="grid gap-3 sm:hidden">
+            {historyQuery.isLoading ? (
+              <InlineLoader className="justify-center py-8" label={t("transactions.loading")} />
+            ) : historyQuery.isError ? (
+              <p className="px-3 py-8 text-center text-sm text-red-700">
+                {historyQuery.error instanceof Error
+                  ? historyQuery.error.message
+                  : t("transactions.loadError")}
+              </p>
+            ) : filteredTransactions.length > 0 ? (
+              filteredTransactions.map((tx) => (
+                <article className="stb-section-frame p-4" key={tx.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="stb-transaction-type min-w-0">
+                      <span className="stb-transaction-type-icon">
+                        <TransactionTypeIcon intentType={tx.raw.intentType} />
+                      </span>
+                      <span className="min-w-0">
+                        <strong className="block truncate text-sm text-slate-950">{tx.type}</strong>
+                        <span className="mt-1 block text-xs uppercase tracking-[0.12em] text-slate-500">
+                          {tx.assetSymbol} · {tx.date}
+                        </span>
+                      </span>
+                    </div>
+                    <StatusBadge label={tx.statusLabel} tone={tx.statusTone} />
+                  </div>
+                  <p className="stb-page-title mt-5 text-2xl font-semibold text-slate-950">
+                    {tx.amount}
+                  </p>
+                  <p className="stb-ref mt-2 truncate text-xs text-slate-500">
+                    <bdi>{tx.address}</bdi>
+                  </p>
+                  <button
+                    className="stb-clear-filter mt-4 w-full"
+                    type="button"
+                    onClick={() => setSelectedRow(tx)}
+                  >
+                    <ArrowUpRight aria-hidden="true" />
+                    {locale === "ar" ? "فتح التفاصيل" : "Open details"}
+                  </button>
+                </article>
+              ))
+            ) : (
+              <p className="px-3 py-8 text-center text-sm text-slate-500">{t("transactions.empty")}</p>
+            )}
+          </div>
+          <div className="hidden overflow-x-auto sm:block">
             <div className="stb-premium-table">
               <table className="w-full min-w-[760px]">
               <thead>
@@ -244,7 +346,17 @@ const Transactions = () => {
                       className="stb-premium-row border-b border-slate-100 last:border-0"
                     >
                       <td className="px-4 py-4 text-sm font-semibold text-slate-950">
-                        {tx.type}
+                        <div className="stb-transaction-type">
+                          <span className="stb-transaction-type-icon">
+                            <TransactionTypeIcon intentType={tx.raw.intentType} />
+                          </span>
+                          <span>
+                            <span className="block">{tx.type}</span>
+                            <span className="mt-1 block text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                              {tx.assetSymbol}
+                            </span>
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-sm font-medium text-slate-900">
                         {tx.amount}
@@ -264,7 +376,7 @@ const Transactions = () => {
                           className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/88 px-4 py-2 text-sm font-semibold text-slate-900 shadow-[0_10px_22px_rgba(10,18,28,0.05)] transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_28px_rgba(10,18,28,0.08)]"
                           onClick={() => setSelectedRow(tx)}
                         >
-                          <Filter className="h-4 w-4" />
+                          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                           {locale === "ar" ? "فتح" : "Open"}
                         </button>
                       </td>
@@ -309,35 +421,35 @@ const Transactions = () => {
                 </SheetHeader>
 
                 <div className="mt-6 space-y-6">
-                  <Card className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-none">
+                  <Card className="stb-transaction-detail-hero rounded-[1.5rem] border p-5 shadow-none sm:p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
-                        <p className="text-sm font-semibold text-slate-950">
+                        <p className="stb-transaction-detail-amount text-slate-950">
                           {selectedRow.amount}
                         </p>
-                        <p className="mt-1 text-sm text-slate-600">
+                        <p className="mt-2 text-sm text-slate-600">
                           {locale === "ar" ? "تم الإنشاء" : "Created"} {selectedRow.date}
                         </p>
                       </div>
                       <StatusBadge label={selectedRow.statusLabel} tone={selectedRow.statusTone} />
                     </div>
-                    <div className="mt-5 grid gap-3 text-sm text-slate-600">
-                      <div className="flex justify-between gap-3">
+                    <div className="mt-6 grid gap-3 text-sm text-slate-600">
+                      <div className="grid gap-1 rounded-xl bg-white/70 p-3 sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] sm:items-start sm:gap-3">
                         <span>{locale === "ar" ? "المرجع الداخلي" : "Internal reference"}</span>
-                        <span className="stb-ref font-semibold text-slate-950">
+                        <span className="stb-ref break-all font-semibold text-slate-950 sm:text-right">
                           {selectedRow.raw.id}
                         </span>
                       </div>
-                      <div className="flex justify-between gap-3">
+                      <div className="grid gap-1 rounded-xl bg-white/70 p-3 sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] sm:items-start sm:gap-3">
                         <span>{locale === "ar" ? "العنوان" : "Address"}</span>
-                        <span className="stb-ref font-semibold text-slate-950">
+                        <span className="stb-ref break-all font-semibold text-slate-950 sm:text-right">
                           <bdi>{selectedRow.address}</bdi>
                         </span>
                       </div>
                       {selectedRow.raw.latestBlockchainTransaction?.txHash ? (
-                        <div className="flex justify-between gap-3">
+                        <div className="grid gap-1 rounded-xl bg-white/70 p-3 sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] sm:items-start sm:gap-3">
                           <span>{locale === "ar" ? "هاش السلسلة" : "Chain hash"}</span>
-                          <span className="stb-ref font-semibold text-slate-950">
+                          <span className="stb-ref break-all font-semibold text-slate-950 sm:text-right">
                             {selectedRow.raw.latestBlockchainTransaction.txHash}
                           </span>
                         </div>

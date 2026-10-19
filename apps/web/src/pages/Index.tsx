@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import {
   Activity,
+  ArrowDownToLine,
   ArrowRight,
+  ArrowUpFromLine,
+  Bot,
   Clock3,
   Landmark,
   LockKeyhole,
+  Send,
   ShieldCheck,
   Sparkles,
   Wallet
@@ -18,6 +22,7 @@ import { InlineLoader } from "@/components/ui/loading-panel";
 import { useLocale } from "@/i18n/use-locale";
 import { useT } from "@/i18n/use-t";
 import { useMyBalances } from "@/hooks/balances/useMyBalances";
+import { useFinancialCopilot } from "@/hooks/ai/useFinancialCopilot";
 import { useMyRetirementVaults } from "@/hooks/retirement-vault/useMyRetirementVaults";
 import { useMyTransactionHistory } from "@/hooks/transactions/useMyTransactionHistory";
 import {
@@ -48,12 +53,19 @@ const Index = () => {
   const balancesQuery = useMyBalances();
   const retirementVaultsQuery = useMyRetirementVaults();
   const historyQuery = useMyTransactionHistory(5);
+  const copilotQuery = useFinancialCopilot();
 
   const balances = balancesQuery.data?.balances ?? [];
   const vaults = retirementVaultsQuery.data?.vaults ?? [];
   const intents = historyQuery.data?.intents ?? [];
+  const featuredBalance =
+    balances.find((balance) => Number(balance.availableBalance) > 0) ?? balances[0];
   const pendingAssetCount = balances.filter((balance) =>
     hasPendingBalance(balance.pendingBalance)
+  ).length;
+  const activeIntentCount = intents.filter(
+    (intent) =>
+      !["settled", "failed", "cancelled", "manually_resolved"].includes(intent.status)
   ).length;
   const latestBalanceUpdate = balances
     .map((balance) => balance.updatedAt)
@@ -71,6 +83,26 @@ const Index = () => {
   const nextVaultUnlock = vaults
     .map((vault) => vault.unlockAt)
     .sort((left, right) => Date.parse(left) - Date.parse(right))[0];
+  const suggestedCopilotQuestion = copilotQuery.data?.suggestedQuestions[0];
+  const aiInsight = staleOperationalData
+    ? locale === "ar"
+      ? "لقطة الحساب أقدم من المتوقع. راجع آخر حركة قبل اتخاذ قرار مالي جديد."
+      : "Your account snapshot is older than expected. Review the latest movement before making a new financial decision."
+    : pendingAssetCount > 0
+      ? locale === "ar"
+        ? `لديك ${pendingAssetCount} من الأصول بحالة معلقة. افتح السجل لمتابعة الخطوة التالية بوضوح.`
+        : `${pendingAssetCount} asset${pendingAssetCount === 1 ? " has" : "s have"} pending movement. Open the ledger to track the next step clearly.`
+      : activeIntentCount > 0
+        ? locale === "ar"
+          ? `هناك ${activeIntentCount} من طلبات حركة الأموال قيد المتابعة. يمكن للمساعد تلخيص الحالة قبل المتابعة.`
+          : `${activeIntentCount} money-movement request${activeIntentCount === 1 ? " is" : "s are"} in progress. The copilot can summarize status before you proceed.`
+        : lockedVaultBalance > 0
+          ? locale === "ar"
+            ? "أموالك المحمية منفصلة عن الرصيد اليومي. استخدم المساعد لمراجعة التوازن بين السيولة والحماية."
+            : "Your protected funds are separate from daily spending. Use the copilot to review the balance between liquidity and protection."
+          : locale === "ar"
+            ? "أرصدتك محدثة ولا توجد إجراءات عاجلة. حوّل السياق الحالي إلى موجز مالي واضح عند الحاجة."
+            : "Your balances are current and there are no urgent actions. Turn the current context into a plain-language financial brief when needed.";
 
   return (
     <Layout>
@@ -94,45 +126,69 @@ const Index = () => {
                   </p>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="stb-section-frame p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <div className="stb-financial-grid">
+                  <div className="stb-financial-card stb-financial-card--primary">
+                    <p className="stb-financial-label">
+                      <Wallet aria-hidden="true" />
+                      {locale === "ar" ? "الرصيد الرئيسي" : "Primary balance"}
+                    </p>
+                    <strong className="stb-financial-value">
+                      {balancesQuery.isLoading ? (
+                        <InlineLoader label={locale === "ar" ? "جارٍ التحميل" : "Loading"} />
+                      ) : featuredBalance ? (
+                        <>
+                          {formatTokenAmount(featuredBalance.availableBalance, locale)}{" "}
+                          <span className="text-[0.45em] font-semibold tracking-normal">
+                            {featuredBalance.asset.symbol}
+                          </span>
+                        </>
+                      ) : (
+                        balances.length
+                      )}
+                    </strong>
+                    <span className="stb-financial-detail">
+                      {featuredBalance
+                        ? featuredBalance.asset.displayName
+                        : locale === "ar"
+                          ? "لا توجد أصول ممولة بعد"
+                          : "No funded assets yet"}
+                    </span>
+                  </div>
+                  <div className="stb-financial-card">
+                    <p className="stb-financial-label">
+                      <ShieldCheck aria-hidden="true" />
                       {locale === "ar" ? "الأصول المتاحة" : "Available assets"}
                     </p>
-                    <p className="mt-3 text-3xl font-semibold text-slate-950">
+                    <strong className="stb-financial-value">
                       {balancesQuery.isLoading ? (
                         <InlineLoader label={locale === "ar" ? "جارٍ التحميل" : "Loading"} />
                       ) : (
                         balances.length
                       )}
-                    </p>
+                    </strong>
+                    <span className="stb-financial-detail">
+                      {locale === "ar"
+                        ? "أصول مُدارة ضمن مساحة واحدة"
+                        : "Managed assets in one workspace"}
+                    </span>
                   </div>
-                  <div className="stb-section-frame p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {locale === "ar" ? "الحالات المعلقة" : "Pending states"}
+                  <div className="stb-financial-card">
+                    <p className="stb-financial-label">
+                      <Activity aria-hidden="true" />
+                      {locale === "ar" ? "حركة قيد المتابعة" : "Movement to watch"}
                     </p>
-                    <p className="mt-3 text-3xl font-semibold text-slate-950">
-                      {balancesQuery.isLoading ? (
+                    <strong className="stb-financial-value">
+                      {historyQuery.isLoading || balancesQuery.isLoading ? (
                         <InlineLoader label={locale === "ar" ? "جارٍ التحميل" : "Loading"} />
                       ) : (
-                        pendingAssetCount
+                        activeIntentCount + pendingAssetCount
                       )}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] bg-slate-950 p-4 text-white">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-                      {locale === "ar" ? "سجل الأموال" : "Money movement"}
-                    </p>
-                    <p className="mt-3 text-3xl font-semibold">
-                      {historyQuery.isLoading ? (
-                        <InlineLoader
-                          className="text-white/70"
-                          label={locale === "ar" ? "جارٍ التحميل" : "Loading"}
-                        />
-                      ) : (
-                        intents.length
-                      )}
-                    </p>
+                    </strong>
+                    <span className="stb-financial-detail">
+                      {locale === "ar"
+                        ? `${activeIntentCount} طلبات و${pendingAssetCount} أصول معلقة`
+                        : `${activeIntentCount} requests and ${pendingAssetCount} pending assets`}
+                    </span>
                   </div>
                 </div>
 
@@ -357,6 +413,149 @@ const Index = () => {
           </MotionSurface>
         </section>
 
+        <section className="stb-quick-actions" aria-label={locale === "ar" ? "إجراءات سريعة" : "Quick actions"}>
+          <Link className="stb-quick-action" to="/wallet#deposit">
+            <span className="stb-quick-action-icon">
+              <ArrowDownToLine aria-hidden="true" />
+            </span>
+            <span>
+              <strong>{locale === "ar" ? "إضافة أموال" : "Add money"}</strong>
+              <span>
+                {locale === "ar"
+                  ? "افتح عنوان الإيداع وسجّل التوقع قبل وصول الأموال."
+                  : "Open the deposit address and record the expectation before funds arrive."}
+              </span>
+            </span>
+          </Link>
+          <Link className="stb-quick-action" to="/wallet#withdraw">
+            <span className="stb-quick-action-icon">
+              <ArrowUpFromLine aria-hidden="true" />
+            </span>
+            <span>
+              <strong>{locale === "ar" ? "سحب" : "Withdraw"}</strong>
+              <span>
+                {locale === "ar"
+                  ? "ابدأ طلب سحب محمي بخطوة تحقق واضحة."
+                  : "Start a protected withdrawal with a clear verification step."}
+              </span>
+            </span>
+          </Link>
+          <Link className="stb-quick-action" to="/wallet#transfer">
+            <span className="stb-quick-action-icon">
+              <Send aria-hidden="true" />
+            </span>
+            <span>
+              <strong>{locale === "ar" ? "تحويل داخلي" : "Send internally"}</strong>
+              <span>
+                {locale === "ar"
+                  ? "انقل الرصيد إلى عميل آخر بعد معاينة المستلم."
+                  : "Move balance to another customer after previewing the recipient."}
+              </span>
+            </span>
+          </Link>
+          <Link
+            className="stb-quick-action"
+            state={suggestedCopilotQuestion ? { suggestedPrompt: suggestedCopilotQuestion } : undefined}
+            to="/copilot"
+          >
+            <span className="stb-quick-action-icon">
+              <Bot aria-hidden="true" />
+            </span>
+            <span>
+              <strong>{locale === "ar" ? "اسأل المساعد" : "Ask AI"}</strong>
+              <span>
+                {suggestedCopilotQuestion ??
+                  (locale === "ar"
+                    ? "حوّل سياق حسابك إلى إجابة مفهومة."
+                    : "Turn your account context into an understandable answer.")}
+              </span>
+            </span>
+          </Link>
+        </section>
+
+        <MotionSurface className="stb-pressable-shell">
+          <Card className="stb-surface stb-ai-panel stb-reveal rounded-[1.8rem] border-0 p-6" data-delay="1">
+            <div className="stb-ai-header">
+              <div className="flex items-start gap-4">
+                <span className="stb-ai-icon">
+                  <Sparkles aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="stb-section-kicker">
+                    {locale === "ar" ? "رؤى الذكاء الاصطناعي" : "AI insights"}
+                  </p>
+                  <h2 className="stb-page-title mt-2 text-2xl font-semibold text-slate-950">
+                    {locale === "ar" ? "الخطوة التالية الأكثر وضوحاً" : "Your clearest next step"}
+                  </h2>
+                </div>
+              </div>
+              <span className="stb-ai-status">
+                {copilotQuery.isLoading
+                  ? locale === "ar"
+                    ? "جارٍ المزامنة"
+                    : "Syncing"
+                  : copilotQuery.data?.capabilities.externalAiAvailable
+                    ? locale === "ar"
+                      ? "ذكاء مباشر متاح"
+                      : "Live AI available"
+                    : locale === "ar"
+                      ? "معاينة موجهة"
+                      : "Guided preview"}
+              </span>
+            </div>
+            <p className="stb-ai-copy">{aiInsight}</p>
+            <div className="stb-ai-insight-list">
+              <div className="stb-ai-insight">
+                <strong>{locale === "ar" ? "حركة الأموال" : "Money movement"}</strong>
+                <span>
+                  {locale === "ar"
+                    ? `${activeIntentCount} طلبات نشطة و${pendingAssetCount} أصول معلقة.`
+                    : `${activeIntentCount} active requests and ${pendingAssetCount} pending assets.`}
+                </span>
+              </div>
+              <div className="stb-ai-insight">
+                <strong>{locale === "ar" ? "الأموال المحمية" : "Protected funds"}</strong>
+                <span>
+                  {locale === "ar"
+                    ? `${formatTokenAmount(String(lockedVaultBalance), locale)} مقفلة خارج السيولة اليومية.`
+                    : `${formatTokenAmount(String(lockedVaultBalance), locale)} locked outside daily liquidity.`}
+                </span>
+              </div>
+              <div className="stb-ai-insight">
+                <strong>{locale === "ar" ? "جاهزية المساعد" : "Copilot readiness"}</strong>
+                <span>
+                  {copilotQuery.data?.capabilities.providerName ??
+                    copilotQuery.data?.capabilities.model ??
+                    (locale === "ar"
+                      ? "يعمل ضمن حدود الحساب المعتمدة."
+                      : "Operating within approved account boundaries.")}
+                </span>
+              </div>
+            </div>
+            <div className="stb-ai-actions">
+              <Button asChild className="rounded-full">
+                <Link
+                  state={suggestedCopilotQuestion ? { suggestedPrompt: suggestedCopilotQuestion } : undefined}
+                  to="/copilot"
+                >
+                  {locale === "ar" ? "فتح المساعد المالي" : "Open Financial Copilot"}
+                  <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Button asChild className="rounded-full" variant="outline">
+                <Link to="/wealth-brief">
+                  {locale === "ar" ? "إنشاء موجز الثروة" : "Create wealth brief"}
+                </Link>
+              </Button>
+              <Button asChild className="rounded-full" variant="ghost">
+                <Link to="/transactions">
+                  {locale === "ar" ? "مراجعة السجل" : "Review ledger"}
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        </MotionSurface>
+
         {balancesQuery.isError ? (
           <Card className="stb-trust-note rounded-[1.6rem] border-0 p-5 text-sm text-red-700" data-tone="critical">
             {balancesQuery.error instanceof Error
@@ -366,16 +565,21 @@ const Index = () => {
         ) : balances.length > 0 ? (
           <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             {balances.map((balance) => (
-              <Card key={balance.asset.id} className="stb-surface stb-reveal rounded-[1.7rem] border-0 p-5" data-delay="2">
+              <Card key={balance.asset.id} className="stb-surface stb-asset-card stb-reveal rounded-[1.7rem] border-0 p-5" data-delay="2">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {balance.asset.displayName}
-                    </p>
-                    <p className="mt-2 text-3xl font-semibold text-slate-950">
-                      {formatTokenAmount(balance.availableBalance, locale)}{" "}
-                      <span className="text-base text-slate-500">{balance.asset.symbol}</span>
-                    </p>
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="stb-asset-mark" aria-hidden="true">
+                      {balance.asset.symbol.slice(0, 3)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900">
+                        {balance.asset.displayName}
+                      </p>
+                      <p className="stb-page-title mt-2 text-3xl font-semibold text-slate-950">
+                        {formatTokenAmount(balance.availableBalance, locale)}{" "}
+                        <span className="text-base font-sans text-slate-500">{balance.asset.symbol}</span>
+                      </p>
+                    </div>
                   </div>
                   <StatusBadge
                     label={

@@ -57,12 +57,12 @@ export function CustomerNotificationBell() {
       <SheetTrigger asChild>
         <button
           type="button"
-          className="stb-data-chip border-white/12 bg-white/6 text-white transition hover:bg-white/12"
+          className="stb-app-action-chip"
         >
           <span className="relative inline-flex items-center">
-            <Bell className="h-4 w-4 text-white/84" />
+            <Bell className="h-4 w-4" />
             {unreadCount > 0 ? (
-              <span className="absolute -right-2 -top-2 inline-flex min-w-5 items-center justify-center rounded-full bg-emerald-300 px-1.5 text-[10px] font-bold text-slate-950">
+              <span className="absolute -right-2 -top-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             ) : null}
