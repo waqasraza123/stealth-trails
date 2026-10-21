@@ -21,6 +21,7 @@ import type {
 import type { Opportunity, OpportunityHunterResponse } from "./opportunity-hunter.types";
 import type { PortfolioRiskAnalysis } from "./portfolio-risk.types";
 import type { InvestmentResearchPlan } from "./research-plan.types";
+import { FinancialMemoryService } from "./financial-memory.service";
 
 const SNAPSHOT_ACTION = "ai_investment_committee.mission_snapshot";
 const SNAPSHOT_TARGET = "ai_investment_committee_mission";
@@ -142,6 +143,7 @@ export class InvestmentCommitteeService {
     private readonly tools: InvestmentCommitteeTools,
     private readonly llm: InvestmentCommitteeLlmService,
     private readonly observatory: AgentObservatoryService,
+    private readonly memory: FinancialMemoryService,
   ) {}
 
   async startMission(supabaseUserId: string, input: InvestmentCommitteeMissionInput): Promise<InvestmentCommitteeMission> {
@@ -335,9 +337,9 @@ export class InvestmentCommitteeService {
   private buildGraph(checkpointer: PostgresSaver) {
     return new StateGraph(CommitteeState)
       .addNode("chief", (state) => this.runChiefNode(state))
-      .addNode("opportunity", (state) => this.runOpportunityNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
-      .addNode("risk", (state) => this.runRiskNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
-      .addNode("halal", (state) => this.runHalalNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
+      .addNode<"opportunity", CommitteeGraphState>("opportunity", (state) => this.runOpportunityNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
+      .addNode<"risk", CommitteeGraphState>("risk", (state) => this.runRiskNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
+      .addNode<"halal", CommitteeGraphState>("halal", (state) => this.runHalalNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
       .addNode("strategy", (state) => this.runStrategyNode(state))
       .addNode("approval", (state) => this.runApprovalNode(state))
       .addNode("synthesis", (state) => this.runSynthesisNode(state))
@@ -356,6 +358,12 @@ export class InvestmentCommitteeService {
 
   private async runChiefNode(state: CommitteeGraphState) {
     await this.ensureCanRun(state);
+    const memoryContext = await this.memory.retrieveForAgent(
+      state.supabaseUserId,
+      "investment-committee",
+      state.mission.goal,
+      state.mission.externalAiConsent,
+    );
     let mission = await this.getLatest(state.customerId, state.missionId);
     const now = new Date().toISOString();
     mission.status = "running";
@@ -364,7 +372,7 @@ export class InvestmentCommitteeService {
     mission = this.updateAgent(mission, "chief-research-agent", {
       status: "running",
       startedAt: mission.agents[0]?.startedAt ?? now,
-      reasoningSummary: "LangGraph decomposed the mandate into opportunity, risk, Shariah-evidence, and educational strategy nodes.",
+      reasoningSummary: `LangGraph decomposed the mandate into opportunity, risk, Shariah-evidence, and educational strategy nodes. ${memoryContext.influences.length} explicitly authorized preference(s) were available; specialist tools remain read-only.`,
       toolActivity: [{ tool: "langgraph-state-graph", status: "running", summary: "Routing bounded graph nodes with PostgreSQL checkpoints and conditional transitions." }],
     });
     await this.persist(state.customerId, state.supabaseUserId, mission);
@@ -374,6 +382,13 @@ export class InvestmentCommitteeService {
   private async runOpportunityNode(state: CommitteeGraphState) {
     await this.ensureCanRun(state);
     await this.startAgent(state, "opportunity-agent", "opportunity_hunter_read_only");
+    const memoryContext = await this.memory.retrieveForAgent(
+      state.supabaseUserId,
+      "investment-committee",
+      `Research opportunities for ${state.mission.goal}`,
+      state.mission.externalAiConsent,
+      4,
+    );
     const tool = this.tools.opportunity(state.supabaseUserId, state.mission);
     const result = await this.runTimed(() => this.observatory.observeCustomer(state.supabaseUserId, {
       agentId: "opportunity-agent",
@@ -391,11 +406,25 @@ export class InvestmentCommitteeService {
         steps: [{ id: "langgraph:opportunity", label: "Opportunity graph node and typed tool", kind: "tool" as const, status: execution.fallbackReason ? "fallback" as const : "succeeded" as const, toolName: tool.name, outputSummary: `${execution.value.opportunities.length} opportunities returned by the existing research service.`, evidenceIds: execution.value.opportunities.flatMap((item) => item.evidence.map((evidence) => evidence.id)).slice(0, 20), failureReason: null }],
       }),
     }));
-    const summary = `${result.value.opportunities.length} opportunities analyzed; dataset reliability is ${result.value.dataset.reliability}.`;
+    const terms = memoryContext.influences.flatMap((item) => item.summary.toLowerCase().match(/[a-z0-9]{3,}/gu) ?? []);
+    const opportunities = [...result.value.opportunities].sort((left, right) => {
+      const relevance = (item: Opportunity) => terms.reduce((total, term) => total + (`${item.name} ${item.symbol} ${item.category} ${item.summary}`.toLowerCase().includes(term) ? 1 : 0), 0);
+      return relevance(right) - relevance(left) || right.score - left.score;
+    });
+    const personalizedResearch: OpportunityHunterResponse = {
+      ...result.value,
+      opportunities,
+      personalization: {
+        applied: memoryContext.influences.length > 0,
+        influences: memoryContext.influences.map(({ id, category, summary: influence, source }) => ({ id, category, summary: influence, source })),
+        note: memoryContext.notice,
+      },
+    };
+    const summary = `${opportunities.length} opportunities analyzed; dataset reliability is ${result.value.dataset.reliability}; ${memoryContext.influences.length} authorized preference(s) affected ordering.`;
     await this.finishAgent(state, "opportunity-agent", summary, result.fallbackReason);
     return {
-      opportunityResearch: result.value,
-      allocations: this.resolveAllocations(state.mission.input.allocations, result.value.opportunities),
+      opportunityResearch: personalizedResearch,
+      allocations: this.resolveAllocations(state.mission.input.allocations, opportunities),
       externalAiUsed: result.externalAiUsed || result.value.ai.externalAiUsed,
       providerUsage: providerUsage(result),
       fallbackReasons: result.fallbackReason ? [result.fallbackReason] : [],

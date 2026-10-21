@@ -119,6 +119,7 @@ const DEFAULT_PLATFORM_ALERT_REESCALATION_REPEAT_SECONDS = 1800;
 const DEFAULT_WORKER_POLL_INTERVAL_MS = 10_000;
 const DEFAULT_WORKER_BATCH_LIMIT = 20;
 const DEFAULT_WORKER_REQUEST_TIMEOUT_MS = 10_000;
+const DEFAULT_WORKER_AI_WORKFLOW_REQUEST_TIMEOUT_MS = 55_000;
 const DEFAULT_WORKER_CONFIRMATION_BLOCKS = 1;
 const DEFAULT_WORKER_PLATFORM_ALERT_REESCALATION_INTERVAL_MS = 300_000;
 const DEFAULT_WORKER_SOLVENCY_SNAPSHOT_INTERVAL_MS = 300_000;
@@ -1181,6 +1182,7 @@ export type WorkerRuntimeConfig = {
   readonly pollIntervalMs: number;
   readonly batchLimit: number;
   readonly requestTimeoutMs: number;
+  readonly aiWorkflowRequestTimeoutMs?: number;
   readonly internalApiStartupGracePeriodMs: number;
   readonly confirmationBlocks: number;
   readonly reconciliationScanIntervalMs: number;
@@ -2309,6 +2311,11 @@ export function loadWorkerRuntimeConfig(
       readOptionalRuntimeEnv(env, "WORKER_REQUEST_TIMEOUT_MS") ??
         String(DEFAULT_WORKER_REQUEST_TIMEOUT_MS),
       "WORKER_REQUEST_TIMEOUT_MS",
+    ),
+    aiWorkflowRequestTimeoutMs: parsePositiveInteger(
+      readOptionalRuntimeEnv(env, "WORKER_AI_WORKFLOW_REQUEST_TIMEOUT_MS") ??
+        String(DEFAULT_WORKER_AI_WORKFLOW_REQUEST_TIMEOUT_MS),
+      "WORKER_AI_WORKFLOW_REQUEST_TIMEOUT_MS",
     ),
     internalApiStartupGracePeriodMs: parsePositiveInteger(
       readOptionalRuntimeEnv(

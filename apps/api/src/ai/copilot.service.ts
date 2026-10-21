@@ -37,6 +37,8 @@ import type {
 } from "./portfolio-risk.types";
 import { getAttachedProviderUsage } from "./ai-provider-usage";
 import { DocumentIntelligenceService } from "./document-intelligence.service";
+import { FinancialMemoryService } from "./financial-memory.service";
+import type { FinancialMemoryCategory, FinancialMemoryContext } from "./financial-memory.types";
 
 const CONVERSATION_ACTION = "ai_copilot.conversation_created";
 const TURN_ACTION = "ai_copilot.turn_recorded";
@@ -78,6 +80,22 @@ function classifyIntent(message: string): CopilotIntent {
 function titleFromMessage(message: string): string {
   const compact = message.replace(/\s+/gu, " ").trim();
   return compact.length > 72 ? `${compact.slice(0, 69)}…` : compact;
+}
+
+function memoryCommand(message: string): { action: "save" | "forget"; content: string } | null {
+  const save = message.match(/^\s*(?:remember(?:\s+that)?|save(?:\s+(?:this|my))?(?:\s+(?:preference|goal|interest))?)\s*[:,-]?\s*(.+?)\s*$/iu);
+  if (save?.[1]) return { action: "save", content: save[1] };
+  const forget = message.match(/^\s*(?:forget|delete\s+(?:the\s+)?memory(?:\s+that)?|remove\s+(?:the\s+)?memory(?:\s+that)?)\s*[:,-]?\s*(.+?)\s*$/iu);
+  return forget?.[1] ? { action: "forget", content: forget[1] } : null;
+}
+
+function memoryCategory(content: string): FinancialMemoryCategory {
+  if (/goal|save for|retire|retirement|target/u.test(content.toLowerCase())) return "goal";
+  if (/halal|sharia|ethical|exclude|avoid/u.test(content.toLowerCase())) return "ethical_screening";
+  if (/risk|conservative|balanced|growth|aggressive/u.test(content.toLowerCase())) return "risk_preference";
+  if (/horizon|month|year|long[- ]term|short[- ]term/u.test(content.toLowerCase())) return "investment_horizon";
+  if (/research|interest|sector|asset|market/u.test(content.toLowerCase())) return "research_interest";
+  return "preference";
 }
 
 function stringifyList(values: string[]): string {
@@ -126,6 +144,7 @@ export class CopilotService {
     private readonly wealthGuardian: WealthGuardianService,
     private readonly portfolioRisk: PortfolioRiskService,
     private readonly documents: DocumentIntelligenceService,
+    private readonly memory: FinancialMemoryService,
     private readonly rateLimit: WealthBriefRateLimitService,
     @Inject(COPILOT_PROVIDER) private readonly provider: CopilotProvider,
   ) {}
@@ -161,6 +180,7 @@ export class CopilotService {
       conversationId?: string;
       message: string;
       externalAiOptIn: boolean;
+      approveMemoryChange?: boolean;
       portfolioRiskContext?: PortfolioRiskRequest;
       searchDocuments?: boolean;
       documentId?: string;
@@ -193,6 +213,24 @@ export class CopilotService {
       });
     }
 
+    const command = memoryCommand(input.message);
+    let memoryActionNote: string | null = null;
+    if (command && !input.approveMemoryChange) {
+      memoryActionNote = "No memory was changed. Re-send this request with the one-turn ‘Approve memory change’ control enabled.";
+    } else if (command?.action === "save") {
+      await this.memory.create(supabaseUserId, {
+        category: memoryCategory(command.content),
+        content: command.content,
+        authorizedAgentIds: ["financial-copilot"],
+      }, "copilot_explicit", "customer_confirmed");
+      memoryActionNote = "I saved that as customer-confirmed Financial Copilot memory.";
+    } else if (command?.action === "forget") {
+      const forgotten = await this.memory.forgetExact(supabaseUserId, command.content);
+      memoryActionNote = forgotten
+        ? "I deleted the matching long-term memory."
+        : "I did not delete anything because there was not exactly one matching long-term memory.";
+    }
+
     let intent = classifyIntent(input.message);
     if (
       intent === "overview" &&
@@ -205,13 +243,19 @@ export class CopilotService {
         previousUserMessages[previousUserMessages.length - 1];
       if (previousUserMessage) intent = classifyIntent(previousUserMessage.content);
     }
-    const [brief, opportunities, guardian, riskAnalysis] = await Promise.all([
+    const [brief, opportunities, guardian, riskAnalysis, memoryContext] = await Promise.all([
       this.wealthBrief.generate(supabaseUserId, false),
       this.opportunityHunter.discover(),
       this.wealthGuardian.getDashboard(supabaseUserId),
       input.portfolioRiskContext
         ? this.portfolioRisk.analyze(input.portfolioRiskContext)
         : Promise.resolve(null),
+      this.memory.retrieveForAgent(
+        supabaseUserId,
+        "financial-copilot",
+        input.message,
+        input.externalAiOptIn,
+      ),
     ]);
     const { statements, citations } = this.buildCatalog(
       brief,
@@ -224,6 +268,7 @@ export class CopilotService {
         priorMessages,
       )?.id ?? null,
     );
+    this.addMemoryContext(intent, memoryContext, statements, citations);
     if (input.searchDocuments) {
       try {
         const passages = await this.documents.search(
@@ -265,12 +310,20 @@ export class CopilotService {
     const capabilities = this.provider.getCapabilities();
     if (input.externalAiOptIn && capabilities.externalAiAvailable) {
       try {
-        const ids = await this.provider.prioritize(intent, statements);
+        const providerStatements = memoryContext.externalAiUseAuthorized
+          ? statements
+          : statements.filter((statement) => !statement.id.startsWith("memory-statement-"));
+        const ids = await this.provider.prioritize(intent, providerStatements);
         providerUsage = getAttachedProviderUsage(ids);
         const selectedByProvider = ids
           .map((id) => statements.find((statement) => statement.id === id))
           .filter((item): item is CopilotStatement => item !== undefined);
-        if (selectedByProvider.length > 0) selected = selectedByProvider;
+        if (selectedByProvider.length > 0) {
+          const localMemory = memoryContext.externalAiUseAuthorized
+            ? []
+            : statements.filter((statement) => statement.id.startsWith("memory-statement-")).slice(0, 2);
+          selected = [...localMemory, ...selectedByProvider].slice(0, 8);
+        }
         mode = "ai_prioritized";
       } catch (error) {
         fallbackReason =
@@ -287,13 +340,16 @@ export class CopilotService {
     const assistantMessage: CopilotMessage = {
       id: randomUUID(),
       role: "assistant",
-      content: this.renderAnswer(intent, selected),
+      content: `${memoryActionNote ? `${memoryActionNote}\n\n` : ""}${this.renderAnswer(intent, selected)}`,
       createdAt: new Date().toISOString(),
       mode,
       providerName: mode === "ai_prioritized" ? capabilities.providerName : null,
       citations: citations.filter((citation) => usedCitationIds.has(citation.id)),
       suggestedQuestions: this.followUps(intent),
       disclaimer: DISCLAIMER,
+      memoryInfluences: memoryContext.influences
+        .filter((influence) => usedCitationIds.has(`memory:${influence.id}`))
+        .map(({ id, category, summary, source }) => ({ id, category, summary, source })),
     };
     const userMessage: CopilotMessage = {
       id: randomUUID(),
@@ -305,6 +361,7 @@ export class CopilotService {
       citations: [],
       suggestedQuestions: [],
       disclaimer: null,
+      memoryInfluences: [],
     };
     await this.prisma.auditEvent.create({
       data: {
@@ -317,6 +374,8 @@ export class CopilotService {
         metadata: {
           intent,
           externalAiOptIn: input.externalAiOptIn,
+          memoryChangeApproved: input.approveMemoryChange === true,
+          memoryAction: command?.action ?? null,
           portfolioRiskContext: input.portfolioRiskContext ?? null,
           documentSearchRequested: input.searchDocuments === true,
           documentId: input.documentId ?? null,
@@ -599,6 +658,33 @@ export class CopilotService {
     }
 
     return { statements, citations };
+  }
+
+  private addMemoryContext(
+    intent: CopilotIntent,
+    context: FinancialMemoryContext,
+    statements: CopilotStatement[],
+    citations: CopilotCitation[],
+  ): void {
+    for (const [index, influence] of context.influences.entries()) {
+      const citationId = `memory:${influence.id}`;
+      citations.push({
+        id: citationId,
+        label: `Your ${influence.category.replace(/_/gu, " ")}: ${influence.summary}`,
+        sourceType: "customer_memory",
+        observedAt: null,
+        evidenceId: influence.id,
+        synthetic: false,
+      });
+      statements.push({
+        id: `memory-statement-${index + 1}`,
+        intent,
+        topic: `authorized customer ${influence.category.replace(/_/gu, " ")}`,
+        priority: 115 - index,
+        text: `Personalization applied: ${influence.summary}`,
+        citationIds: [citationId],
+      });
+    }
   }
 
   private deterministicSelection(

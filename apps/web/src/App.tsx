@@ -37,6 +37,8 @@ const PortfolioRiskLab = lazy(() => import("./pages/PortfolioRiskLab"));
 const AgentObservatory = lazy(() => import("./pages/AgentObservatory"));
 const InvestmentCommittee = lazy(() => import("./pages/InvestmentCommittee"));
 const DocumentIntelligence = lazy(() => import("./pages/DocumentIntelligence"));
+const WorkflowStudio = lazy(() => import("./pages/WorkflowStudio"));
+const FinancialMemory = lazy(() => import("./pages/FinancialMemory"));
 const SignIn = lazy(() => import("./pages/auth/SignIn"));
 const SignUp = lazy(() => import("./pages/auth/SignUp"));
 
@@ -208,6 +210,18 @@ const App = () => (
                   <ProtectedRoute>
                     {withRouteBoundary(<AgentObservatory />)}
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ai-workflows"
+                element={
+                  <ProtectedRoute>{withRouteBoundary(<WorkflowStudio />)}</ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ai-memory"
+                element={
+                  <ProtectedRoute>{withRouteBoundary(<FinancialMemory />)}</ProtectedRoute>
                 }
               />
               <Route

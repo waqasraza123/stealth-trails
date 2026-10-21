@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import {
   Bot,
+  BrainCircuit,
   CheckCircle2,
   Clock3,
   Database,
@@ -105,6 +106,13 @@ function MessageCard({
           </div>
         ) : null}
 
+        {assistant && (message.memoryInfluences?.length ?? 0) > 0 ? (
+          <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs text-violet-950">
+            <div className="flex items-center gap-2 font-semibold"><BrainCircuit className="h-3.5 w-3.5" /> Preferences that influenced this response</div>
+            <ul className="mt-2 space-y-1">{message.memoryInfluences?.map((item) => <li key={item.id}>• {item.summary} <span className="text-violet-600">({item.source.replace(/_/gu, " ")})</span></li>)}</ul>
+          </div>
+        ) : null}
+
         {assistant && message.disclaimer ? (
           <p className="px-1 text-[11px] leading-5 text-slate-500">
             {message.disclaimer}
@@ -151,6 +159,7 @@ export default function FinancialCopilot() {
   const [question, setQuestion] = useState(riskLabState?.suggestedPrompt ?? "");
   const [externalAiOptIn, setExternalAiOptIn] = useState(false);
   const [searchDocuments, setSearchDocuments] = useState(false);
+  const [approveMemoryChange, setApproveMemoryChange] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -217,6 +226,7 @@ export default function FinancialCopilot() {
       citations: [],
       suggestedQuestions: [],
       disclaimer: null,
+      memoryInfluences: [],
     };
     const assistantId = `local-assistant-${now}`;
     const assistantMessage: CopilotMessage = {
@@ -229,6 +239,7 @@ export default function FinancialCopilot() {
       citations: [],
       suggestedQuestions: [],
       disclaimer: null,
+      memoryInfluences: [],
     };
     setMessages((current) => [...current, userMessage, assistantMessage]);
     try {
@@ -237,6 +248,7 @@ export default function FinancialCopilot() {
         conversationId: conversationId ?? undefined,
         message: content,
         externalAiOptIn,
+        approveMemoryChange,
         searchDocuments,
         portfolioRiskContext: riskLabState?.portfolioRiskContext,
         onDelta: (delta) =>
@@ -254,6 +266,7 @@ export default function FinancialCopilot() {
         ),
       );
       setConversationId(result.conversation.id);
+      setApproveMemoryChange(false);
       await queryClient.invalidateQueries({ queryKey: ["financial-copilot"] });
     } catch (requestError) {
       setMessages((current) => current.filter((message) => message.id !== assistantId));
@@ -364,6 +377,7 @@ export default function FinancialCopilot() {
                 <Badge variant="outline">
                   <Database className="mr-1 h-3.5 w-3.5" /> Customer-isolated memory
                 </Badge>
+                <Button asChild size="sm" variant="outline"><Link to="/ai-memory"><BrainCircuit className="mr-1 h-3.5 w-3.5" />Manage memory</Link></Button>
               </div>
             </div>
 
@@ -448,6 +462,10 @@ export default function FinancialCopilot() {
                       onCheckedChange={(checked) => setSearchDocuments(checked === true)}
                     />
                     <span>Search my authorized document library; relevant extracted passages may be embedded externally{!capabilities.documentSearchAvailable ? " (unavailable here)" : ""}.</span>
+                  </label>
+                  <label className="flex items-start gap-2 text-xs leading-5">
+                    <Checkbox checked={approveMemoryChange} disabled={sending} onCheckedChange={(checked) => setApproveMemoryChange(checked === true)} />
+                    <span>Approve one explicit “remember…” or “forget…” request in this message. This resets after sending.</span>
                   </label>
                 </div>
                 <Button onClick={() => void ask()} disabled={!question.trim() || sending} className="gap-2">

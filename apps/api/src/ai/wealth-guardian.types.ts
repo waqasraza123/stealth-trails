@@ -120,6 +120,11 @@ export type WealthGuardianReport = {
 };
 
 export type WealthGuardianDashboard = {
+  memoryPersonalization?: {
+    applied: boolean;
+    influences: Array<{ id: string; category: string; summary: string; source: string }>;
+    note: string;
+  };
   preferences: WealthGuardianPreferences;
   agent: {
     status: "disabled" | "scheduled";

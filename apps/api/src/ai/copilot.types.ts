@@ -24,7 +24,8 @@ export type CopilotCitation = {
     | "halal_screening"
     | "guardian_report"
     | "portfolio_risk"
-    | "financial_document";
+    | "financial_document"
+    | "customer_memory";
   observedAt: string | null;
   evidenceId: string | null;
   synthetic: boolean;
@@ -40,6 +41,12 @@ export type CopilotMessage = {
   citations: CopilotCitation[];
   suggestedQuestions: string[];
   disclaimer: string | null;
+  memoryInfluences: Array<{
+    id: string;
+    category: string;
+    summary: string;
+    source: "profile" | "long_term_memory";
+  }>;
 };
 
 export type CopilotConversationSummary = {
@@ -60,7 +67,7 @@ export type CopilotCapabilities = {
   model: string | null;
   productionAiDisabled: boolean;
   streamingSupported: true;
-  memoryStore: "customer_isolated_audit_history";
+  memoryStore: "customer_isolated_postgresql_memory";
   disclosure: string[];
   boundaryNote: string;
   documentSearchAvailable: boolean;

@@ -59,6 +59,13 @@ import { InvestmentCommitteeController } from "./investment-committee.controller
 import { InvestmentCommitteeService } from "./investment-committee.service";
 import { InvestmentCommitteeLlmService } from "./investment-committee.llm.service";
 import { InvestmentCommitteeTools } from "./investment-committee.tools";
+import {
+  WorkflowStudioController,
+  WorkflowStudioWorkerController,
+} from "./workflow-studio.controller";
+import { WorkflowStudioService } from "./workflow-studio.service";
+import { FinancialMemoryController } from "./financial-memory.controller";
+import { FinancialMemoryService } from "./financial-memory.service";
 
 @Module({
   imports: [
@@ -80,6 +87,9 @@ import { InvestmentCommitteeTools } from "./investment-committee.tools";
     AgentObservatoryController,
     DocumentIntelligenceController,
     InvestmentCommitteeController,
+    WorkflowStudioController,
+    WorkflowStudioWorkerController,
+    FinancialMemoryController,
   ],
   providers: [
     WealthSnapshotService,
@@ -96,6 +106,8 @@ import { InvestmentCommitteeTools } from "./investment-committee.tools";
     InvestmentCommitteeService,
     InvestmentCommitteeLlmService,
     InvestmentCommitteeTools,
+    WorkflowStudioService,
+    FinancialMemoryService,
     InternalWorkerApiKeyGuard,
     {
       provide: MARKET_DATA_CONFIG,

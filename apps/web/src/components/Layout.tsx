@@ -5,6 +5,7 @@ import {
   ArrowLeftRight,
   ArrowUpRight,
   Bot,
+  BrainCircuit,
   CircleHelp,
   FileText,
   Fingerprint,
@@ -18,7 +19,8 @@ import {
   ShieldCheck,
   TrendingUp,
   UserRound,
-  Wallet
+  Wallet,
+  Workflow
 } from "lucide-react";
 import { useBranding } from "@/branding/BrandingProvider";
 import { CustomerNotificationBell } from "@/components/notifications/CustomerNotificationBell";
@@ -93,6 +95,11 @@ export const Layout = ({ children }: LayoutProps) => {
           icon: Bot
         },
         {
+          label: locale === "ar" ? "ذاكرة الذكاء المالي" : "AI Memory",
+          path: "/ai-memory",
+          icon: BrainCircuit
+        },
+        {
           label: locale === "ar" ? "ذكاء المستندات" : "Documents",
           path: "/documents",
           icon: FileText
@@ -111,6 +118,11 @@ export const Layout = ({ children }: LayoutProps) => {
           label: locale === "ar" ? "لجنة الاستثمار" : "Investment Committee",
           path: "/investment-committee",
           icon: Scale
+        },
+        {
+          label: locale === "ar" ? "تدفقات الوكلاء" : "Workflow Studio",
+          path: "/ai-workflows",
+          icon: Workflow
         },
         {
           label: locale === "ar" ? "مرصد الوكلاء" : "AI Observatory",

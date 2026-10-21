@@ -18,6 +18,8 @@ import type {
 } from "./opportunity-hunter.types";
 import { AgentObservatoryService } from "./agent-observatory.service";
 import { summarizeOpportunityRun } from "./agent-observatory.summaries";
+import { FinancialMemoryService } from "./financial-memory.service";
+import type { FinancialMemoryContext } from "./financial-memory.types";
 
 type AuthenticatedRequest = { user: { id: string } };
 
@@ -28,6 +30,7 @@ export class OpportunityHunterController {
     private readonly opportunityHunter: OpportunityHunterService,
     private readonly rateLimitService: WealthBriefRateLimitService,
     private readonly observatory: AgentObservatoryService,
+    private readonly memory: FinancialMemoryService,
   ) {}
 
   @Get()
@@ -37,7 +40,10 @@ export class OpportunityHunterController {
     const data = await this.observatory.observeCustomer(request.user.id, {
       agentId: "opportunity-hunter",
       workflow: "discover_opportunities",
-      execute: () => this.opportunityHunter.discover(),
+      execute: async () => this.personalize(
+        await this.opportunityHunter.discover(),
+        await this.memory.retrieveForAgent(request.user.id, "opportunity-hunter", "Discover relevant financial research opportunities", false),
+      ),
       summarize: summarizeOpportunityRun,
     });
     return {
@@ -60,7 +66,11 @@ export class OpportunityHunterController {
       workflow: "analyze_opportunities",
       execute: async () => {
         await this.rateLimitService.assertAllowed(request.user.id);
-        return this.opportunityHunter.analyze(dto.externalAiOptIn === true);
+        const [research, context] = await Promise.all([
+          this.opportunityHunter.analyze(dto.externalAiOptIn === true),
+          this.memory.retrieveForAgent(request.user.id, "opportunity-hunter", "Analyze and rank relevant financial research opportunities", dto.externalAiOptIn === true),
+        ]);
+        return this.personalize(research, context);
       },
       summarize: summarizeOpportunityRun,
     });
@@ -108,6 +118,23 @@ export class OpportunityHunterController {
           })),
         }),
       }),
+    };
+  }
+
+  private personalize(research: OpportunityHunterResponse, context: FinancialMemoryContext): OpportunityHunterResponse {
+    const terms = context.influences.flatMap((item) => item.summary.toLowerCase().match(/[a-z0-9]{3,}/gu) ?? []);
+    const opportunities = [...research.opportunities].sort((left, right) => {
+      const score = (item: Opportunity) => terms.reduce((total, term) => total + (`${item.name} ${item.symbol} ${item.category} ${item.summary}`.toLowerCase().includes(term) ? 1 : 0), 0);
+      return score(right) - score(left) || right.score - left.score;
+    });
+    return {
+      ...research,
+      opportunities,
+      personalization: {
+        applied: context.influences.length > 0,
+        influences: context.influences.map(({ id, category, summary, source }) => ({ id, category, summary, source })),
+        note: context.notice,
+      },
     };
   }
 }

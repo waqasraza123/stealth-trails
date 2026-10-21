@@ -296,6 +296,25 @@ export type WorkerIterationMetrics = {
   solvencyReportAnchorSubmittedCount: number;
   solvencyReportAnchorConfirmedCount: number;
   solvencyReportAnchorFailedCount: number;
+  aiWorkflowScheduledRunCount: number;
+  aiWorkflowDataChangeRunCount: number;
+  aiWorkflowClaimedRunCount: number;
+  aiWorkflowSucceededRunCount: number;
+  aiWorkflowAwaitingApprovalRunCount: number;
+  aiWorkflowRetriedRunCount: number;
+  aiWorkflowFailedRunCount: number;
+};
+
+export type WorkflowWorkerSweepResult = {
+  scheduledRunCount: number;
+  dataChangeRunCount: number;
+  reclaimedRunCount: number;
+  claimedRunCount: number;
+  succeededRunCount: number;
+  awaitingApprovalRunCount: number;
+  retriedRunCount: number;
+  failedRunCount: number;
+  runIds: string[];
 };
 
 export type WealthGuardianScheduleResult = {

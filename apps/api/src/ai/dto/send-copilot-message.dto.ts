@@ -25,6 +25,10 @@ export class SendCopilotMessageDto {
 
   @IsOptional()
   @IsBoolean()
+  readonly approveMemoryChange?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   readonly searchDocuments?: boolean;
 
   @IsOptional()

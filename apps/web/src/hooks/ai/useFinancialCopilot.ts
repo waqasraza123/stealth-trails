@@ -39,6 +39,7 @@ export type CopilotMessage = {
   citations: CopilotCitation[];
   suggestedQuestions: string[];
   disclaimer: string | null;
+  memoryInfluences?: Array<{ id: string; category: string; summary: string; source: "profile" | "long_term_memory" }>;
 };
 
 export type CopilotConversationSummary = {
@@ -135,6 +136,7 @@ export async function streamCopilotMessage(args: {
   conversationId?: string;
   message: string;
   externalAiOptIn: boolean;
+  approveMemoryChange?: boolean;
   searchDocuments?: boolean;
   documentId?: string;
   portfolioRiskContext?: PortfolioRiskInput;
@@ -157,6 +159,7 @@ export async function streamCopilotMessage(args: {
       conversationId: args.conversationId,
       message: args.message,
       externalAiOptIn: args.externalAiOptIn,
+      approveMemoryChange: args.approveMemoryChange,
       searchDocuments: args.searchDocuments,
       documentId: args.documentId,
       portfolioRiskContext: args.portfolioRiskContext,

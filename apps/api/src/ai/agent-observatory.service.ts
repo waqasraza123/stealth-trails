@@ -18,6 +18,26 @@ const MAX_EVIDENCE = 30;
 
 const REGISTRY: Omit<AgentRegistryEntry, "operationalStatus" | "lastExecutionAt">[] = [
   {
+    id: "financial-memory",
+    name: "AI Financial Memory",
+    description: "Retrieves and maintains explicitly authorized customer preferences with bounded, customer-isolated access.",
+    capabilities: ["consent enforcement", "bounded retrieval", "retention", "sanitized access audit"],
+    executionModes: ["deterministic"],
+    tools: ["customer-scoped-postgres", "optional-pgvector"],
+    customerVisible: true,
+    externalAiProductionDisabled: true,
+  },
+  {
+    id: "workflow-studio",
+    name: "AI Agent Workflow Studio",
+    description: "Executes customer-owned, allow-listed research graphs with durable runs, conditions, retries, and human approval.",
+    capabilities: ["workflow routing", "durable execution", "conditional logic", "human approval"],
+    executionModes: ["deterministic", "hybrid", "scheduled_deterministic"],
+    tools: ["langgraph-state-graph", "workflow-postgres-store", "read-only-agent-tools", "internal-worker-api"],
+    customerVisible: true,
+    externalAiProductionDisabled: true,
+  },
+  {
     id: "chief-research-agent",
     name: "Chief Research Agent",
     description: "Coordinates checkpointed LangGraph investment-research missions and consolidates evidence, assumptions, and disagreements.",
@@ -181,6 +201,30 @@ export class AgentObservatoryService {
   private readonly logger = new Logger(AgentObservatoryService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  async recordCustomerMemoryActivity(
+    supabaseUserId: string,
+    input: { operation: string; agentId: string; count: number; categories: string[] },
+  ): Promise<void> {
+    await this.observeCustomer(supabaseUserId, {
+      agentId: "financial-memory",
+      workflow: input.operation.replace(/[^a-z0-9_-]+/giu, "_").slice(0, 80),
+      execute: async () => input,
+      summarize: (value) => ({
+        mode: "deterministic",
+        steps: [{
+          id: "memory-policy-boundary",
+          label: "Apply customer memory policy",
+          kind: "persistence",
+          status: "succeeded",
+          toolName: "customer-scoped-memory-store",
+          outputSummary: `${Math.max(0, value.count)} memory item(s) processed for ${value.agentId}; categories: ${value.categories.slice(0, 7).join(", ") || "none"}. Raw memory content was excluded from this trace.`,
+          evidenceIds: [],
+          failureReason: null,
+        }],
+      }),
+    });
+  }
 
   async observeCustomer<T>(
     supabaseUserId: string,

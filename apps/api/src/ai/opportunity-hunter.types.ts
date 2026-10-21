@@ -155,6 +155,11 @@ export type OpportunityAiInsight = {
 };
 
 export type OpportunityHunterResponse = {
+  personalization?: {
+    applied: boolean;
+    influences: Array<{ id: string; category: string; summary: string; source: string }>;
+    note: string;
+  };
   dataset: {
     kind: "live_market" | "synthetic_research";
     label: string;

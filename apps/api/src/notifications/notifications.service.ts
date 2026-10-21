@@ -1259,6 +1259,10 @@ export class NotificationsService {
       return "yield";
     }
 
+    if (action.startsWith("ai_workflow.")) {
+      return "product";
+    }
+
     return "product";
   }
 
@@ -1313,6 +1317,7 @@ export class NotificationsService {
       .replace(/^ledger_reconciliation\./, "")
       .replace(/^loan\./, "")
       .replace(/^wealth_guardian\./, "")
+      .replace(/^ai_workflow\./, "")
       .replace(/\./g, " ")
       .replace(/_/g, " ");
 
@@ -1379,6 +1384,16 @@ export class NotificationsService {
       return {
         label: "Open Wealth Guardian",
         webPath: "/wealth-guardian",
+        adminPath: null,
+        mobileRoute: null,
+        mobileParams: null,
+      };
+    }
+
+    if (action.startsWith("ai_workflow.")) {
+      return {
+        label: "Open workflow studio",
+        webPath: "/ai-workflows",
         adminPath: null,
         mobileRoute: null,
         mobileParams: null,
@@ -1530,7 +1545,8 @@ export class NotificationsService {
         action.startsWith("retirement_vault.") ||
         action.startsWith("staking.") ||
         action.startsWith("loan.") ||
-        action.startsWith("wealth_guardian."));
+        action.startsWith("wealth_guardian.") ||
+        action.startsWith("ai_workflow."));
 
     if (customerRelevant && event.customerId) {
       const customerRecipientIds = [event.customerId];
@@ -1578,6 +1594,8 @@ export class NotificationsService {
                 ? "Your yield activity changed."
                 : action.startsWith("wealth_guardian.")
                   ? "Your Wealth Guardian research briefing is ready."
+                  : action.startsWith("ai_workflow.")
+                    ? "Your AI workflow has a new execution update."
                   : "Your notification feed has a new event.",
         body:
           typeof (event.metadata as Record<string, unknown> | null)?.[

@@ -43,7 +43,7 @@ class DisabledCopilotProvider implements CopilotProvider {
       model: null,
       productionAiDisabled: this.productionAiDisabled,
       streamingSupported: true,
-      memoryStore: "customer_isolated_audit_history",
+      memoryStore: "customer_isolated_postgresql_memory",
       disclosure: [],
       boundaryNote: BOUNDARY_NOTE,
       documentSearchAvailable: false,
@@ -74,7 +74,7 @@ class OpenAiCompatibleCopilotProvider implements CopilotProvider {
       model: this.config.model,
       productionAiDisabled: false,
       streamingSupported: true,
-      memoryStore: "customer_isolated_audit_history",
+      memoryStore: "customer_isolated_postgresql_memory",
       disclosure: [
         "The server-classified question intent",
         "Opaque statement IDs, topic labels, and citation counts",

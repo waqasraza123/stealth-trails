@@ -22,6 +22,7 @@ import type {
   WealthGuardianReport,
   WealthGuardianScheduleResult,
 } from "./wealth-guardian.types";
+import { FinancialMemoryService } from "./financial-memory.service";
 
 const PREFERENCES_ACTION = "wealth_guardian.preferences_updated";
 const REPORT_ACTIONS = [
@@ -126,20 +127,27 @@ export class WealthGuardianService {
     private readonly opportunityHunter: OpportunityHunterService,
     private readonly rateLimitService: WealthBriefRateLimitService,
     private readonly notificationsService: NotificationsService,
+    private readonly memory: FinancialMemoryService,
   ) {}
 
   async getDashboard(
     supabaseUserId: string,
   ): Promise<WealthGuardianDashboard> {
     const customer = await this.resolveCustomer(supabaseUserId);
-    const [preferences, reports] = await Promise.all([
+    const [preferences, reports, memoryContext] = await Promise.all([
       this.getPreferencesForCustomer(customer.id),
       this.listReportsForCustomer(customer.id, 14),
+      this.memory.retrieveForAgent(supabaseUserId, "wealth-guardian", "Monitor portfolio risk, goals, research interests, and ethical screening preferences", false),
     ]);
     const latestReport = reports[0] ?? null;
     const capabilities = this.opportunityHunter.getAnalystCapabilities();
 
     return {
+      memoryPersonalization: {
+        applied: memoryContext.influences.length > 0,
+        influences: memoryContext.influences.map(({ id, category, summary, source }) => ({ id, category, summary, source })),
+        note: memoryContext.notice,
+      },
       preferences,
       agent: {
         status: preferences.enabled ? "scheduled" : "disabled",
@@ -298,16 +306,25 @@ export class WealthGuardianService {
     const previousReport = (
       await this.listReportsForCustomer(args.customerId, 1)
     )[0] ?? null;
-    const research = await this.opportunityHunter.analyze(
-      args.externalAiRequested && args.preferences.externalAiConsent,
-    );
+    const [research, memoryContext] = await Promise.all([
+      this.opportunityHunter.analyze(args.externalAiRequested && args.preferences.externalAiConsent),
+      this.memory.retrieveForAgent(
+        args.supabaseUserId,
+        "wealth-guardian",
+        "Prioritize monitored opportunities, portfolio risks, and ethical screening alerts",
+        args.externalAiRequested && args.preferences.externalAiConsent,
+        4,
+      ),
+    ]);
     const matchingOpportunities = research.opportunities.filter((opportunity) =>
       this.matchesPreferences(opportunity, args.preferences),
     );
+    const terms = memoryContext.influences.flatMap((item) => item.summary.toLowerCase().match(/[a-z0-9]{3,}/gu) ?? []);
+    const relevance = (item: Opportunity) => terms.reduce((total, term) => total + (`${item.name} ${item.symbol} ${item.category} ${item.summary}`.toLowerCase().includes(term) ? 1 : 0), 0);
     const opportunities =
       research.ai.analysisMode === "ai_ranked"
         ? matchingOpportunities
-        : matchingOpportunities.sort((left, right) => right.score - left.score);
+        : matchingOpportunities.sort((left, right) => relevance(right) - relevance(left) || right.score - left.score);
     const previousById = new Map(
       previousReport?.monitoringSnapshot.map((item) => [
         item.opportunityId,

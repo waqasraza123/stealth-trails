@@ -77,6 +77,145 @@ model Customer {
   notificationSocketSessions NotificationSocketSession[]
   financialDocuments FinancialDocument[]
   financialDocumentTraces FinancialDocumentTrace[]
+  aiWorkflows AiWorkflow[]
+  aiWorkflowRuns AiWorkflowRun[]
+  aiWorkflowRunSteps AiWorkflowRunStep[]
+  aiFinancialMemoryProfile AiFinancialMemoryProfile?
+  aiFinancialMemories AiFinancialMemory[]
+}
+
+model AiFinancialMemoryProfile {
+  id                     String     @id @default(cuid())
+  customerId             String     @unique
+  customer               Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  preferredCurrencies    String[]   @default([])
+  financialGoals         String[]   @default([])
+  researchInterests      String[]   @default([])
+  investmentHorizon      String?
+  riskPreference         String?
+  ethicalPreferences     String[]   @default([])
+  shariahScreening       Boolean?
+  personalizationEnabled Boolean    @default(false)
+  memorySavingEnabled    Boolean    @default(false)
+  externalAiConsent      Boolean    @default(false)
+  allowedAgentIds        String[]   @default([])
+  retentionDays          Int        @default(365)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+}
+
+model AiFinancialMemory {
+  id                   String    @id @default(cuid())
+  customerId           String
+  customer             Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  category             String
+  content              String
+  contentHash          String
+  sourceType           String
+  verificationStatus   String
+  authorizedAgentIds   String[]  @default([])
+  embeddingModel       String?
+  embeddingDimensions  Int?
+  embedding            Unsupported("vector(1536)")?
+  expiresAt             DateTime?
+  deletedAt             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([customerId, contentHash])
+  @@index([customerId, category, deletedAt, updatedAt])
+  @@index([customerId, expiresAt])
+}
+
+model AiWorkflow {
+  id                String              @id @default(cuid())
+  customerId        String
+  customer          Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name              String
+  description       String?
+  enabled           Boolean             @default(false)
+  externalAiConsent Boolean             @default(false)
+  definition        Json
+  triggerType       String
+  intervalMinutes   Int?
+  nextRunAt         DateTime?
+  lastDataChangeAt  DateTime?
+  maxConcurrentRuns Int                 @default(1)
+  timeoutSeconds    Int                 @default(30)
+  retryLimit        Int                 @default(2)
+  revision          Int                 @default(1)
+  deletedAt         DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  runs              AiWorkflowRun[]
+  steps             AiWorkflowRunStep[]
+
+  @@index([customerId, deletedAt, updatedAt])
+  @@index([enabled, triggerType, nextRunAt])
+}
+
+model AiWorkflowRun {
+  id                  String              @id @default(cuid())
+  workflowId          String
+  workflow            AiWorkflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  customerId          String
+  customer            Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  workflowRevision    Int
+  definitionSnapshot  Json
+  triggerType         String
+  triggerKey          String
+  status              String              @default("queued")
+  currentNodeId       String?
+  input               Json?
+  output              Json?
+  errorCode           String?
+  errorMessage        String?
+  attempt             Int                 @default(0)
+  maxAttempts         Int                 @default(3)
+  availableAt         DateTime            @default(now())
+  claimedByWorkerId   String?
+  claimedAt           DateTime?
+  leaseExpiresAt      DateTime?
+  approvalRequestedAt DateTime?
+  approvalPrompt      String?
+  approvedAt          DateTime?
+  approvedByActorId   String?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  steps               AiWorkflowRunStep[]
+
+  @@unique([workflowId, triggerKey])
+  @@index([customerId, createdAt])
+  @@index([workflowId, status, createdAt])
+  @@index([status, availableAt, leaseExpiresAt])
+}
+
+model AiWorkflowRunStep {
+  id           String        @id @default(cuid())
+  runId        String
+  run          AiWorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  workflowId   String
+  workflow     AiWorkflow    @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  nodeId       String
+  nodeType     String
+  status       String
+  attempt      Int
+  input        Json?
+  output       Json?
+  errorCode    String?
+  errorMessage String?
+  durationMs   Int?
+  startedAt    DateTime
+  completedAt  DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@index([runId, createdAt])
+  @@index([workflowId, createdAt])
+  @@index([customerId, createdAt])
 }
 
 model FinancialDocument {

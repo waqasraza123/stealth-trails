@@ -33,7 +33,8 @@ import type {
   StartManagedWithdrawalExecutionResult,
   TrackedLedgerReconciliationScanResult,
   WealthGuardianScheduleResult,
-  WorkerHeartbeatPayload
+  WorkerHeartbeatPayload,
+  WorkflowWorkerSweepResult
 } from "./worker-types";
 
 type ApiEnvelope<T> = {
@@ -597,6 +598,17 @@ export function createInternalWorkerApiClient(runtime: WorkerRuntime) {
       return readResponseData(
         httpClient.post<ApiEnvelope<WealthGuardianScheduleResult>>(
           "/ai/wealth-guardian/internal/worker/run-scheduled"
+        ),
+        baseUrl
+      );
+    },
+
+    async runDueAiWorkflows(limit: number): Promise<WorkflowWorkerSweepResult> {
+      return readResponseData(
+        httpClient.post<ApiEnvelope<WorkflowWorkerSweepResult>>(
+          "/ai/workflows/internal/worker/run-due",
+          { limit },
+          { timeout: runtime.aiWorkflowRequestTimeoutMs ?? 55_000 }
         ),
         baseUrl
       );

@@ -102,7 +102,14 @@ function createEmptyIterationMetrics(): WorkerIterationMetrics {
     submittedSolvencyReportAnchorCount: 0,
     solvencyReportAnchorSubmittedCount: 0,
     solvencyReportAnchorConfirmedCount: 0,
-    solvencyReportAnchorFailedCount: 0
+    solvencyReportAnchorFailedCount: 0,
+    aiWorkflowScheduledRunCount: 0,
+    aiWorkflowDataChangeRunCount: 0,
+    aiWorkflowClaimedRunCount: 0,
+    aiWorkflowSucceededRunCount: 0,
+    aiWorkflowAwaitingApprovalRunCount: 0,
+    aiWorkflowRetriedRunCount: 0,
+    aiWorkflowFailedRunCount: 0
   };
 }
 
@@ -345,6 +352,35 @@ export class WorkerOrchestrator {
         this.deps.logger.error("wealth_guardian_scheduled_research_failed", {
           error
         });
+      }
+    }
+
+    const runDueAiWorkflows = this.deps.internalApiClient.runDueAiWorkflows;
+    if (typeof runDueAiWorkflows === "function") {
+      try {
+        const workflowSweep = await runDueAiWorkflows(
+          this.deps.runtime.batchLimit
+        );
+        metrics.aiWorkflowScheduledRunCount = workflowSweep.scheduledRunCount;
+        metrics.aiWorkflowDataChangeRunCount = workflowSweep.dataChangeRunCount;
+        metrics.aiWorkflowClaimedRunCount = workflowSweep.claimedRunCount;
+        metrics.aiWorkflowSucceededRunCount = workflowSweep.succeededRunCount;
+        metrics.aiWorkflowAwaitingApprovalRunCount =
+          workflowSweep.awaitingApprovalRunCount;
+        metrics.aiWorkflowRetriedRunCount = workflowSweep.retriedRunCount;
+        metrics.aiWorkflowFailedRunCount = workflowSweep.failedRunCount;
+        if (
+          workflowSweep.claimedRunCount > 0 ||
+          workflowSweep.scheduledRunCount > 0 ||
+          workflowSweep.dataChangeRunCount > 0 ||
+          workflowSweep.reclaimedRunCount > 0
+        ) {
+          this.deps.logger.info("ai_workflow_sweep_completed", {
+            ...workflowSweep
+          });
+        }
+      } catch (error) {
+        this.deps.logger.error("ai_workflow_sweep_failed", { error });
       }
     }
 
