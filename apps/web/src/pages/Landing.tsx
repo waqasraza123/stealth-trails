@@ -16,7 +16,6 @@ import {
   WalletCards,
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { useBranding } from "@/branding/BrandingProvider";
 import {
   HeroItem,
   HeroReveal,
@@ -77,18 +76,18 @@ const copy = {
     navIntelligence: "Intelligence",
     navSecurity: "Security",
     signIn: "Sign in",
-    signUp: "Start a demo",
+    signUp: "Open account",
     dashboard: "Open dashboard",
-    eyebrow: "Premium white-label fintech starter kit",
-    titleOne: "Launch your neobank,",
-    titleTwo: "already AI-native.",
+    eyebrow: "AI-native banking on Ethereum",
+    titleOne: "A private bank,",
+    titleTwo: "built around you.",
     description:
-      "A production-minded foundation for teams building branded digital banking: customer money movement, operator controls, AI wealth tools, and visible trust in one adaptable product.",
-    primaryCta: "Launch the customer demo",
-    secondaryCta: "See what is included",
-    trustOne: "White-label brand system",
-    trustTwo: "Banking and AI journeys",
-    trustThree: "Operator-grade controls",
+      "Bring banking, intelligent research, and long-term wealth tools into one calm, secure workspace—without losing sight of what your money is doing.",
+    primaryCta: "Open your account",
+    secondaryCta: "Explore the platform",
+    trustOne: "Policy-led security",
+    trustTwo: "Traceable money movement",
+    trustThree: "Human-readable controls",
     visualLabel: "Illustrative account workspace",
     visualGreeting: "Good morning, Amina",
     visualBalanceLabel: "Total managed balance",
@@ -100,10 +99,10 @@ const copy = {
     visualStatus: "All systems clear",
     visualLedger: "Activity trail",
     visualLedgerText: "Every instruction remains visible and reviewable.",
-    sectionEyebrow: "A launch-ready product surface",
-    sectionTitle: "The hard parts of a modern neobank, connected.",
+    sectionEyebrow: "One intelligent workspace",
+    sectionTitle: "Clarity across every financial decision.",
     sectionDescription:
-      "Start from coherent customer and operator experiences, then apply your own identity. Banking rails, AI workflows, traceability, and trust stay connected instead of becoming separate demos.",
+      "Purpose-built tools work together, so you can move from a question to a considered action without stitching together disconnected apps.",
     trustEyebrow: "Trust is a product feature",
     trustTitle: "Designed to make control visible.",
     trustDescription:
@@ -115,24 +114,24 @@ const copy = {
     trustCardTwo: "Proof and traceability",
     trustCardTwoText:
       "Transaction references and solvency views make important system state inspectable.",
-    journeyEyebrow: "Designed for product teams",
-    journeyTitle: "From your brand to a credible product demo.",
+    journeyEyebrow: "A simpler path",
+    journeyTitle: "From first deposit to long-term plan.",
     journeyDescription:
-      "Configure the identity, demonstrate complete customer journeys, and show the operational controls behind them—all from one starter foundation.",
+      "Start with a secure profile. Build a complete view of your money. Then use intelligent tools when the decision deserves deeper attention.",
     steps: [
-      ["01", "Make it yours", "Apply a product name, logo, palette, and type system to the shared experience."],
-      ["02", "Demo real journeys", "Walk through balances, transfers, vaults, lending, AI guidance, and trust views."],
-      ["03", "Operate with context", "Use the separate operator console to review state, evidence, and governed actions."],
+      ["01", "Create your profile", "Set up secure access and your managed Ethereum account."],
+      ["02", "See the full picture", "Review balances, movement, protected funds, and current status."],
+      ["03", "Decide with context", "Use research, risk, and AI tools inside the same trusted workspace."],
     ],
-    ctaEyebrow: "Your fintech concept, made tangible",
-    ctaTitle: "Give stakeholders a neobank they can actually explore.",
+    ctaEyebrow: "Your financial life, composed",
+    ctaTitle: "Bank with more intelligence—and less noise.",
     ctaDescription:
-      "Open the customer experience and see how a premium, AI-native financial product can feel under your own brand.",
-    ctaButton: "Explore the live customer demo",
-    footerTagline: "White-label banking. AI-native intelligence. Visible control.",
+      "Create your secure profile and enter a workspace built for clearer financial decisions.",
+    ctaButton: "Get started securely",
+    footerTagline: "Intelligent banking. Visible control.",
     footerSecurity: "Trust center",
     footerSignIn: "Client sign in",
-    footerCopyright: "Built as a premium fintech starter kit.",
+    footerCopyright: "Stealth Trails Bank. Built for the next financial era.",
   },
   ar: {
     navPlatform: "المنصة",
@@ -141,13 +140,13 @@ const copy = {
     signIn: "تسجيل الدخول",
     signUp: "فتح حساب",
     dashboard: "فتح لوحة التحكم",
-    eyebrow: "حزمة انطلاق مالية فاخرة قابلة لإعادة العلامة",
-    titleOne: "أطلق بنكك الرقمي،",
-    titleTwo: "مدعوماً بالذكاء من البداية.",
+    eyebrow: "خدمات مصرفية ذكية على إيثيريوم",
+    titleOne: "بنك خاص،",
+    titleTwo: "مصمم حولك.",
     description:
-      "أساس عملي للفرق التي تبني خدمات مصرفية رقمية بعلامتها: حركة الأموال وأدوات التشغيل وذكاء الثروة والثقة المرئية في منتج واحد قابل للتخصيص.",
-    primaryCta: "شغّل تجربة العميل",
-    secondaryCta: "استكشف ما تتضمنه المنصة",
+      "اجمع الخدمات المصرفية والبحث الذكي وأدوات الثروة طويلة الأجل في مساحة واحدة هادئة وآمنة، مع رؤية واضحة لما تفعله أموالك.",
+    primaryCta: "افتح حسابك",
+    secondaryCta: "استكشف المنصة",
     trustOne: "أمان قائم على السياسات",
     trustTwo: "حركة أموال قابلة للتتبع",
     trustThree: "ضوابط واضحة ومفهومة",
@@ -200,15 +199,14 @@ const copy = {
 
 export default function Landing() {
   const { locale } = useLocale();
-  const { branding } = useBranding();
   const user = useUserStore((state) => state.user);
   const content = copy[locale];
 
   return (
-    <div className="landing-page min-h-screen overflow-hidden bg-[var(--brand-ink)] text-white">
-      <header className="landing-nav fixed inset-x-0 top-0 z-50 border-b border-white/10 backdrop-blur-2xl">
+    <div className="landing-page min-h-screen overflow-hidden bg-[#07111f] text-white">
+      <header className="landing-nav fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#07111f]/78 backdrop-blur-2xl">
         <div className="mx-auto flex h-[76px] w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
-          <Link to="/" aria-label={`${branding.productName} home`}>
+          <Link to="/" aria-label="Stealth Trails Bank home">
             <Logo size="sm" tone="light" />
           </Link>
 
@@ -264,7 +262,7 @@ export default function Landing() {
               <HeroItem>
                 <div className="landing-kicker">
                   <Sparkles className="h-3.5 w-3.5" />
-                  {branding.productName} · {content.eyebrow}
+                  {content.eyebrow}
                 </div>
               </HeroItem>
               <HeroItem>
@@ -311,15 +309,15 @@ export default function Landing() {
 
             <HeroReveal className="relative z-10 lg:ps-8">
               <HeroItem>
-                <ProductVisual content={content} productName={branding.productName} />
+                <ProductVisual content={content} />
               </HeroItem>
             </HeroReveal>
           </div>
 
-          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-[var(--brand-canvas)]" aria-hidden="true" />
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-[#f5f2ea]" aria-hidden="true" />
         </section>
 
-        <section id="platform" className="scroll-mt-24 bg-[var(--brand-canvas)] px-5 py-24 text-slate-950 sm:px-8 sm:py-32 lg:px-12">
+        <section id="platform" className="scroll-mt-24 bg-[#f5f2ea] px-5 py-24 text-slate-950 sm:px-8 sm:py-32 lg:px-12">
           <div className="mx-auto max-w-[1344px]">
             <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
               <div>
@@ -406,7 +404,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="bg-[var(--brand-canvas)] px-5 py-24 text-slate-950 sm:px-8 sm:py-32 lg:px-12">
+        <section className="bg-[#f5f2ea] px-5 py-24 text-slate-950 sm:px-8 sm:py-32 lg:px-12">
           <div className="mx-auto max-w-[1344px]">
             <div className="mx-auto max-w-3xl text-center">
               <p className="landing-section-kicker justify-center">{content.journeyEyebrow}</p>
@@ -433,7 +431,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="bg-[var(--brand-canvas)] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
+        <section className="bg-[#f5f2ea] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
           <div className="landing-cta relative mx-auto max-w-[1344px] overflow-hidden rounded-[2.5rem] px-6 py-16 sm:px-12 sm:py-20 lg:px-20 lg:py-24">
             <div className="landing-grid absolute inset-0 opacity-30" aria-hidden="true" />
             <div className="landing-cta-orb" aria-hidden="true" />
@@ -456,7 +454,7 @@ export default function Landing() {
         </section>
       </main>
 
-      <footer className="bg-[var(--brand-canvas)] px-5 pb-10 pt-4 text-slate-950 sm:px-8 lg:px-12">
+      <footer className="bg-[#f5f2ea] px-5 pb-10 pt-4 text-slate-950 sm:px-8 lg:px-12">
         <div className="mx-auto flex max-w-[1344px] flex-col gap-8 border-t border-slate-300/70 pt-8 md:flex-row md:items-center md:justify-between">
           <div>
             <Logo size="sm" tone="dark" />
@@ -465,7 +463,7 @@ export default function Landing() {
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-slate-600">
             <Link className="hover:text-slate-950" to="/trust/solvency">{content.footerSecurity}</Link>
             <Link className="hover:text-slate-950" to="/auth/sign-in">{content.footerSignIn}</Link>
-            <span className="text-slate-400">© {new Date().getFullYear()} {branding.productName}. {content.footerCopyright}</span>
+            <span className="text-slate-400">© {new Date().getFullYear()} {content.footerCopyright}</span>
           </div>
         </div>
       </footer>
@@ -475,13 +473,7 @@ export default function Landing() {
 
 type LandingCopy = (typeof copy)["en"];
 
-function ProductVisual({
-  content,
-  productName
-}: {
-  content: LandingCopy;
-  productName: string;
-}) {
+function ProductVisual({ content }: { content: LandingCopy }) {
   return (
     <div className="landing-product-wrap relative mx-auto max-w-[720px]">
       <div className="landing-product-halo" aria-hidden="true" />
@@ -493,7 +485,7 @@ function ProductVisual({
             <span className="h-2.5 w-2.5 rounded-full bg-white/8" />
           </div>
           <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/35 sm:text-[10px]">
-            {productName} · {content.visualLabel}
+            {content.visualLabel}
           </p>
           <LockKeyhole className="h-3.5 w-3.5 text-emerald-300/70" />
         </div>

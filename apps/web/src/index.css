@@ -208,18 +208,14 @@
 
 @layer components {
   .landing-page {
-    --landing-ink: var(--brand-ink);
-    --landing-mint: var(--brand-accent);
-    --landing-ivory: var(--brand-canvas);
+    --landing-ink: #07111f;
+    --landing-mint: #6ee7c7;
+    --landing-ivory: #f5f2ea;
     font-family: var(--font-sans);
   }
 
   .landing-display {
     font-family: var(--font-display);
-  }
-
-  .landing-nav {
-    background: color-mix(in srgb, var(--brand-ink) 78%, transparent);
   }
 
   .landing-nav-link {
@@ -237,8 +233,6 @@
 
   .landing-nav-primary {
     @apply h-11 gap-2 rounded-full border border-emerald-200/20 bg-emerald-300 px-4 font-semibold text-slate-950 shadow-[0_10px_35px_rgba(110,231,199,0.16)] transition-[background-color,transform,box-shadow] hover:-translate-y-0.5 hover:bg-emerald-200 hover:shadow-[0_16px_42px_rgba(110,231,199,0.22)] sm:px-5;
-    background: var(--brand-accent);
-    color: var(--brand-ink);
   }
 
   .landing-nav-secondary {
@@ -280,32 +274,25 @@
 
   .landing-kicker {
     @apply rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3.5 py-2 text-emerald-200;
-    border-color: color-mix(in srgb, var(--brand-accent) 24%, transparent);
-    background: color-mix(in srgb, var(--brand-accent) 11%, transparent);
-    color: color-mix(in srgb, var(--brand-accent) 78%, white);
   }
 
   .landing-section-kicker {
     @apply text-emerald-800;
-    color: var(--brand-primary);
   }
 
   .landing-section-kicker::before {
     content: "";
     @apply h-px w-8 bg-emerald-700/50;
-    background: color-mix(in srgb, var(--brand-primary) 55%, transparent);
   }
 
   .landing-title-accent {
-    background: linear-gradient(110deg, #ffffff 0%, color-mix(in srgb, var(--brand-accent) 55%, white) 42%, color-mix(in srgb, var(--brand-primary) 45%, #a8c7ff) 100%);
+    background: linear-gradient(110deg, #ffffff 0%, #b9efe1 42%, #8ebcf4 100%);
     background-clip: text;
     color: transparent;
   }
 
   .landing-hero-primary {
     @apply gap-2 rounded-full border border-emerald-200/20 bg-emerald-300 font-semibold text-slate-950 shadow-[0_18px_55px_rgba(70,209,177,0.2)] transition-[background-color,transform,box-shadow] hover:-translate-y-0.5 hover:bg-emerald-200 hover:shadow-[0_24px_62px_rgba(70,209,177,0.28)];
-    background: var(--brand-accent);
-    color: var(--brand-ink);
   }
 
   .landing-hero-secondary {
@@ -422,7 +409,7 @@
     background:
       radial-gradient(circle at 88% 20%, rgba(93, 128, 211, 0.22), transparent 32%),
       radial-gradient(circle at 72% 100%, rgba(110, 231, 199, 0.13), transparent 36%),
-      var(--brand-ink);
+      #07111f;
     box-shadow: 0 36px 100px rgba(15, 23, 42, 0.16);
   }
 
