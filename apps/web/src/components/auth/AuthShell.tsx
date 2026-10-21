@@ -36,63 +36,11 @@ function AuthBrandArt() {
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(114,233,212,0.18),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(70,142,255,0.16),transparent_32%)]" />
       <div className="absolute inset-0 auth-ledger-grid opacity-40" />
-      <svg
-        viewBox="0 0 520 360"
-        className="relative z-10 h-full w-full"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect
-          x="64"
-          y="52"
-          width="392"
-          height="256"
-          rx="32"
-          stroke="rgba(242,239,230,0.24)"
-        />
-        <path
-          d="M260 78L332 164L260 278L188 164L260 78Z"
-          stroke="rgba(134,196,255,0.92)"
-          strokeWidth="2"
-        />
-        <path
-          d="M260 78V278M188 164H332"
-          stroke="rgba(114,233,212,0.92)"
-          strokeWidth="2"
-        />
-        <path
-          d="M130 112H204M316 112H390M130 216H204M316 216H390"
-          stroke="rgba(242,239,230,0.34)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M96 164H166M354 164H424"
-          stroke="rgba(242,239,230,0.42)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <rect
-          x="148"
-          y="126"
-          width="224"
-          height="76"
-          rx="20"
-          fill="rgba(7,17,29,0.54)"
-          stroke="rgba(242,239,230,0.12)"
-        />
-        <path
-          d="M218 164L260 122L302 164L260 206L218 164Z"
-          fill="rgba(91,175,255,0.18)"
-          stroke="rgba(134,196,255,0.88)"
-        />
-        <path
-          d="M205 239H315"
-          stroke="rgba(114,233,212,0.48)"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
+      <img
+        src="/brand-hero.png"
+        alt=""
+        className="relative z-10 h-full w-full rounded-[1.25rem] object-cover shadow-[0_24px_36px_rgba(0,0,0,0.28)]"
+      />
     </div>
   );
 }

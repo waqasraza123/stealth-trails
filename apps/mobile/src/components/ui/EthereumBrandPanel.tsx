@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import { View } from "react-native";
-import Svg, { Path, Rect } from "react-native-svg";
+import { Image, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -25,21 +24,17 @@ type EthereumMarkProps = {
 
 function EthereumMark({ size = 88 }: EthereumMarkProps) {
   return (
-    <Svg
-      accessibilityLabel="Ethereum logo"
-      height={size}
-      viewBox="0 0 256 256"
-      width={size}>
-      <Rect fill="#0F172A" height="256" rx="64" width="256" />
-      <Path d="M128 28L67 128L128 100.5L189 128L128 28Z" fill="#8B5CF6" />
-      <Path d="M128 100.5L67 128L128 164.5L189 128L128 100.5Z" fill="#A78BFA" />
-      <Path d="M128 175L67 139L128 228L189 139L128 175Z" fill="#C4B5FD" />
-    </Svg>
+    <Image
+      accessibilityLabel="Stealth Trails logo"
+      resizeMode="contain"
+      source={require("../../../assets/brand-mark.png")}
+      style={{ height: size, width: size }}
+    />
   );
 }
 
 export function EthereumBrandPanel({
-  title = "Ethereum",
+  title = "Stealth Trails",
   subtitle,
   centered = true,
   compact = false,

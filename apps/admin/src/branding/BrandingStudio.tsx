@@ -184,7 +184,7 @@ export function BrandingStudio({ authorized, verifying }: BrandingStudioProps) {
                 value={draft.logoUrl}
                 onChange={(event) => updateDraft({ logoUrl: event.target.value })}
               />
-              <small className="admin-field-help">Use a secure, publicly readable image URL. Leave blank for the generated brand mark.</small>
+              <small className="admin-field-help">Use a secure, publicly readable image URL. Leave blank for the default Stealth Trails mark.</small>
             </label>
           </div>
         </section>
@@ -280,11 +280,7 @@ export function BrandingStudio({ authorized, verifying }: BrandingStudioProps) {
         <section className="admin-branding-preview" style={previewStyle}>
           <div className="admin-branding-preview-topbar">
             <div className="admin-branding-preview-logo">
-              {normalizedDraft.logoUrl ? (
-                <img alt="" src={normalizedDraft.logoUrl} />
-              ) : (
-                <span>{normalizedDraft.productName.slice(0, 1).toUpperCase()}</span>
-              )}
+              <img alt="" src={normalizedDraft.logoUrl || "/brand-mark.png"} />
               <div><strong>{normalizedDraft.productName}</strong><small>{normalizedDraft.tagline}</small></div>
             </div>
             <span className="admin-branding-preview-pill"><Sparkles aria-hidden="true" /> AI native</span>

@@ -432,6 +432,18 @@ export default function Landing() {
         </section>
 
         <section className="bg-[#f5f2ea] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
+          <figure className="mx-auto max-w-[1344px] overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.12)] sm:rounded-[2.5rem]">
+            <img
+              src="/brand-hero.png"
+              alt="Stealth Trails Private Bank — AI-native banking on Ethereum"
+              className="aspect-[2/1] h-auto w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </section>
+
+        <section className="bg-[#f5f2ea] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
           <div className="landing-cta relative mx-auto max-w-[1344px] overflow-hidden rounded-[2.5rem] px-6 py-16 sm:px-12 sm:py-20 lg:px-20 lg:py-24">
             <div className="landing-grid absolute inset-0 opacity-30" aria-hidden="true" />
             <div className="landing-cta-orb" aria-hidden="true" />

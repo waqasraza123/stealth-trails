@@ -30,7 +30,7 @@ describe("SignInScreen", () => {
     const screen = renderMobile(<SignInScreen />);
 
     expect(screen.getByTestId("ethereum-brand-panel")).toBeTruthy();
-    expect(screen.getByText("Ethereum")).toBeTruthy();
+    expect(screen.getByText("Stealth Trails")).toBeTruthy();
 
     fireEvent.changeText(screen.getByLabelText("Email"), "invalid-email");
     fireEvent.changeText(screen.getByLabelText("Password"), "password123");

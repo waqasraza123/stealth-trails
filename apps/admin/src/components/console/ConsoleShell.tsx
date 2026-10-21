@@ -49,11 +49,7 @@ export function ConsoleShell({
           <div className="admin-brand">
             <div className="admin-brand-lockup">
               <span className="admin-brand-mark" aria-hidden="true">
-                {branding.logoUrl ? (
-                  <img src={branding.logoUrl} alt="" />
-                ) : (
-                  branding.productName.slice(0, 1).toUpperCase()
-                )}
+                <img src={branding.logoUrl || "/brand-mark.png"} alt="" />
               </span>
               <span>
                 <strong>{branding.productName}</strong>
