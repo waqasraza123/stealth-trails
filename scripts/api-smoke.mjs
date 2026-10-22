@@ -6,7 +6,7 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const defaultSmokeOrigin = "https://stealth-trails-bank-web.vercel.app";
+const defaultSmokeOrigin = "https://www.stealth-trails.space";
 const defaultRetryAttempts = 1;
 const defaultRetryDelayMs = 5_000;
 const defaultHealthResponse = {

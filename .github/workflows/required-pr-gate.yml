@@ -92,6 +92,6 @@ jobs:
         run: |
           pnpm api:smoke -- \
             --base-url "${{ steps.resolve_preview.outputs.url }}" \
-            --origin "https://stealth-trails-bank-web.vercel.app" \
+            --origin "https://www.stealth-trails.space" \
             --retry-attempts 30 \
             --retry-delay-ms 10000

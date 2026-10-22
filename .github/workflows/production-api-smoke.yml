@@ -50,8 +50,8 @@ jobs:
           VERCEL_PROTECTION_BYPASS_SECRET: ${{ secrets.STEALTH_TRAILS_BANK_API_VERCEL_BYPASS_SECRET }}
         run: |
           node ./scripts/api-smoke.mjs \
-            --base-url "https://stealth-trails-bank-api.vercel.app" \
-            --origin "https://stealth-trails-bank-web.vercel.app" \
+            --base-url "https://api.stealth-trails.space" \
+            --origin "https://www.stealth-trails.space" \
             --retry-attempts 30 \
             --retry-delay-ms 10000
 

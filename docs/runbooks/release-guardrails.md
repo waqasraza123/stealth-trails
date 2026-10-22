@@ -59,7 +59,7 @@ The PR and deployment workflows require these GitHub Actions secrets:
 
 `required-pr-gate` resolves the preview deployment URL for the PR commit and runs deployed smoke against it when API-relevant files changed.
 
-`production-api-smoke` waits for the production deployment for the merged commit, then smokes `https://stealth-trails-bank-api.vercel.app`.
+`production-api-smoke` waits for the production deployment for the merged commit, then smokes `https://api.stealth-trails.space` with the canonical customer origin `https://www.stealth-trails.space`.
 
 ## Branch protection
 
