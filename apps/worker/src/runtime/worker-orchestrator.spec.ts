@@ -446,6 +446,7 @@ test("solvency monitoring confirms only successful sufficiently confirmed receip
           return hash === "pending"
             ? null
             : {
+                txHash: hash,
                 succeeded: hash !== "reverted",
                 blockNumber: hash === "early" ? 100n : 95n,
                 fromAddress: null,
