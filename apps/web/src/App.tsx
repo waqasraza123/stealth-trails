@@ -41,6 +41,8 @@ const WorkflowStudio = lazy(() => import("./pages/WorkflowStudio"));
 const FinancialMemory = lazy(() => import("./pages/FinancialMemory"));
 const SignIn = lazy(() => import("./pages/auth/SignIn"));
 const SignUp = lazy(() => import("./pages/auth/SignUp"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 
 const queryClient = createWebQueryClient();
 
@@ -73,6 +75,8 @@ const App = () => (
             <Routes>
               <Route path="/auth/sign-in" element={withRouteBoundary(<SignIn />)} />
               <Route path="/auth/sign-up" element={withRouteBoundary(<SignUp />)} />
+              <Route path="/auth/forgot-password" element={withRouteBoundary(<ForgotPassword />)} />
+              <Route path="/auth/reset-password" element={withRouteBoundary(<ResetPassword />)} />
               <Route
                 path="/trust/solvency"
                 element={withRouteBoundary(<TrustCenter />)}

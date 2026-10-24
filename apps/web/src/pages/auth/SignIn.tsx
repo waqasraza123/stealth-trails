@@ -95,6 +95,7 @@ export default function SignIn() {
               <span className="text-sm font-medium">{t("auth.signIn.passwordLabel")}</span>
               <Input id="password" name="password" type="password" autoComplete="current-password" required value={credentials.password} onChange={(e) => setCredentials({ ...credentials, password: e.target.value })} />
             </label>
+            <Link to="/auth/forgot-password" className="block text-sm font-semibold text-auth-form-accent">Forgot password?</Link>
           </>
         ) : challenge === "upgrade_password" ? (
           <label className="block space-y-2" htmlFor="newPassword">

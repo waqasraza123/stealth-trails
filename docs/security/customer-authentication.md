@@ -57,9 +57,9 @@ and no account session is issued until verification and mandatory TOTP finish.
 
 ### Repository work
 
-1. Implement forgotten-password recovery using verified email plus TOTP or a
-   one-time recovery code, short-lived server-side state, strict throttling, and
-   full session revocation after completion.
+1. Verify forgotten-password email delivery in an approved staging mailbox and
+   monitor recovery throttling and delivery failures; see
+   [password recovery setup](password-recovery.md).
 2. Remove the disabled legacy email-MFA enrollment, challenge, step-up, and
    recovery code paths from the API and both clients. Replace the obsolete
    skipped tests with explicit tests proving email OTP cannot authenticate a

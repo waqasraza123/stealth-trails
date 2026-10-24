@@ -18,6 +18,9 @@ type NotificationSocketContext = {
   heartbeatIntervalMs: number;
   lastPongAt: number;
   heartbeatTimer: NodeJS.Timeout | null;
+  customerId: string | null;
+  authTokenVersion: number | null;
+  deliveryQueue: Promise<void>;
 };
 
 type BroadcastPayload =
@@ -184,6 +187,9 @@ export class NotificationsRealtimeService implements OnModuleDestroy {
       heartbeatIntervalMs: session.heartbeatIntervalMs,
       lastPongAt: Date.now(),
       heartbeatTimer: null,
+      customerId: session.customerId,
+      authTokenVersion: session.authTokenVersion,
+      deliveryQueue: Promise.resolve(),
     };
   }
 
@@ -197,16 +203,19 @@ export class NotificationsRealtimeService implements OnModuleDestroy {
       new Map<WebSocket, NotificationSocketContext>();
 
     context.heartbeatTimer = setInterval(() => {
-      if (Date.now() - context.lastPongAt > context.heartbeatIntervalMs * 2) {
-        socket.close(1011, "Heartbeat timed out");
-        return;
-      }
+      void this.authorizeSocket(socket, context).then((authorized) => {
+        if (!authorized) return;
+        if (Date.now() - context.lastPongAt > context.heartbeatIntervalMs * 2) {
+          socket.close(1011, "Heartbeat timed out");
+          return;
+        }
 
-      this.send(socket, {
-        type: "ping",
-        data: {
-          at: new Date().toISOString(),
-        },
+        this.send(socket, {
+          type: "ping",
+          data: {
+            at: new Date().toISOString(),
+          },
+        });
       });
     }, context.heartbeatIntervalMs);
 
@@ -240,6 +249,7 @@ export class NotificationsRealtimeService implements OnModuleDestroy {
     payload: RawData,
   ): Promise<void> {
     try {
+      if (!await this.authorizeSocket(socket, context)) return;
       const parsed = JSON.parse(String(payload)) as IncomingRealtimePayload;
 
       if (parsed.type === "pong" || parsed.type === "ping") {
@@ -329,7 +339,34 @@ export class NotificationsRealtimeService implements OnModuleDestroy {
     latestSequence: number;
     heartbeatIntervalMs: number;
   }>): void {
-    this.send(socket, payload);
+    const context = this.clients.get(payload.recipientKey)?.get(socket);
+    if (!context?.customerId) {
+      this.send(socket, payload);
+      return;
+    }
+    // Version checks apply across API instances, including already-open sockets
+    // after password recovery. Preserve delivery order while checking each item.
+    context.deliveryQueue = context.deliveryQueue
+      .then(async () => {
+        if (await this.authorizeSocket(socket, context)) this.send(socket, payload);
+      })
+      .catch(() => { socket.close(1008, "Unauthorized"); });
+  }
+
+  private async authorizeSocket(
+    socket: WebSocket,
+    context: NotificationSocketContext,
+  ): Promise<boolean> {
+    if (!context.customerId) return true;
+    try {
+      if (context.authTokenVersion !== null &&
+        await this.notificationsService.isCustomerSocketAuthorizationCurrent(
+          context.customerId, context.authTokenVersion,
+        )) return true;
+    } catch { /* Database failures must not keep a revoked connection authorized. */ }
+    socket.close(1008, "Unauthorized");
+    this.unregisterSocket(context.recipientKey, socket);
+    return false;
   }
 
   private send(socket: WebSocket, payload: unknown): void {

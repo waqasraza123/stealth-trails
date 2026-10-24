@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -49,6 +50,8 @@ import {
   VerifyLoginTotpDto,
 } from "./dto/login-flow.dto";
 import { MobileRefreshDto } from "./dto/mobile-refresh.dto";
+import { ForgotPasswordDto, ResetPasswordDto } from "./dto/password-recovery.dto";
+import { PasswordRecoveryService } from "./password-recovery.service";
 
 type AuthenticatedRequest = {
   headers?: Record<string, string | string[] | undefined>;
@@ -115,7 +118,28 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly operatorIdentityService?: OperatorIdentityService,
+    private readonly passwordRecoveryService?: PasswordRecoveryService,
   ) {}
+
+  @Post("forgot-password")
+  @HttpCode(200)
+  async forgotPassword(
+    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true,
+      validationError: { target: false, value: false } })) dto: ForgotPasswordDto,
+    @Request() request: UnauthenticatedRequest,
+  ): Promise<CustomJsonResponse> {
+    return this.passwordRecoveryService!.forgotPassword(dto.email, request.ip ?? "unknown");
+  }
+
+  @Post("reset-password")
+  @HttpCode(200)
+  async resetPassword(
+    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true,
+      validationError: { target: false, value: false } })) dto: ResetPasswordDto,
+    @Request() request: UnauthenticatedRequest,
+  ): Promise<CustomJsonResponse> {
+    return this.passwordRecoveryService!.resetPassword(dto, request.ip ?? "unknown");
+  }
 
   private finalizeWebLoginResponse<T extends CustomJsonResponse>(
     result: T,

@@ -550,6 +550,7 @@ export class NotificationsService {
     operatorId: string | null;
     latestSequence: number;
     heartbeatIntervalMs: number;
+    authTokenVersion: number | null;
   } | null> {
     const tokenHash = this.hashSocketToken(token);
     const session =
@@ -557,6 +558,7 @@ export class NotificationsService {
         where: {
           tokenHash,
         },
+        include: { customer: { select: { authTokenVersion: true } } },
       });
 
     if (!session || session.expiresAt.getTime() <= Date.now()) {
@@ -573,7 +575,15 @@ export class NotificationsService {
       operatorId: session.operatorId,
       latestSequence: session.lastIssuedSequence,
       heartbeatIntervalMs: this.heartbeatIntervalMs,
+      authTokenVersion: session.customer?.authTokenVersion ?? null,
     };
+  }
+
+  async isCustomerSocketAuthorizationCurrent(customerId: string, tokenVersion: number): Promise<boolean> {
+    const customer = await this.prismaService.customer.findUnique({
+      where: { id: customerId }, select: { authTokenVersion: true },
+    });
+    return customer?.authTokenVersion === tokenVersion;
   }
 
   async listRealtimeEventsAfterSequence(

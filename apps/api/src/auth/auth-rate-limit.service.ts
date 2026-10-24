@@ -18,6 +18,30 @@ export class AuthRateLimitService {
     return new Date(Math.floor(Date.now() / windowMs) * windowMs);
   }
 
+  // Reserve an attempt atomically; a read followed by an increment permits
+  // concurrent requests to exceed the limit on multi-instance deployments.
+  async consume(rule: RateLimitRule): Promise<boolean> {
+    const windowStart = this.bucketStart(rule.windowSeconds);
+    const bucket = await this.prisma.authRateLimitBucket.upsert({
+      where: {
+        action_subjectHash_windowStart: {
+          action: rule.action,
+          subjectHash: customerAuthHmac(rule.subject),
+          windowStart,
+        },
+      },
+      create: {
+        action: rule.action,
+        subjectHash: customerAuthHmac(rule.subject),
+        windowStart,
+        attemptCount: 1,
+      },
+      update: { attemptCount: { increment: 1 } },
+    });
+    return bucket.attemptCount <= rule.limit &&
+      (!bucket.blockedUntil || bucket.blockedUntil.getTime() <= Date.now());
+  }
+
   async assertAllowed(rule: RateLimitRule): Promise<void> {
     const windowStart = this.bucketStart(rule.windowSeconds);
     const bucket = await this.prisma.authRateLimitBucket.findUnique({

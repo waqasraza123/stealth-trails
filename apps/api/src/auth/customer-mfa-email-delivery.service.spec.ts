@@ -50,6 +50,51 @@ function createService() {
 }
 
 describe("CustomerMfaEmailDeliveryService", () => {
+  describe("password reset delivery", () => {
+    const input = { email: "amina@example.com", link: "https://bank.example/auth/reset-password#token=secret",
+      deliveryId: "delivery-id", expiresAt: "2026-10-24T10:15:00.000Z" };
+    const config = { mode: "resend", resendApiKey: "test-key", requestTimeoutMs: 5000,
+      fromEmail: "security@example.com", fromName: "Security" };
+
+    it("fails closed in preview mode without returning or auditing the link", async () => {
+      (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue({ ...config, mode: "preview" });
+      const { service, prismaService } = createService();
+      await expect(service.sendPasswordReset(input)).rejects.toThrow("delivery is unavailable");
+      expect(axios.post).not.toHaveBeenCalled();
+      expect(prismaService.auditEvent.create).not.toHaveBeenCalled();
+    });
+
+    it("uses the existing Resend adapter and never persists provider data or the link", async () => {
+      (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue(config);
+      (axios.post as jest.Mock).mockResolvedValue({ status: 200, data: { id: input.link } });
+      const { service, prismaService } = createService();
+      await expect(service.sendPasswordReset(input)).resolves.toBeUndefined();
+      expect(axios.post).toHaveBeenCalledWith("https://api.resend.com/emails", expect.objectContaining({
+        to: [input.email], text: expect.stringContaining(input.link),
+      }), expect.objectContaining({ maxRedirects: 0, timeout: 5000 }));
+      expect(prismaService.auditEvent.create).not.toHaveBeenCalled();
+    });
+
+    it("supports the configured transactional webhook with tracking disabled", async () => {
+      (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue({ ...config, mode: "webhook", webhookUrl: "https://mailer.example/send" });
+      (axios.post as jest.Mock).mockResolvedValue({ status: 200 });
+      const { service } = createService();
+      await service.sendPasswordReset(input);
+      expect(axios.post).toHaveBeenCalledWith("https://mailer.example/send", expect.objectContaining({
+        type: "customer_password_recovery", recovery: { link: input.link, expiresAt: input.expiresAt },
+        tracking: { clicks: false, opens: false },
+      }), expect.objectContaining({ maxRedirects: 0 }));
+    });
+
+    it("sanitizes provider errors that contain the token and password", async () => {
+      (loadCustomerMfaEmailDeliveryRuntimeConfig as jest.Mock).mockReturnValue(config);
+      (axios.post as jest.Mock).mockRejectedValue(new Error(`request body: ${input.link}`));
+      const { service, prismaService } = createService();
+      await expect(service.sendPasswordReset(input)).rejects.toThrow("Password recovery delivery is unavailable.");
+      expect(prismaService.auditEvent.create).not.toHaveBeenCalled();
+    });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();

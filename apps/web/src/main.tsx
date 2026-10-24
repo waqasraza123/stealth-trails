@@ -17,6 +17,9 @@ import "./index.css";
 import { webTelemetry } from "./lib/observability";
 import { initializeUserStore } from "./stores/userStore";
 import "./lib/auth-session";
+import { capturePasswordRecoveryToken } from "./lib/password-recovery-token";
+
+capturePasswordRecoveryToken();
 
 async function bootstrap() {
   try {

@@ -65,6 +65,13 @@ import {
   generateRecoveryCodes,
 } from "./customer-auth-crypto";
 
+function rejectStaleAuthenticationState(error: unknown): never {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    throw new UnauthorizedException("Authentication state changed. Sign in again.");
+  }
+  throw error;
+}
+
 type LegacyUserRecord = {
   id: number;
   firstName: string;
@@ -3471,12 +3478,17 @@ export class AuthService {
     await this.prismaService.$transaction(
       async (transaction) => {
         await transaction.customer.update({
-          where: { id: customer.id },
+          where: { id: customer.id, authTokenVersion: customer.authTokenVersion, passwordHash: customer.passwordHash },
           data: {
             passwordHash: nextPasswordHash,
             passwordPolicyVersion: CUSTOMER_PASSWORD_POLICY_VERSION,
             authTokenVersion: { increment: 1 },
           },
+        }).catch((error: unknown) => {
+          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+            throw new UnauthorizedException("Authentication state changed. Sign in again.");
+          }
+          throw error;
         });
         await transaction.customerAuthSession.updateMany({
           where: { customerId: customer.id, revokedAt: null },
@@ -5326,15 +5338,20 @@ export class AuthService {
       customer.passwordPolicyVersion >= CUSTOMER_PASSWORD_POLICY_VERSION;
 
     if (passwordValidation.valid && verification.legacyHash) {
+      const upgradedHash = await this.passwordSecurityService.hash(passwordValidation.normalizedPassword);
       await this.prismaService.customer.update({
-        where: { id: customer.id },
+        where: { id: customer.id, authTokenVersion: customer.authTokenVersion, passwordHash: customer.passwordHash },
         data: {
-          passwordHash: await this.passwordSecurityService.hash(
-            passwordValidation.normalizedPassword,
-          ),
+          passwordHash: upgradedHash,
           passwordPolicyVersion: CUSTOMER_PASSWORD_POLICY_VERSION,
         },
+      }).catch((error: unknown) => {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+          throw new UnauthorizedException("Invalid email or password.");
+        }
+        throw error;
       });
+      customer.passwordHash = upgradedHash;
       passwordPolicyCurrent = true;
     }
 
@@ -5363,6 +5380,19 @@ export class AuthService {
         expiresAt,
       },
     });
+
+    // Password verification is expensive. Recovery may have completed while it
+    // was running; a stale password must not create a fresh usable login flow.
+    const currentCredential = await this.prismaService.customer.findUnique({
+      where: { id: customer.id }, select: { authTokenVersion: true, passwordHash: true },
+    });
+    if (!currentCredential || currentCredential.authTokenVersion !== customer.authTokenVersion ||
+      currentCredential.passwordHash !== customer.passwordHash) {
+      await this.prismaService.customerAuthFlow.update({
+        where: { id: flow.id }, data: { consumedAt: new Date() },
+      });
+      throw new UnauthorizedException("Invalid email or password.");
+    }
 
     if (!passwordPolicyCurrent) {
       await this.appendAuditEvent({
@@ -5442,7 +5472,7 @@ export class AuthService {
     const failedAttemptCount = flow.failedAttemptCount + 1;
     await this.prismaService.$transaction([
       this.prismaService.customerAuthFlow.update({
-        where: { id: flow.id },
+        where: { id: flow.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: { failedAttemptCount },
       }),
       ...(failedAttemptCount >= this.maxFailedAttempts
@@ -5456,7 +5486,7 @@ export class AuthService {
             }),
           ]
         : []),
-    ]);
+    ]).catch(rejectStaleAuthenticationState);
   }
 
   async startLoginTotpEnrollment(
@@ -5471,14 +5501,14 @@ export class AuthService {
     const secret = generateBase32Secret();
     const encrypted = encryptCustomerAuthSecret(secret);
     await this.prismaService.customer.update({
-      where: { id: flow.customerId },
+      where: { id: flow.customerId, authTokenVersion: flow.customer.authTokenVersion },
       data: {
         mfaPendingTotpSecret: null,
         mfaPendingTotpSecretEncrypted: encrypted.ciphertext,
         mfaPendingTotpSecretKeyVersion: encrypted.keyVersion,
         mfaPendingTotpIssuedAt: new Date(),
       },
-    });
+    }).catch(rejectStaleAuthenticationState);
 
     return {
       status: "success",
@@ -5536,7 +5566,7 @@ export class AuthService {
 
     await this.prismaService.$transaction([
       this.prismaService.customer.update({
-        where: { id: flow.customerId },
+        where: { id: flow.customerId, authTokenVersion: flow.customer.authTokenVersion },
         data: {
           mfaTotpEnrolled: true,
           mfaTotpSecret: null,
@@ -5553,14 +5583,14 @@ export class AuthService {
         },
       }),
       this.prismaService.customerAuthFlow.update({
-        where: { id: flow.id },
+        where: { id: flow.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: {
           mfaVerifiedAt: new Date(),
           failedAttemptCount: 0,
           nextAction,
         },
       }),
-    ]);
+    ]).catch(rejectStaleAuthenticationState);
 
     return nextAction === CustomerAuthFlowNextAction.setup_recovery_codes
       ? {
@@ -5618,7 +5648,10 @@ export class AuthService {
 
     await this.prismaService.$transaction([
       this.prismaService.customer.update({
-        where: { id: flow.customerId },
+        where: {
+          id: flow.customerId, authTokenVersion: flow.customer.authTokenVersion,
+          OR: [{ mfaLastAcceptedTotpCounter: null }, { mfaLastAcceptedTotpCounter: { lt: counter } }],
+        },
         data: {
           mfaLastAcceptedTotpCounter: counter,
           mfaLastVerifiedAt: new Date(),
@@ -5627,10 +5660,10 @@ export class AuthService {
         },
       }),
       this.prismaService.customerAuthFlow.update({
-        where: { id: flow.id },
+        where: { id: flow.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: { mfaVerifiedAt: new Date(), failedAttemptCount: 0, nextAction },
       }),
-    ]);
+    ]).catch(rejectStaleAuthenticationState);
 
     if (nextAction === CustomerAuthFlowNextAction.complete) {
       return this.finalizeCustomerLogin(flow.id, context);
@@ -5669,11 +5702,11 @@ export class AuthService {
 
     await this.prismaService.$transaction([
       this.prismaService.customerRecoveryCode.update({
-        where: { id: recoveryCode.id },
+        where: { id: recoveryCode.id, customerId: flow.customerId, consumedAt: null },
         data: { consumedAt: new Date() },
       }),
       this.prismaService.customer.update({
-        where: { id: flow.customerId },
+        where: { id: flow.customerId, authTokenVersion: flow.customer.authTokenVersion },
         data: {
           mfaTotpEnrolled: false,
           mfaTotpSecret: null,
@@ -5691,13 +5724,13 @@ export class AuthService {
         },
       }),
       this.prismaService.customerAuthFlow.update({
-        where: { id: flow.id },
+        where: { id: flow.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: {
           mfaVerifiedAt: new Date(),
           nextAction: CustomerAuthFlowNextAction.enroll_totp,
         },
       }),
-    ]);
+    ]).catch(rejectStaleAuthenticationState);
 
     return {
       status: "success",
@@ -5751,7 +5784,7 @@ export class AuthService {
         : CustomerAuthFlowNextAction.complete;
     await this.prismaService.$transaction([
       this.prismaService.customer.update({
-        where: { id: flow.customerId },
+        where: { id: flow.customerId, authTokenVersion: flow.customer.authTokenVersion, passwordHash: flow.customer.passwordHash },
         data: {
           passwordHash: await this.passwordSecurityService.hash(
             validation.normalizedPassword,
@@ -5768,10 +5801,15 @@ export class AuthService {
         },
       }),
       this.prismaService.customerAuthFlow.update({
-        where: { id: flow.id },
+        where: { id: flow.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: { nextAction },
       }),
-    ]);
+    ]).catch((error: unknown) => {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        throw new UnauthorizedException("Authentication state changed. Sign in again.");
+      }
+      throw error;
+    });
 
     return nextAction === CustomerAuthFlowNextAction.complete
       ? this.finalizeCustomerLogin(flow.id, context)
@@ -5811,10 +5849,10 @@ export class AuthService {
         })),
       }),
       this.prismaService.customerAuthFlow.update({
-        where: { id: flow.id },
+        where: { id: flow.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: { nextAction: CustomerAuthFlowNextAction.complete },
       }),
-    ]);
+    ]).catch(rejectStaleAuthenticationState);
 
     const completed = await this.finalizeCustomerLogin(flow.id, context);
     return {

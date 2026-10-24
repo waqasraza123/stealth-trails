@@ -1,7 +1,7 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { loadApiBootstrapRuntime } from "./bootstrap/api-server.util";
+import { loadApiBootstrapRuntime, loadAuthTrustedProxyCidrs } from "./bootstrap/api-server.util";
 import { ApiRequestLoggingInterceptor } from "./logging/api-request-logging.interceptor";
 import { assignRequestContext } from "./logging/api-request-context";
 import { ApiRequestMetricsService } from "./logging/api-request-metrics.service";
@@ -26,6 +26,10 @@ async function createApiApp() {
     logger: environment === "development" ? ["warn", "error"] : undefined
   });
   const httpAdapterInstance = app.getHttpAdapter().getInstance?.();
+  const trustedProxies = loadAuthTrustedProxyCidrs();
+  if (trustedProxies.length && typeof httpAdapterInstance?.set === "function") {
+    httpAdapterInstance.set("trust proxy", trustedProxies);
+  }
 
   if (
     httpAdapterInstance &&

@@ -25,6 +25,24 @@ describe("ApiRequestLoggingInterceptor", () => {
     jest.restoreAllMocks();
   });
 
+  it("discards recovery URL queries without logging request bodies", async () => {
+    const interceptor = new ApiRequestLoggingInterceptor(new ApiRequestMetricsService());
+    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    const request = {
+      method: "POST", originalUrl: "/auth/reset-password?token=secret-token",
+      url: "/auth/reset-password?token=secret-token", headers: {},
+      route: { path: "/auth/reset-password" },
+      body: { token: "secret-token", newPassword: "secret-password" },
+    } as ApiRequestContext;
+    await lastValueFrom(interceptor.intercept(createHttpExecutionContext(request, { statusCode: 200 }), {
+      handle: () => of({ status: "success" }),
+    }));
+    const log = consoleSpy.mock.calls[0][0];
+    expect(log).not.toContain("secret-token");
+    expect(log).not.toContain("secret-password");
+    expect(JSON.parse(log).path).toBe("/auth/reset-password");
+  });
+
   it("writes structured success logs with request context", async () => {
     const interceptor = new ApiRequestLoggingInterceptor(
       new ApiRequestMetricsService()

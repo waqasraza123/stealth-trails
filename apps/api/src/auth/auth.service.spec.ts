@@ -910,7 +910,7 @@ describe("AuthService", () => {
     );
 
     expect(transaction.customer.update).toHaveBeenNthCalledWith(1, {
-      where: { id: "customer_1" },
+      where: { id: "customer_1", authTokenVersion: 0, passwordHash },
       data: {
         passwordHash: expect.any(String),
         passwordPolicyVersion: 2,

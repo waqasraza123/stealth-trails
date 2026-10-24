@@ -13,6 +13,7 @@ import { CustomerMfaEmailDeliveryService } from "./customer-mfa-email-delivery.s
 import { CustomerSecurityEmailDeliveryService } from "./customer-security-email-delivery.service";
 import { PasswordSecurityService } from "./password-security.service";
 import { AuthRateLimitService } from "./auth-rate-limit.service";
+import { PasswordRecoveryService } from "./password-recovery.service";
 
 @Global()
 @Module({
@@ -31,6 +32,7 @@ import { AuthRateLimitService } from "./auth-rate-limit.service";
     CustomerSecurityEmailDeliveryService,
     PasswordSecurityService,
     AuthRateLimitService,
+    PasswordRecoveryService,
   ],
   exports: [
     AuthService,

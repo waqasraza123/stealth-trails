@@ -58,6 +58,7 @@ describe("auth pages", () => {
     expect(screen.getByText(/institutional digital banking/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Forgot password\?/i })).toHaveAttribute("href", "/auth/forgot-password");
   });
 
   it("renders the branded sign-up shell and onboarding form", () => {

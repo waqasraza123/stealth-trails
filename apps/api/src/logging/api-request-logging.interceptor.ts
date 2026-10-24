@@ -65,7 +65,9 @@ export class ApiRequestLoggingInterceptor implements NestInterceptor {
     const baseMetadata = {
       requestId: request.requestId ?? null,
       method,
-      path: request.originalUrl ?? request.url,
+      path: /\/auth\/(?:forgot|reset)-password(?:[?#]|$)/u.test(request.originalUrl ?? request.url ?? "")
+        ? (request.originalUrl ?? request.url)?.split(/[?#]/u)[0]
+        : request.originalUrl ?? request.url,
       routePath,
       actorType: actor.actorType,
       actorId: actor.actorId,

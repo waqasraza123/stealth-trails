@@ -59,6 +59,66 @@ export class CustomerMfaEmailDeliveryService {
     this.runtimeConfig = loadCustomerMfaEmailDeliveryRuntimeConfig();
   }
 
+  get passwordRecoveryResponseWindowMs(): number {
+    return Math.min(this.runtimeConfig.requestTimeoutMs, 5000) + 3000;
+  }
+
+  async sendPasswordReset(input: {
+    email: string;
+    link: string;
+    deliveryId: string;
+    expiresAt: string;
+  }): Promise<void> {
+    // No preview token, success audit, provider response, or raw provider error.
+    // Provider errors can contain the complete request, including the reset link.
+    if (this.runtimeConfig.mode === "preview") {
+      throw new ServiceUnavailableException("Password recovery delivery is unavailable.");
+    }
+    const text = `Reset your Stealth Trails Bank password:\n\n${input.link}\n\nThis link expires in 15 minutes and can only be used once. You will also need your authenticator or a one-time recovery code. If you did not request this, ignore this email.`;
+    try {
+      if (this.runtimeConfig.mode === "resend") {
+        await axios.post("https://api.resend.com/emails", {
+          from: `${this.runtimeConfig.fromName} <${this.runtimeConfig.fromEmail}>`,
+          to: [input.email],
+          subject: "Reset your Stealth Trails Bank password",
+          text,
+        }, {
+          timeout: Math.min(this.runtimeConfig.requestTimeoutMs, 5000),
+          maxRedirects: 0,
+          headers: {
+            Authorization: `Bearer ${this.runtimeConfig.resendApiKey}`,
+            "Idempotency-Key": input.deliveryId,
+          },
+        });
+      } else {
+        const webhook = new URL(this.runtimeConfig.webhookUrl!);
+        if (webhook.username || webhook.password || webhook.hash || webhook.search ||
+          (webhook.protocol !== "https:" && !(process.env.NODE_ENV !== "production" &&
+            ["localhost", "127.0.0.1", "[::1]"].includes(webhook.hostname) && webhook.protocol === "http:"))) {
+          throw new Error("Invalid recovery email webhook.");
+        }
+        await axios.post(webhook.toString(), {
+          type: "customer_password_recovery",
+          from: { email: this.runtimeConfig.fromEmail, name: this.runtimeConfig.fromName },
+          recipient: { email: input.email },
+          message: { subject: "Reset your Stealth Trails Bank password", text },
+          recovery: { link: input.link, expiresAt: input.expiresAt },
+          tracking: { clicks: false, opens: false },
+        }, {
+          timeout: Math.min(this.runtimeConfig.requestTimeoutMs, 5000),
+          maxRedirects: 0,
+          headers: {
+            "Idempotency-Key": input.deliveryId,
+            ...(this.runtimeConfig.bearerToken
+              ? { Authorization: `Bearer ${this.runtimeConfig.bearerToken}` } : {}),
+          },
+        });
+      }
+    } catch {
+      throw new ServiceUnavailableException("Password recovery delivery is unavailable.");
+    }
+  }
+
   private trimToNull(value: string | null | undefined): string | null {
     if (typeof value !== "string") {
       return null;

@@ -2,6 +2,7 @@ import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
+import { PasswordRecoveryService } from "./password-recovery.service";
 import { InternalOperatorBearerGuard } from "./guards/internal-operator-bearer.guard";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { OperatorIdentityService } from "./operator-identity.service";
@@ -39,6 +40,7 @@ describe("AuthController", () => {
     const result = await createIntegrationTestApp({
       controllers: [AuthController],
       providers: [
+        { provide: PasswordRecoveryService, useValue: {} },
         {
           provide: AuthService,
           useValue: authService,

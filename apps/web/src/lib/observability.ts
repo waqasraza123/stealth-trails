@@ -49,6 +49,10 @@ export function reportWebApiError(
 
   const requestError = axios.isAxiosError(error) ? error : null;
 
+  // These request objects contain credentials. Recovery pages handle their own
+  // sanitized errors; never pass the AxiosError to analytics or telemetry.
+  if (/\/auth\/(?:forgot|reset)-password(?:[?#]|$)/u.test(requestError?.config?.url ?? "")) return;
+
   webTelemetry.captureException(error, {
     kind: "http_error",
     message: "Customer web API request failed",
