@@ -237,6 +237,380 @@ function createRuntime<T extends Record<string, unknown>>(
   };
 }
 
+function createIdleWorker(
+  overrides: Record<string, unknown>,
+  dependencies: Partial<
+    ConstructorParameters<typeof WorkerOrchestrator>[0]
+  > = {},
+  executionMode: ConstructorParameters<
+    typeof WorkerOrchestrator
+  >[0]["runtime"]["executionMode"] = "monitor",
+) {
+  const empty = async () => ({ intents: [], limit: 20 });
+  const internalApiClient = createInternalApiClient({
+    listQueuedDepositIntents: empty,
+    listQueuedWithdrawalIntents: empty,
+    listBroadcastDepositIntents: empty,
+    listBroadcastWithdrawalIntents: empty,
+    listConfirmedDepositIntentsReadyToSettle: empty,
+    listConfirmedWithdrawalIntentsReadyToSettle: empty,
+    ...overrides,
+  });
+  return new WorkerOrchestrator({
+    runtime: createRuntime({
+      environment: "development",
+      workerId: "worker_1",
+      internalApiBaseUrl: "http://localhost:9001",
+      internalWorkerApiKey: "fixture-key",
+      executionMode,
+      pollIntervalMs: 10,
+      batchLimit: 20,
+      requestTimeoutMs: 1000,
+      internalApiStartupGracePeriodMs: 45000,
+      confirmationBlocks: 3,
+      reconciliationScanIntervalMs: 300000,
+      platformAlertReEscalationIntervalMs: 300000,
+      rpcUrl: null,
+      depositSignerPrivateKey: null,
+    }),
+    internalApiClient: internalApiClient as never,
+    rpcClient: null,
+    depositBroadcaster: null,
+    withdrawalBroadcaster: null,
+    policyControlledWithdrawalBroadcaster: null,
+    logger: createLogger(),
+    ...dependencies,
+  });
+}
+
+test("scheduled research reports approval state and isolates provider failures", async () => {
+  const { logger, infos, errors } = createCapturingLogger();
+  const workflow = {
+    scheduledRunCount: 1,
+    dataChangeRunCount: 2,
+    claimedRunCount: 3,
+    succeededRunCount: 1,
+    awaitingApprovalRunCount: 1,
+    retriedRunCount: 1,
+    failedRunCount: 0,
+    reclaimedRunCount: 1,
+  };
+  const worker = createIdleWorker(
+    {
+      async runScheduledWealthGuardianResearch() {
+        return { dueCustomerCount: 2, failedCustomerCount: 1 };
+      },
+      async runDueAiWorkflows(limit: number) {
+        assert.equal(limit, 20);
+        return workflow;
+      },
+      async sweepRetirementVaultReleaseRequests() {
+        return {
+          readyForReleaseCount: 1,
+          releasedCount: 1,
+          failedCount: 0,
+          processedReleaseRequestIds: ["release-1"],
+        };
+      },
+      async sweepRetirementVaultRuleChangeRequests() {
+        return {
+          readyToApplyCount: 1,
+          appliedCount: 1,
+          failedCount: 0,
+          processedRuleChangeRequestIds: ["rule-1"],
+        };
+      },
+    },
+    { logger },
+  );
+  const metrics = await worker.runOnce();
+  assert.equal(metrics.aiWorkflowAwaitingApprovalRunCount, 1);
+  assert.equal(metrics.aiWorkflowSucceededRunCount, 1);
+  assert.equal(metrics.aiWorkflowRetriedRunCount, 1);
+  assert.equal(metrics.retirementVaultReleasedCount, 1);
+  assert.equal(metrics.retirementVaultRuleChangeAppliedCount, 1);
+  assert.ok(
+    infos.some(
+      ({ event }) => event === "wealth_guardian_scheduled_research_completed",
+    ),
+  );
+  assert.ok(infos.some(({ event }) => event === "ai_workflow_sweep_completed"));
+  assert.equal(errors.length, 0);
+  let workflowsAttempted = false;
+  const failed = createIdleWorker(
+    {
+      async runScheduledWealthGuardianResearch() {
+        throw new Error("provider unavailable");
+      },
+      async runDueAiWorkflows() {
+        workflowsAttempted = true;
+        throw new Error("workflow unavailable");
+      },
+    },
+    { logger },
+  );
+  const failedMetrics = await failed.runOnce();
+  assert.equal(workflowsAttempted, true);
+  assert.equal(failedMetrics.aiWorkflowSucceededRunCount, 0);
+  assert.deepEqual(
+    errors.map(({ event }) => event),
+    ["wealth_guardian_scheduled_research_failed", "ai_workflow_sweep_failed"],
+  );
+});
+
+test("synthetic solvency anchors use fixture submission and confirmation paths", async () => {
+  const submitted: Array<{ id: string; txHash: string }> = [];
+  const confirmed: string[] = [];
+  const worker = createIdleWorker(
+    {
+      async listRequestedSolvencyReportAnchors() {
+        return {
+          anchors: [
+            { id: "anchor-new", reportId: "report-1", contractAddress: null },
+          ],
+        };
+      },
+      async listSubmittedSolvencyReportAnchors() {
+        return {
+          anchors: [
+            {
+              id: "anchor-pending",
+              reportId: "report-2",
+              txHash: "fixture-tx",
+              contractAddress: null,
+            },
+          ],
+        };
+      },
+      async recordSolvencyReportAnchorSubmitted(
+        id: string,
+        payload: { txHash: string },
+      ) {
+        submitted.push({ id, txHash: payload.txHash });
+      },
+      async recordSolvencyReportAnchorConfirmed(id: string) {
+        confirmed.push(id);
+      },
+    },
+    {},
+    "synthetic",
+  );
+  const metrics = await worker.runOnce();
+  assert.equal(submitted[0].id, "anchor-new");
+  assert.match(submitted[0].txHash, /^0x[0-9a-f]{64}$/u);
+  assert.deepEqual(confirmed, ["anchor-pending"]);
+  assert.equal(metrics.solvencyReportAnchorSubmittedCount, 1);
+  assert.equal(metrics.solvencyReportAnchorConfirmedCount, 1);
+});
+
+test("solvency monitoring confirms only successful sufficiently confirmed receipts", async () => {
+  const { logger, infos, warnings } = createCapturingLogger();
+  const confirmed: string[] = [];
+  const failed: string[] = [];
+  const worker = createIdleWorker(
+    {
+      async listSubmittedSolvencyReportAnchors() {
+        return {
+          anchors: ["missing", "pending", "reverted", "early", "confirmed"].map(
+            (id) => ({
+              id,
+              reportId: id,
+              txHash: id === "missing" ? null : id,
+              contractAddress: null,
+            }),
+          ),
+        };
+      },
+      async recordSolvencyReportAnchorConfirmed(
+        id: string,
+        payload: { blockNumber: number },
+      ) {
+        confirmed.push(id);
+        assert.equal(payload.blockNumber, 95);
+      },
+      async recordSolvencyReportAnchorFailed(
+        id: string,
+        payload: { failureReason: string },
+      ) {
+        failed.push(id);
+        assert.match(payload.failureReason, /reverted/u);
+      },
+    },
+    {
+      logger,
+      rpcClient: {
+        async getBlockNumber() {
+          return 100n;
+        },
+        async getTransactionReceipt(hash: string) {
+          return hash === "pending"
+            ? null
+            : {
+                succeeded: hash !== "reverted",
+                blockNumber: hash === "early" ? 100n : 95n,
+                fromAddress: null,
+                toAddress: null,
+              };
+        },
+      },
+    },
+  );
+  const metrics = await worker.runOnce();
+  assert.deepEqual(confirmed, ["confirmed"]);
+  assert.deepEqual(failed, ["reverted"]);
+  assert.equal(metrics.solvencyReportAnchorConfirmedCount, 1);
+  assert.equal(metrics.solvencyReportAnchorFailedCount, 1);
+  assert.ok(
+    warnings.some(
+      ({ event }) =>
+        event === "submitted_solvency_report_anchor_missing_tx_hash",
+    ),
+  );
+  assert.ok(
+    infos.some(
+      ({ event }) => event === "solvency_report_anchor_pending_confirmation",
+    ),
+  );
+  assert.ok(
+    infos.some(
+      ({ event }) => event === "solvency_report_anchor_waiting_confirmations",
+    ),
+  );
+});
+
+test("solvency submission waits for a configured broadcaster and records failed attempts", async () => {
+  const anchor = {
+    id: "anchor-1",
+    reportId: "report-1",
+    chainId: 1,
+    contractAddress: "fixture-contract",
+    anchorPayloadHash: "fixture-hash",
+  };
+  const { logger, infos } = createCapturingLogger();
+  const waiting = await createIdleWorker(
+    {
+      async listRequestedSolvencyReportAnchors() {
+        return { anchors: [anchor] };
+      },
+    },
+    { logger },
+  ).runOnce();
+  assert.equal(waiting.solvencyReportAnchorSubmittedCount, 0);
+  assert.ok(
+    infos.some(
+      ({ event }) => event === "solvency_report_anchor_waiting_for_broadcast",
+    ),
+  );
+  for (const error of [new Error("provider unavailable"), "unknown failure"]) {
+    const failures: string[] = [];
+    const result = await createIdleWorker(
+      {
+        async listRequestedSolvencyReportAnchors() {
+          return { anchors: [anchor] };
+        },
+        async recordSolvencyReportAnchorFailed(
+          _id: string,
+          payload: { failureReason: string },
+        ) {
+          failures.push(payload.failureReason);
+        },
+      },
+      {
+        solvencyReportAnchorBroadcaster: {
+          signerAddress: "fixture-signer",
+          contractAddress: "fixture-contract",
+          async broadcast() {
+            throw error;
+          },
+        },
+      },
+    ).runOnce();
+    assert.equal(result.solvencyReportAnchorFailedCount, 1);
+    assert.deepEqual(failures, [
+      error instanceof Error
+        ? error.message
+        : "Solvency report anchor broadcast failed.",
+    ]);
+  }
+  const submitted: string[] = [];
+  const success = await createIdleWorker(
+    {
+      async listRequestedSolvencyReportAnchors() {
+        return { anchors: [anchor] };
+      },
+      async recordSolvencyReportAnchorSubmitted(id: string) {
+        submitted.push(id);
+      },
+    },
+    {
+      solvencyReportAnchorBroadcaster: {
+        signerAddress: "fixture-signer",
+        contractAddress: "fixture-contract",
+        async broadcast() {
+          return {
+            txHash: "fixture-tx",
+            fromAddress: "fixture-signer",
+            toAddress: "fixture-contract",
+          };
+        },
+      },
+    },
+  ).runOnce();
+  assert.equal(success.solvencyReportAnchorSubmittedCount, 1);
+  assert.deepEqual(submitted, ["anchor-1"]);
+  await assert.rejects(
+    createIdleWorker({
+      async listSubmittedSolvencyReportAnchors() {
+        return { anchors: [{ id: "anchor-1", txHash: "fixture-tx" }] };
+      },
+    }).runOnce(),
+    /RPC client is required for solvency anchor monitoring/u,
+  );
+});
+
+test("loan monitoring deduplicates autopay and records valuation and default work", async () => {
+  const attempts: string[] = [];
+  const valuations: string[] = [];
+  const defaults: string[] = [];
+  const worker = createIdleWorker({
+    async listDueLoanInstallments() {
+      return {
+        installments: ["paid", "paid", "failed", "not-due"].map(
+          (loanAgreementId) => ({ loanAgreementId }),
+        ),
+      };
+    },
+    async runLoanAutopay(id: string) {
+      attempts.push(id);
+      return { attempted: id !== "not-due", succeeded: id === "paid" };
+    },
+    async listValuationMonitorLoans() {
+      return { agreements: [{ loanAgreementId: "loan-1" }] };
+    },
+    async refreshLoanValuation(id: string) {
+      valuations.push(id);
+    },
+    async listGracePeriodExpiredLoans() {
+      return { agreements: [{ loanAgreementId: "loan-2" }] };
+    },
+    async escalateLoanDefault(id: string) {
+      defaults.push(id);
+    },
+    async listLoanLiquidationCandidates() {
+      return { agreements: [{ loanAgreementId: "loan-2" }] };
+    },
+  });
+  const metrics = await worker.runOnce();
+  assert.deepEqual(attempts, ["paid", "failed", "not-due"]);
+  assert.deepEqual(valuations, ["loan-1"]);
+  assert.deepEqual(defaults, ["loan-2"]);
+  assert.equal(metrics.autopayLoanSweepCount, 2);
+  assert.equal(metrics.autopayLoanSuccessCount, 1);
+  assert.equal(metrics.autopayLoanFailureCount, 1);
+  assert.equal(metrics.valuationRefreshCount, 1);
+  assert.equal(metrics.defaultEscalatedLoanCount, 1);
+});
+
 test("worker claims and dispatches governed execution requests before downstream funding", async () => {
   const operations: string[] = [];
   const client = createInternalApiClient({

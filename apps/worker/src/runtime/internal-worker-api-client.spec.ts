@@ -515,3 +515,94 @@ test("internal worker api client preserves agreement-shaped liquidation candidat
     axios.create = originalCreate;
   }
 });
+
+test("worker research, retirement and solvency calls preserve results, limits and workflow timeout", async () => {
+  const originalCreate = axios.create;
+  const calls: Array<{
+    method: string;
+    url: string;
+    payload?: unknown;
+    options?: unknown;
+  }> = [];
+  const response = { fixture: "worker-result" };
+  axios.create = (() => ({
+    async get(url: string, options: unknown) {
+      calls.push({ method: "get", url, options });
+      return { data: { status: "success", data: response } };
+    },
+    async post(url: string, payload?: unknown, options?: unknown) {
+      calls.push({ method: "post", url, payload, options });
+      return { data: { status: "success", data: response } };
+    },
+  })) as unknown as typeof axios.create;
+  try {
+    const client = createInternalWorkerApiClient({
+      ...runtime,
+      aiWorkflowRequestTimeoutMs: 42000,
+    });
+    assert.deepEqual(
+      await client.sweepRetirementVaultReleaseRequests(7),
+      response,
+    );
+    assert.deepEqual(
+      await client.sweepRetirementVaultRuleChangeRequests(7),
+      response,
+    );
+    assert.deepEqual(
+      await client.runScheduledWealthGuardianResearch(),
+      response,
+    );
+    assert.deepEqual(await client.runDueAiWorkflows(7), response);
+    assert.deepEqual(
+      await client.listRequestedSolvencyReportAnchors(7),
+      response,
+    );
+    assert.deepEqual(
+      await client.listSubmittedSolvencyReportAnchors(7),
+      response,
+    );
+    assert.deepEqual(
+      await client.recordSolvencyReportAnchorSubmitted("anchor_1", {
+        txHash: "fixture-tx",
+      }),
+      response,
+    );
+    assert.deepEqual(
+      await client.recordSolvencyReportAnchorConfirmed("anchor_1", {
+        txHash: "fixture-tx",
+        blockNumber: 100,
+      }),
+      response,
+    );
+    assert.deepEqual(
+      await client.recordSolvencyReportAnchorFailed("anchor_1", {
+        failureReason: "reverted",
+      }),
+      response,
+    );
+    assert.deepEqual(
+      calls.map(({ method, url }) => `${method}:${url}`),
+      [
+        "post:/retirement-vault/internal/worker/release-requests/sweep",
+        "post:/retirement-vault/internal/worker/rule-change-requests/sweep",
+        "post:/ai/wealth-guardian/internal/worker/run-scheduled",
+        "post:/ai/workflows/internal/worker/run-due",
+        "get:/solvency/internal/worker/report-anchors/requested",
+        "get:/solvency/internal/worker/report-anchors/submitted",
+        "post:/solvency/internal/worker/report-anchors/anchor_1/record-submitted",
+        "post:/solvency/internal/worker/report-anchors/anchor_1/record-confirmed",
+        "post:/solvency/internal/worker/report-anchors/anchor_1/record-failed",
+      ],
+    );
+    assert.deepEqual(calls[0].payload, { limit: 7 });
+    assert.deepEqual(calls[3].options, { timeout: 42000 });
+    assert.deepEqual(calls[4].options, { params: { limit: 7 } });
+    assert.deepEqual(calls[7].payload, {
+      txHash: "fixture-tx",
+      blockNumber: 100,
+    });
+    assert.deepEqual(calls[8].payload, { failureReason: "reverted" });
+  } finally {
+    axios.create = originalCreate;
+  }
+});
