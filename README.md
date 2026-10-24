@@ -27,6 +27,12 @@ This repository demonstrates how AI can sit beside financial infrastructure with
 > [!IMPORTANT]
 > This is an engineering project, not a licensed bank, broker, financial adviser, or investment service. Nothing in the application or this repository is financial or investment advice.
 
+### Financial Research Agent and independent evaluation
+
+Copilot now also exposes an opt-in, non-production **Financial Research Agent** at `POST /ai/copilot/research`. A bounded LangGraph loop lets a configured LLM select typed read-only tools, observe real service results, and answer with evidence. Customer identity, ownership, consent, permissions and budgets are enforced by the backend. Financial calculations and transaction approvals remain authoritative deterministic services.
+
+The [isolated SafeLabs integration](evaluations/safelabs/README.md) provides a separately authenticated local evaluation API, two persisted synthetic customer fixtures, a restricted PostgreSQL role, an internal Docker network with a fixed model gateway, pinned original ASI06 prompts, independent tool traces, and JSON/Markdown reports. Mock-model verification is separate from live evaluation. No live 30-prompt security result is claimed without a configured real provider and an explicitly authorized API budget.
+
 ## Why this project stands out
 
 - **Real financial workflow boundaries** — ledger-backed balances, intent-based deposits and withdrawals, settlement tracking, reconciliation, and audit events.

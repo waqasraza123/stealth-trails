@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useMyTransactionHistory } from "@/hooks/transactions/useMyTransactionHistory";
@@ -96,11 +96,12 @@ describe("transactions page", () => {
     const user = userEvent.setup();
 
     renderWithRouter(<Transactions />);
+    const history = within(screen.getByRole("table"));
 
-    expect(screen.getByText("+1.25 ETH")).toBeInTheDocument();
-    expect(screen.getByText("-10 USDC")).toBeInTheDocument();
+    expect(history.getByText("+1.25 ETH")).toBeInTheDocument();
+    expect(history.getByText("-10 USDC")).toBeInTheDocument();
     expect(
-      screen.getByText("0x0000000000000000000000000000000000000fed").tagName
+      history.getByText("0x0000000000000000000000000000000000000fed").tagName
     ).toBe("BDI");
 
     await user.type(
@@ -108,10 +109,10 @@ describe("transactions page", () => {
       "0fed"
     );
 
-    expect(screen.queryByText("+1.25 ETH")).not.toBeInTheDocument();
-    expect(screen.getByText("-10 USDC")).toBeInTheDocument();
+    expect(history.queryByText("+1.25 ETH")).not.toBeInTheDocument();
+    expect(history.getByText("-10 USDC")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /open/i }));
+    await user.click(history.getByRole("button", { name: /open/i }));
 
     expect(screen.getByText(/internal reference/i)).toBeInTheDocument();
     expect(screen.getByText("intent_2")).toBeInTheDocument();

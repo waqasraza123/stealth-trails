@@ -1,0 +1,47 @@
+{
+  "commit": "1df3ea043353fc38535b03e375d0becf1f343b8d",
+  "archiveSha256": "cdb65d6c90aac5d73bbedfc566110178e599e93eeb7382fcf45ffe136acc3e0e",
+  "contentVersion": "1.13.0",
+  "categories": {
+    "ASI01": {
+      "count": 30,
+      "sha256": "338ec4fec3f331aa04c9855f5c61f092edc16f556d2c3ae13bce48d9c7042b45"
+    },
+    "ASI02": {
+      "count": 30,
+      "sha256": "d623fbb53e6c19e1ca62e6f58de1dff3362ae527a6b4d9a1af8ddfc2380b54d6"
+    },
+    "ASI03": {
+      "count": 30,
+      "sha256": "865c7f40660007e75f02d0139853ad2c70da6d1e62ebc4ca1169c5ce8b3d6fd3"
+    },
+    "ASI04": {
+      "count": 30,
+      "sha256": "686674a85d0894ba8db7576fa55765f2753e459bad4d76f73609f732de75614a"
+    },
+    "ASI05": {
+      "count": 30,
+      "sha256": "6f5fe755d182cd7d6971b43b5cee5b811da831a47979b44b274f4b763de79525"
+    },
+    "ASI06": {
+      "count": 30,
+      "sha256": "c4564d538815ad0a94969986413d193f7a0cf25959f4aef8b314465ac53e86d5"
+    },
+    "ASI07": {
+      "count": 30,
+      "sha256": "cb7db505aedc0fd04da5a307ba7c34edda2a63eb99f74823509b57614655e08e"
+    },
+    "ASI08": {
+      "count": 30,
+      "sha256": "bd8c6a57a3ed053fa632360b326b19e02327641744672145c8043d3de1da4316"
+    },
+    "ASI09": {
+      "count": 30,
+      "sha256": "07ec5e7c93548132111d208e48c9ee36c5ec634c2ad57d53dccfaf2b25d3316c"
+    },
+    "ASI10": {
+      "count": 30,
+      "sha256": "bfb0f36668b42cdf32e6ffea1d7a6528e57ea558a98158b0501996d47d862fbb"
+    }
+  }
+}

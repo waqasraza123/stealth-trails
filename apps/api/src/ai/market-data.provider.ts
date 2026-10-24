@@ -13,7 +13,7 @@ const DEFAULT_ASSET_IDS = [
   "uniswap",
 ] as const;
 
-export type MarketDataProviderName = "disabled" | "coingecko";
+export type MarketDataProviderName = "disabled" | "coingecko" | "recorded";
 
 export type MarketAssetSnapshot = {
   id: string;

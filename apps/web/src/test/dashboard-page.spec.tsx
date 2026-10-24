@@ -136,7 +136,7 @@ describe("dashboard page", () => {
 
     expect(screen.getAllByRole("heading", { name: "Dashboard" }).length).toBeGreaterThan(0);
     expect(screen.getByText(/managed account overview for amina/i)).toBeInTheDocument();
-    expect(screen.getByText("Ethereum")).toBeInTheDocument();
+    expect(screen.getAllByText("Ethereum").length).toBeGreaterThan(0);
     expect(screen.getByText("1.5 ETH")).toBeInTheDocument();
     expect(screen.getByText("0.25 ETH")).toBeInTheDocument();
     expect(screen.getAllByText("0x1111222233334444555566667777888899990000").length).toBeGreaterThan(0);

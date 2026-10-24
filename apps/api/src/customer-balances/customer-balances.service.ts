@@ -24,7 +24,8 @@ export class CustomerBalancesService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async listMyBalances(
-    supabaseUserId: string
+    supabaseUserId: string,
+    limit?: number,
   ): Promise<MyCustomerBalancesResult> {
     const customerAccount = await this.prismaService.customerAccount.findFirst({
       where: {
@@ -42,6 +43,7 @@ export class CustomerBalancesService {
     }
 
     const balances = await this.prismaService.customerAssetBalance.findMany({
+      ...(limit === undefined ? {} : { take: Math.min(50, Math.max(1, limit)) }),
       where: {
         customerAccountId: customerAccount.id
       },

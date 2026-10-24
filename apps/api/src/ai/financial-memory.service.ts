@@ -294,6 +294,7 @@ export class FinancialMemoryService {
     task: string,
     externalAiRequested = false,
     limit = MAX_RETRIEVAL_RESULTS,
+    readOnly = false,
   ): Promise<FinancialMemoryContext> {
     const customerId = await this.customerId(supabaseUserId);
     const profile = await this.profileForCustomer(customerId);
@@ -301,7 +302,7 @@ export class FinancialMemoryService {
     if (!profile.personalizationEnabled || !profile.allowedAgentIds.includes(agentId)) {
       return { agentId, task: normalizedText(task).slice(0, 300), influences: [], externalAiUseAuthorized: false, notice: "Personalization is disabled or this agent is not authorized." };
     }
-    await this.expire(customerId);
+    if (!readOnly) await this.expire(customerId);
     const externalAiUseAuthorized = externalAiRequested && profile.externalAiConsent;
     const profileInfluences = this.profileInfluences(profile, task);
     const semantic = await this.embedding(task.slice(0, 800), externalAiUseAuthorized);

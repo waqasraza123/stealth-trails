@@ -38,6 +38,13 @@ export type CommitteeMission = {
     findings: Array<{ agentId: string; category: string; title: string; summary: string; evidenceIds: string[]; evidenceStatus: "verified" | "mixed" | "synthetic" | "assumption" }>;
     assumptions: string[];
     disagreements: Array<{ topic: string; agentIds: string[]; positions: string[]; resolution: string }>;
+    review?: {
+      methodology: string;
+      conclusion: "evidence_limited" | "review_required" | "ready_for_research";
+      summary: string;
+      challenges: Array<{ id: string; reviewer: string; target: string; severity: "warning" | "high"; reason: string; evidenceIds: string[]; reassessmentCondition: string }>;
+      nextResearchSteps: string[];
+    };
     researchPlanId: string | null;
     copilotConversationId: string | null;
     evidenceAsOf: string | null;

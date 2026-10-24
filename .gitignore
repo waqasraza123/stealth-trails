@@ -54,3 +54,11 @@ Thumbs.db
 *.sln
 *.sw?
 .vercel
+
+# Isolated security evaluation artifacts and Python environment
+evaluations/safelabs/.venv/
+evaluations/safelabs/.local-pki/
+evaluations/safelabs/reports/*
+!evaluations/safelabs/reports/.gitkeep
+**/__pycache__/
+*.pyc

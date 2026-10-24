@@ -1,0 +1,14 @@
+# SafeLabs source and prompt library pinned together. Python >=3.11; use a venv.
+safelabs-eval @ https://github.com/AgentSafeLabs/safelabs-eval/archive/1df3ea043353fc38535b03e375d0becf1f343b8d.tar.gz#sha256=cdb65d6c90aac5d73bbedfc566110178e599e93eeb7382fcf45ffe136acc3e0e
+httpx==0.28.1
+pydantic==2.12.5
+click==8.3.1
+annotated-types==0.8.0
+anyio==4.15.1
+certifi==2026.10.23
+h11==0.16.0
+httpcore==1.0.9
+idna==3.20
+pydantic_core==2.41.5
+typing-inspection==0.4.4
+typing_extensions==4.16.0

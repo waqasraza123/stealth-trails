@@ -7,7 +7,7 @@ const webRuntimeConfig = loadWebRuntimeConfig(
   import.meta.env as Record<string, string | boolean | undefined>,
 );
 
-export type AgentTraceStatus = "succeeded" | "failed" | "fallback";
+export type AgentTraceStatus = "succeeded" | "failed" | "fallback" | "running";
 export type AgentExecutionMode =
   | "deterministic"
   | "llm_opt_in"

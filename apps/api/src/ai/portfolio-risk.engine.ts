@@ -15,6 +15,8 @@ export const RISK_VALUES: Record<OpportunityRiskLevel, number> = {
   higher: 3,
 };
 
+export const RISK_TOLERANCE_MAXIMUM = { conservative: 1.5, balanced: 2.25, growth: 3 } as const;
+
 export function roundRiskValue(value: number): number {
   return Number(value.toFixed(2));
 }

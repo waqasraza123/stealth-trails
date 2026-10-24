@@ -5,6 +5,9 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { createIntegrationTestApp } from "../test-utils/create-integration-test-app";
 import { OpportunityHunterController } from "./opportunity-hunter.controller";
 import { OpportunityHunterService } from "./opportunity-hunter.service";
+import { AgentObservatoryService } from "./agent-observatory.service";
+import { WealthBriefRateLimitService } from "./wealth-brief-rate-limit.service";
+import { FinancialMemoryService } from "./financial-memory.service";
 
 describe("OpportunityHunterController", () => {
   let app: INestApplication;
@@ -20,6 +23,25 @@ describe("OpportunityHunterController", () => {
       providers: [
         { provide: AuthService, useValue: authService },
         { provide: OpportunityHunterService, useValue: opportunityHunter },
+        {
+          provide: WealthBriefRateLimitService,
+          useValue: { assertAllowed: jest.fn() },
+        },
+        {
+          provide: AgentObservatoryService,
+          useValue: {
+            observeCustomer: (
+              _subject: string,
+              operation: { execute: () => Promise<unknown> },
+            ) => operation.execute(),
+          },
+        },
+        {
+          provide: FinancialMemoryService,
+          useValue: {
+            retrieveForAgent: jest.fn().mockResolvedValue({ influences: [] }),
+          },
+        },
         JwtAuthGuard,
       ],
     });

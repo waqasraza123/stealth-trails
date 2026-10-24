@@ -257,6 +257,28 @@ export class DocumentIntelligenceService {
     await this.audit(customerId, supabaseUserId, "financial_document.deleted", documentId, {});
   }
 
+  /** Local, bounded passage retrieval. No query or document leaves PostgreSQL. */
+  async searchLocal(supabaseUserId: string, query: string, documentId?: string, limit = 5): Promise<DocumentPassage[]> {
+    const customerId = await this.customerId(supabaseUserId);
+    if (query.length < 2 || query.length > 500) throw new BadRequestException("Invalid document query.");
+    if (documentId) await this.getSummary(customerId, documentId);
+    const words = query.match(/[\p{L}\p{N}]{2,40}/gu)?.slice(0, 12) ?? [];
+    if (words.length === 0) return [];
+    const patterns = words.map((word) => `%${word}%`);
+    const rows = await this.prisma.$queryRaw<PassageRow[]>(Prisma.sql`
+      SELECT c."id" AS "chunkId", c."documentId", d."fileName", c."pageNumber",
+             LEFT(c."content", 1600) AS "content", 0::double precision AS "similarity"
+      FROM "FinancialDocumentChunk" c
+      JOIN "FinancialDocument" d ON d."id" = c."documentId" AND d."customerId" = c."customerId"
+      WHERE c."customerId" = ${customerId} AND d."status" IN ('ready', 'text_ready')
+        AND (${documentId ?? null}::text IS NULL OR c."documentId" = ${documentId ?? null})
+        AND c."content" ILIKE ANY(ARRAY[${Prisma.join(patterns)}]::text[])
+      ORDER BY d."createdAt" DESC, c."chunkIndex" ASC
+      LIMIT ${Math.min(5, Math.max(1, limit))}
+    `);
+    return rows.map((row) => ({ ...row, citation: `[${row.fileName} p.${row.pageNumber}]` }));
+  }
+
   async search(supabaseUserId: string, query: string, consent: boolean, documentId?: string, limit = MAX_RESULTS): Promise<DocumentPassage[]> {
     const customerId = await this.customerId(supabaseUserId);
     const normalizedQuery = query.replace(/\s+/gu, " ").trim();

@@ -31,7 +31,8 @@ export class OpportunityHunterService {
 
   async discover(): Promise<OpportunityHunterResponse> {
     const market = await this.marketData.getSnapshot();
-    const isLive = market.assets.length > 0;
+    // Recorded fixtures remain explicitly synthetic research, never live-market evidence.
+    const isLive = market.assets.length > 0 && market.provider !== "recorded";
     const screeningConfig = loadHalalScreeningConfig();
     const opportunities = isLive
       ? buildLiveOpportunityCatalog(market.assets, screeningConfig)

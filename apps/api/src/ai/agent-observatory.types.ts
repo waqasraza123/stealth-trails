@@ -5,7 +5,7 @@ export type AgentExecutionMode =
   | "scheduled_deterministic"
   | "unavailable";
 
-export type AgentTraceStatus = "succeeded" | "failed" | "fallback";
+export type AgentTraceStatus = "succeeded" | "failed" | "fallback" | "running";
 
 export type AgentEvidenceTrace = {
   evidenceId: string;
@@ -30,7 +30,7 @@ export type AgentTraceStep = {
   id: string;
   label: string;
   kind: "workflow" | "tool" | "decision" | "persistence";
-  status: "succeeded" | "failed" | "fallback";
+  status: AgentTraceStatus;
   durationMs: number | null;
   toolName: string | null;
   outputSummary: string;

@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { CopilotService } from "./copilot.service";
-import type { InvestmentCommitteeMission } from "./investment-committee.types";
+import type { InvestmentCommitteeMission, InvestmentCommitteeReview } from "./investment-committee.types";
 import { OpportunityHunterService } from "./opportunity-hunter.service";
 import type { OpportunityHunterResponse } from "./opportunity-hunter.types";
 import { PortfolioRiskService } from "./portfolio-risk.service";
@@ -91,6 +91,7 @@ export class InvestmentCommitteeTools {
     supabaseUserId: string,
     mission: InvestmentCommitteeMission,
     allocations: Allocation[],
+    review?: InvestmentCommitteeReview,
   ) {
     return tool(
       async (): Promise<InvestmentResearchPlan> =>
@@ -107,7 +108,7 @@ export class InvestmentCommitteeTools {
             ethicalPreferences: mission.input.ethicalPreferences,
           },
           allocations,
-        }),
+        }, review),
       {
         name: "research_plan_studio_read_only",
         description: "Create an educational scenario and monitoring plan using the existing Research Plan Studio. This tool cannot execute the plan.",

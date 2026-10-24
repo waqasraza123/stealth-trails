@@ -86,18 +86,27 @@ function buildOpportunity(
     ],
     halalScreening: {
       status: halalStatus,
+      assessedAt: "2026-10-15T12:00:00.000Z",
+      methodologyVersion: "preliminary-halal-screen-v1",
       rationale: ["Screen based only on synthetic facts."],
       evidenceGaps: ["Independent review"],
+      ruleResults: [],
+      history: [],
+      historyNote:
+        "No prior assessment is recorded for this synthetic fixture.",
       disclaimer: "This is not a fatwa, religious ruling, or certification.",
     },
     researchPlan: {
       objective: "Validate the synthetic thesis.",
       assumptions: ["All figures are synthetic"],
+      riskConsiderations: ["Synthetic concentration risk"],
+      ethicalConsiderations: ["Independent screening review required"],
       researchSteps: ["Review the evidence"],
       monitoringSignals: ["Adoption"],
       exitConditions: ["Usage declines for two quarters"],
     },
     updatedAt: "2026-10-15T12:00:00.000Z",
+    marketData: null,
     synthetic: true,
   };
 }
@@ -110,6 +119,9 @@ function buildResponse(): OpportunityHunterResponse {
       asOf: "2026-10-15T12:00:00.000Z",
       methodologyVersion: "opportunity-score-v1",
       disclaimer: "All opportunities and market signals are simulated.",
+      provider: "disabled",
+      reliability: "fallback",
+      failureReason: null,
     },
     scoringMethodology: {
       deterministic: true,
@@ -117,9 +129,26 @@ function buildResponse(): OpportunityHunterResponse {
       formula: "Fundamentals + momentum + liquidity + evidence + risk.",
       maximumScore: 100,
     },
+    halalScreeningMethodology: {
+      version: "preliminary-halal-screen-v1",
+      preliminaryOnly: true,
+      interestBearingDebtMaximumPercent: 30,
+      nonPermissibleIncomeMaximumPercent: 5,
+      rules: [],
+      statusDefinitions: {
+        eligible: "All preliminary rules passed on synthetic evidence.",
+        questionable: "Evidence requires qualified review.",
+        excluded: "An exclusion rule failed on synthetic evidence.",
+        insufficient_evidence:
+          "The available record does not support a decision.",
+      },
+    },
     ai: {
       analysisMode: "deterministic_rules",
       externalAiUsed: false,
+      analystEnabled: false,
+      fallbackReason: null,
+      insights: [],
       capabilities: {
         externalAiAvailable: false,
         providerName: null,
@@ -184,8 +213,17 @@ describe("AI Opportunity Hunter page", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Stablecoin Credit Loop")).toBeInTheDocument();
     expect(screen.getAllByText(/synthetic/i).length).toBeGreaterThan(2);
-    expect(screen.getByText(/external ai not used/i)).toBeInTheDocument();
-    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Run AI analyst" }),
+    ).not.toBeInTheDocument();
+    expect(
+      mockAxios.post.mock.calls.some(([url]) =>
+        String(url).includes("/ai/opportunities/analyze"),
+      ),
+    ).toBe(false);
+    expect(
+      within(screen.getByText("trade actions").parentElement!).getByText("0"),
+    ).toBeInTheDocument();
     expect(screen.getByText("trade actions")).toBeInTheDocument();
     expect(mockAxios.get).toHaveBeenCalledWith(
       expect.stringContaining("/ai/opportunities"),

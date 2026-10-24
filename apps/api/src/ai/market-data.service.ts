@@ -10,7 +10,7 @@ import {
 export type MarketDataResult = {
   assets: MarketAssetSnapshot[];
   provider: string;
-  status: "live" | "cached" | "stale" | "unavailable";
+  status: "live" | "cached" | "stale" | "unavailable" | "recorded";
   fetchedAt: string | null;
   failureReason: string | null;
 };
@@ -51,8 +51,8 @@ export class MarketDataService {
       return {
         assets,
         provider: this.provider.name,
-        status: "live",
-        fetchedAt: new Date(now).toISOString(),
+        status: this.provider.name === "recorded" ? "recorded" : "live",
+        fetchedAt: this.provider.name === "recorded" ? assets[0]?.lastUpdated ?? null : new Date(now).toISOString(),
         failureReason: null,
       };
     } catch {

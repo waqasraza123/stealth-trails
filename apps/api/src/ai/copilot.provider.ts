@@ -31,7 +31,7 @@ export class InvalidCopilotProviderOutputError extends Error {
 }
 
 const BOUNDARY_NOTE =
-  "The copilot is read-only. Exact account values, customer identity, database access, credentials, and transaction capabilities are never given to the external model. When consented outside production, the model may only reorder opaque server-authored statement IDs; the backend renders every fact and citation.";
+  "Classic Copilot answers are read-only statement selections: external AI can only reorder opaque server-authored IDs. The separate, explicitly consented Financial Research Agent can read minimized customer-scoped evidence and share it with the configured model outside production. Neither mode can transact, access credentials, or change financial approvals.";
 
 class DisabledCopilotProvider implements CopilotProvider {
   constructor(private readonly productionAiDisabled: boolean) {}

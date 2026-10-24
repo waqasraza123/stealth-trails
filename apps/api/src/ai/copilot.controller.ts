@@ -7,6 +7,7 @@ import {
   Request,
   Res,
   UseGuards,
+  BadRequestException,
 } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import type { CustomJsonResponse } from "../types/CustomJsonResponse";
@@ -19,6 +20,9 @@ import type {
 import { SendCopilotMessageDto } from "./dto/send-copilot-message.dto";
 import { AgentObservatoryService } from "./agent-observatory.service";
 import { summarizeCopilotRun } from "./agent-observatory.summaries";
+import { FinancialResearchService } from "./financial-research.service";
+import { researchRequestSchema } from "./financial-research.types";
+import { z } from "zod";
 
 type AuthenticatedRequest = { user: { id: string } };
 type StreamingResponse = {
@@ -35,7 +39,16 @@ export class CopilotController {
   constructor(
     private readonly copilot: CopilotService,
     private readonly observatory: AgentObservatoryService,
+    private readonly research: FinancialResearchService,
   ) {}
+
+  @Post("research")
+  async researchRequest(@Request() request: AuthenticatedRequest, @Body() body: unknown) {
+    const parsed = researchRequestSchema.extend({ externalAiOptIn: z.boolean() }).safeParse(body);
+    if (!parsed.success) throw new BadRequestException("Invalid research request.");
+    const { externalAiOptIn, ...input } = parsed.data;
+    return this.research.execute(request.user.id, input, externalAiOptIn);
+  }
 
   @Get()
   async dashboard(

@@ -6,6 +6,7 @@ import { createIntegrationTestApp } from "../test-utils/create-integration-test-
 import { AiController } from "./ai.controller";
 import { WealthBriefRateLimitService } from "./wealth-brief-rate-limit.service";
 import { WealthBriefService } from "./wealth-brief.service";
+import { AgentObservatoryService } from "./agent-observatory.service";
 
 describe("AiController", () => {
   let app: INestApplication;
@@ -27,6 +28,15 @@ describe("AiController", () => {
         { provide: AuthService, useValue: authService },
         { provide: WealthBriefService, useValue: wealthBriefService },
         { provide: WealthBriefRateLimitService, useValue: rateLimitService },
+        {
+          provide: AgentObservatoryService,
+          useValue: {
+            observeCustomer: (
+              _subject: string,
+              operation: { execute: () => Promise<unknown> },
+            ) => operation.execute(),
+          },
+        },
         JwtAuthGuard,
       ],
     });

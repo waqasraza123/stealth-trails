@@ -48,6 +48,22 @@ export type InvestmentCommitteeDisagreement = {
   resolution: string;
 };
 
+export type InvestmentCommitteeReview = {
+  methodology: "cross_agent_evidence_review_v1";
+  conclusion: "evidence_limited" | "review_required" | "ready_for_research";
+  summary: string;
+  challenges: Array<{
+    id: string;
+    reviewer: InvestmentCommitteeAgentId;
+    target: InvestmentCommitteeAgentId;
+    severity: "warning" | "high";
+    reason: string;
+    evidenceIds: string[];
+    reassessmentCondition: string;
+  }>;
+  nextResearchSteps: string[];
+};
+
 export type InvestmentCommitteeMissionInput = {
   goal: string;
   externalAiConsent: boolean;
@@ -64,6 +80,7 @@ export type InvestmentCommitteeReport = {
   findings: InvestmentCommitteeFinding[];
   assumptions: string[];
   disagreements: InvestmentCommitteeDisagreement[];
+  review?: InvestmentCommitteeReview;
   researchPlanId: string | null;
   copilotConversationId: string | null;
   evidenceAsOf: string | null;

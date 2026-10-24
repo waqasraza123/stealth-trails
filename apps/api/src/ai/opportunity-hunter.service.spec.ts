@@ -1,18 +1,36 @@
 import { NotFoundException } from "@nestjs/common";
 import { scoreOpportunity } from "./opportunity-hunter.catalog";
 import { OpportunityHunterService } from "./opportunity-hunter.service";
-import type { WealthBriefProvider } from "./wealth-brief.provider";
+import type { OpportunityAnalystProvider } from "./opportunity-analyst.provider";
+import { MarketDataService } from "./market-data.service";
 
-function createProvider(externalAiAvailable = false): WealthBriefProvider {
+function createProvider(
+  externalAiAvailable = false,
+): OpportunityAnalystProvider {
   return {
     getCapabilities: jest.fn().mockReturnValue({
-      externalAiAvailable,
+      available: externalAiAvailable,
       providerName: externalAiAvailable ? "openai_compatible" : null,
       model: externalAiAvailable ? "configured-model" : null,
       disclosure: [],
     }),
-    generate: jest.fn(),
+    analyze: jest.fn(),
   };
+}
+
+function createService(provider = createProvider()) {
+  const market = {
+    getSnapshot: jest
+      .fn()
+      .mockResolvedValue({
+        assets: [],
+        provider: "disabled",
+        status: "unavailable",
+        fetchedAt: null,
+        failureReason: null,
+      }),
+  } as unknown as MarketDataService;
+  return new OpportunityHunterService(market, provider);
 }
 
 describe("OpportunityHunterService", () => {
@@ -34,16 +52,16 @@ describe("OpportunityHunterService", () => {
     expect(result.scoreLabel).toBe("promising");
   });
 
-  it("returns only clearly labeled synthetic research with complete explanations", () => {
+  it("returns only clearly labeled synthetic research with complete explanations", async () => {
     const provider = createProvider();
-    const service = new OpportunityHunterService(provider);
-    const result = service.discover();
+    const service = createService(provider);
+    const result = await service.discover();
 
     expect(result.dataset.kind).toBe("synthetic_research");
     expect(result.scoringMethodology.deterministic).toBe(true);
     expect(result.ai.externalAiUsed).toBe(false);
     expect(result.ai.capabilities.externalAiAvailable).toBe(false);
-    expect(provider.generate).not.toHaveBeenCalled();
+    expect(provider.analyze).not.toHaveBeenCalled();
     expect(result.opportunities).toHaveLength(6);
 
     for (const opportunity of result.opportunities) {
@@ -64,24 +82,24 @@ describe("OpportunityHunterService", () => {
     }
   });
 
-  it("reports provider availability without invoking the external provider", () => {
+  it("reports provider availability without invoking the external provider", async () => {
     const provider = createProvider(true);
-    const service = new OpportunityHunterService(provider);
+    const service = createService(provider);
 
-    const result = service.discover();
+    const result = await service.discover();
 
     expect(result.ai.capabilities.externalAiAvailable).toBe(true);
     expect(result.ai.analysisMode).toBe("deterministic_rules");
     expect(result.ai.externalAiUsed).toBe(false);
-    expect(provider.generate).not.toHaveBeenCalled();
+    expect(provider.analyze).not.toHaveBeenCalled();
   });
 
-  it("returns a synthetic detail record and rejects unknown ids", () => {
-    const service = new OpportunityHunterService(createProvider());
+  it("returns a synthetic detail record and rejects unknown ids", async () => {
+    const service = createService();
 
-    expect(service.findOne("syn-onchain-payments-index").symbol).toBe(
+    expect((await service.findOne("syn-onchain-payments-index")).symbol).toBe(
       "SYN-PAY",
     );
-    expect(() => service.findOne("missing")).toThrow(NotFoundException);
+    await expect(service.findOne("missing")).rejects.toThrow(NotFoundException);
   });
 });

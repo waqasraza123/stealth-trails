@@ -1,0 +1,85 @@
+name: stealth-trails-agent-evaluation
+services:
+  db:
+    image: pgvector/pgvector:0.8.0-pg17
+    environment:
+      POSTGRES_USER: eval_admin
+      POSTGRES_PASSWORD: ${AI_EVAL_DB_ADMIN_PASSWORD:?Run prepare.py first}
+      POSTGRES_DB: stealth_trails_agent_eval
+    networks: [isolated]
+    volumes: [evaluation-db:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U eval_admin -d stealth_trails_agent_eval"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  fixtures:
+    build:
+      context: ../..
+      dockerfile: evaluations/safelabs/Dockerfile
+    image: stealth-trails-agent-evaluation:local
+    command: [node, dist/ai/evaluation/fixtures.js, setup]
+    networks: [isolated]
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      NODE_ENV: test
+      AI_EVALUATION_ENABLED: "true"
+      AI_EVALUATION_CONTAINER: "true"
+      DATABASE_URL: postgresql://eval_admin:${AI_EVAL_DB_ADMIN_PASSWORD}@db:5432/stealth_trails_agent_eval
+      DIRECT_URL: postgresql://eval_admin:${AI_EVAL_DB_ADMIN_PASSWORD}@db:5432/stealth_trails_agent_eval
+      AI_EVALUATION_RUNTIME_PASSWORD: ${AI_EVALUATION_RUNTIME_PASSWORD:?Run prepare.py first}
+      AI_WEALTH_BRIEF_PROVIDER: disabled
+      MARKET_DATA_PROVIDER: disabled
+      DOCUMENT_AI_ENABLED: "false"
+      AI_OPPORTUNITY_ANALYST_ENABLED: "false"
+  llm-gateway:
+    image: nginx:1.28.0-alpine
+    networks: [isolated, provider-egress]
+    volumes:
+      - ./gateway.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./.local-pki:/etc/nginx/evaluation-tls:ro
+    read_only: true
+    tmpfs: [/var/cache/nginx, /var/run]
+  agent:
+    image: stealth-trails-agent-evaluation:local
+    networks: [isolated]
+    ports: ["127.0.0.1:9011:9011"]
+    depends_on:
+      fixtures: { condition: service_completed_successfully }
+      llm-gateway: { condition: service_started }
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: ["./.local-pki/ca.crt:/evaluation-ca.crt:ro"]
+    environment:
+      NODE_ENV: test
+      GIT_COMMIT_SHA: ${GIT_COMMIT_SHA:-unknown}
+      AI_EVALUATION_ENABLED: "true"
+      AI_EVALUATION_CONTAINER: "true"
+      DATABASE_URL: postgresql://agent_eval_runtime:${AI_EVALUATION_RUNTIME_PASSWORD}@db:5432/stealth_trails_agent_eval
+      DIRECT_URL: postgresql://agent_eval_runtime:${AI_EVALUATION_RUNTIME_PASSWORD}@db:5432/stealth_trails_agent_eval
+      AI_EVALUATION_API_KEY: ${AI_EVALUATION_API_KEY:?Run prepare.py first}
+      AI_EVALUATION_PEER_API_KEY: ${AI_EVALUATION_PEER_API_KEY:?Run prepare.py first}
+      NODE_EXTRA_CA_CERTS: /evaluation-ca.crt
+      AI_RESEARCH_ENABLED: ${AI_RESEARCH_ENABLED:-false}
+      AI_WEALTH_BRIEF_PROVIDER: ${AI_WEALTH_BRIEF_PROVIDER:-disabled}
+      AI_WEALTH_BRIEF_API_KEY: ${AI_WEALTH_BRIEF_API_KEY:-}
+      AI_WEALTH_BRIEF_MODEL: ${AI_WEALTH_BRIEF_MODEL:-}
+      AI_WEALTH_BRIEF_ENDPOINT: https://llm-gateway/v1/chat/completions
+      AI_WEALTH_BRIEF_ALLOWED_HOSTS: llm-gateway
+      AI_WEALTH_BRIEF_ALLOW_LOCAL_PROVIDER: "true"
+      AI_WEALTH_BRIEF_REQUEST_TIMEOUT_MS: "30000"
+      AI_RESEARCH_MAX_SPEND_USD: ${AI_RESEARCH_MAX_SPEND_USD:-0.5}
+      AI_RESEARCH_INPUT_USD_PER_MILLION: ${AI_RESEARCH_INPUT_USD_PER_MILLION:-10}
+      AI_RESEARCH_OUTPUT_USD_PER_MILLION: ${AI_RESEARCH_OUTPUT_USD_PER_MILLION:-30}
+      DOCUMENT_AI_ENABLED: "false"
+      AI_OPPORTUNITY_ANALYST_ENABLED: "false"
+      MARKET_DATA_PROVIDER: disabled
+networks:
+  isolated:
+    internal: true
+  provider-egress: {}
+volumes:
+  evaluation-db: {}

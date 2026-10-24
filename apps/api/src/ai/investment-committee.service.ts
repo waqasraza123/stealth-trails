@@ -17,11 +17,13 @@ import type {
   InvestmentCommitteeFinding,
   InvestmentCommitteeMission,
   InvestmentCommitteeMissionInput,
+  InvestmentCommitteeReview,
 } from "./investment-committee.types";
 import type { Opportunity, OpportunityHunterResponse } from "./opportunity-hunter.types";
 import type { PortfolioRiskAnalysis } from "./portfolio-risk.types";
 import type { InvestmentResearchPlan } from "./research-plan.types";
 import { FinancialMemoryService } from "./financial-memory.service";
+import { reviewCommitteeEvidence } from "./investment-committee.reasoning";
 
 const SNAPSHOT_ACTION = "ai_investment_committee.mission_snapshot";
 const SNAPSHOT_TARGET = "ai_investment_committee_mission";
@@ -53,6 +55,7 @@ const CommitteeState = Annotation.Root({
   allocations: Annotation<Allocation[]>(),
   riskResearch: Annotation<PortfolioRiskAnalysis | null>(),
   halalFindings: Annotation<HalalFinding[]>(),
+  review: Annotation<InvestmentCommitteeReview | null>(),
   strategyPlan: Annotation<InvestmentResearchPlan | null>(),
   copilotResult: Annotation<CopilotResult | null>(),
   externalAiUsed: Annotation<boolean>({ reducer: (current, update) => current || update, default: () => false }),
@@ -312,6 +315,7 @@ export class InvestmentCommitteeService {
           allocations: [],
           riskResearch: null,
           halalFindings: [],
+          review: null,
           strategyPlan: null,
           copilotResult: null,
           externalAiUsed: false,
@@ -341,6 +345,7 @@ export class InvestmentCommitteeService {
       .addNode<"risk", CommitteeGraphState>("risk", (state) => this.runRiskNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
       .addNode<"halal", CommitteeGraphState>("halal", (state) => this.runHalalNode(state), { retryPolicy: { maxAttempts: RETRY_LIMIT + 1 } })
       .addNode("strategy", (state) => this.runStrategyNode(state))
+      .addNode("review", (state) => this.runReviewNode(state))
       .addNode("approval", (state) => this.runApprovalNode(state))
       .addNode("synthesis", (state) => this.runSynthesisNode(state))
       .addNode("failure", (state) => ({ failureReason: state.failureReason ?? "committee_graph_missing_research_data" }))
@@ -348,7 +353,8 @@ export class InvestmentCommitteeService {
       .addEdge("chief", "opportunity")
       .addConditionalEdges("opportunity", (state) => state.opportunityResearch?.opportunities.length ? "risk" : "failure", ["risk", "failure"])
       .addEdge("risk", "halal")
-      .addEdge("halal", "strategy")
+      .addEdge("halal", "review")
+      .addConditionalEdges("review", (state) => state.failureReason ? "failure" : "strategy", ["failure", "strategy"])
       .addConditionalEdges("strategy", (state) => this.llm.isAvailable(state.mission.externalAiConsent) ? "approval" : "synthesis", ["approval", "synthesis"])
       .addConditionalEdges("approval", (state) => state.cancelled ? END : "synthesis", ["synthesis", END])
       .addEdge("synthesis", END)
@@ -483,11 +489,35 @@ export class InvestmentCommitteeService {
     return { halalFindings: result.value, externalAiUsed: result.externalAiUsed, providerUsage: providerUsage(result), fallbackReasons: result.fallbackReason ? [result.fallbackReason] : [] };
   }
 
+  private async runReviewNode(state: CommitteeGraphState) {
+    await this.ensureCanRun(state);
+    if (!state.opportunityResearch || !state.riskResearch) return { failureReason: "committee_missing_review_evidence" };
+    const research = state.opportunityResearch;
+    const risk = state.riskResearch;
+    const review = await this.observatory.observeCustomer(state.supabaseUserId, {
+      agentId: "chief-research-agent",
+      workflow: "langgraph_cross_agent_review",
+      execute: async () => reviewCommitteeEvidence({ input: state.mission.input, allocations: state.allocations, research, risk, halal: state.halalFindings }),
+      summarize: (result) => ({
+        mode: "deterministic" as const,
+        steps: [{ id: "langgraph:review", label: "Cross-agent evidence review", kind: "workflow" as const, status: "succeeded" as const, toolName: null,
+          outputSummary: `${result.conclusion}; ${result.challenges.length} unresolved challenge(s).`,
+          evidenceIds: [...new Set(result.challenges.flatMap((item) => item.evidenceIds))].slice(0, 20), failureReason: null,
+        }],
+      }),
+    });
+    const latest = await this.getLatest(state.customerId, state.missionId);
+    await this.persist(state.customerId, state.supabaseUserId, this.updateAgent(latest, "chief-research-agent", {
+      reasoningSummary: `${review.summary} ${review.challenges.length} cross-agent challenge(s) passed to the Strategy Agent.`,
+    }));
+    return { review };
+  }
+
   private async runStrategyNode(state: CommitteeGraphState) {
     await this.ensureCanRun(state);
     if (!state.riskResearch) return { failureReason: "committee_missing_risk_research" };
     await this.startAgent(state, "strategy-agent", "research_plan_studio_read_only");
-    const tool = this.tools.strategy(state.supabaseUserId, state.mission, state.allocations);
+    const tool = this.tools.strategy(state.supabaseUserId, state.mission, state.allocations, state.review ?? undefined);
     const result = await this.runTimed(() => this.observatory.observeCustomer(state.supabaseUserId, {
       agentId: "strategy-agent",
       workflow: "langgraph_strategy_node",
@@ -504,7 +534,7 @@ export class InvestmentCommitteeService {
         steps: [{ id: "langgraph:strategy", label: "Strategy graph node and typed tool", kind: "tool" as const, status: execution.fallbackReason ? "fallback" as const : "succeeded" as const, toolName: tool.name, outputSummary: `Plan ${execution.value.id} created with ${execution.value.scenarios.length} deterministic scenarios.`, evidenceIds: execution.value.halalAnalysis.evidence.map((item) => item.evidenceId), failureReason: null }],
       }),
     }));
-    await this.finishAgent(state, "strategy-agent", `Educational plan ${result.value.id} prepared across ${result.value.scenarios.length} scenarios; ${result.value.portfolioAnalysis.riskToleranceAlignment}`, result.fallbackReason);
+    await this.finishAgent(state, "strategy-agent", `Educational plan ${result.value.id} prepared across ${result.value.scenarios.length} scenarios; ${result.value.portfolioAnalysis.riskToleranceAlignment} ${state.review?.summary ?? ""} ${state.review?.nextResearchSteps.join(" ") ?? ""}`, result.fallbackReason);
     return { strategyPlan: result.value, externalAiUsed: result.externalAiUsed || result.value.strategy.externalAiUsed, providerUsage: providerUsage(result), fallbackReasons: result.fallbackReason ? [result.fallbackReason] : [] };
   }
 
@@ -542,12 +572,16 @@ export class InvestmentCommitteeService {
       tool,
       invoke: async (input) => await tool.invoke(input) as CopilotResult,
     }));
-    const findings = this.buildFindings(state.opportunityResearch, state.riskResearch, state.halalFindings, state.strategyPlan.id);
+    // Recompute for missions resumed from checkpoints created before the review node existed.
+    const review = state.review ?? reviewCommitteeEvidence({ input: state.mission.input, allocations: state.allocations, research: state.opportunityResearch, risk: state.riskResearch, halal: state.halalFindings });
+    const findings = this.buildFindings(state.opportunityResearch, state.riskResearch, state.halalFindings, state.strategyPlan.id, state.allocations);
     const ids = findings.map((_, index) => `finding-${index + 1}`);
-    const ranking = await this.llm.rankFindings({
+    const ranking = await this.runTimed(() => this.llm.rankFindings({
       consent: state.mission.externalAiConsent,
-      findings: findings.map((finding, index) => ({ id: ids[index], category: finding.category, evidenceStatus: finding.evidenceStatus })),
-    });
+      findings: findings.map((finding, index) => ({ id: ids[index], category: finding.category, evidenceStatus: finding.evidenceStatus, evidenceCount: finding.evidenceIds.length,
+        challengeCodes: review.challenges.filter((item) => item.target === finding.agentId || item.reviewer === finding.agentId).map((item) => item.id.split(":")[0]),
+      })),
+    }));
     const byId = new Map(ids.map((id, index) => [id, findings[index]]));
     const rankedFindings = ranking.value.flatMap((id) => byId.get(id) ?? []);
     return {
@@ -560,19 +594,21 @@ export class InvestmentCommitteeService {
         report: {
           title: `Investment committee research · ${state.mission.goal.slice(0, 80)}`,
           executiveSummary: [
+            review.summary,
             `${state.opportunityResearch.opportunities.length} opportunities were evaluated against ${state.opportunityResearch.dataset.reliability} evidence.`,
             `Independent risk review classified the scenario as ${state.riskResearch.current.metrics.riskLabel} risk with ${state.riskResearch.current.guardian.healthLabel} stress resilience.`,
             `${state.halalFindings.filter((item) => item.status !== "eligible" || item.evidenceGaps.length > 0).length} selected opportunities retain Shariah-evidence qualifications or gaps.`,
             synthesis.value.message.content,
           ],
           findings: rankedFindings,
+          review,
           assumptions: [...new Set([
             "Portfolio weights are educational scenario inputs and do not trigger rebalancing.",
             "Stress scenarios are hypothetical rather than forecasts.",
             ...(state.opportunityResearch.dataset.kind === "synthetic_research" ? ["Live market evidence was unavailable; opportunity inputs are explicitly synthetic."] : []),
             ...state.strategyPlan.strategy.assumptions.slice(0, 6),
           ])],
-          disagreements: this.buildDisagreements(state.opportunityResearch, state.riskResearch, state.halalFindings),
+          disagreements: this.buildDisagreements({ ...state.opportunityResearch, opportunities: state.opportunityResearch.opportunities.filter((item) => state.allocations.some((allocation) => allocation.opportunityId === item.id && allocation.percent > 0)) }, state.riskResearch, state.halalFindings),
           researchPlanId: state.strategyPlan.id,
           copilotConversationId: synthesis.value.conversation.id,
           evidenceAsOf: state.opportunityResearch.dataset.asOf,
@@ -605,7 +641,7 @@ export class InvestmentCommitteeService {
       status: "completed",
       completedAt,
       durationMs: mission.startedAt ? Date.now() - Date.parse(mission.startedAt) : null,
-      reasoningSummary: `Consolidated ${mission.report.findings.length} graph findings and ${mission.report.disagreements.length} explicit disagreements without issuing an investment instruction.`,
+      reasoningSummary: `Consolidated ${mission.report.findings.length} graph findings and ${mission.report.disagreements.length} explicit disagreements. ${mission.report.review?.summary ?? ""} ${mission.report.review?.challenges.length ?? 0} challenge(s) retain explicit reassessment conditions.`,
       toolActivity: [{ tool: "langgraph-state-graph", status: "completed", summary: `Graph completed with Neon PostgreSQL checkpoints. ${externalAiUsed ? "Provider tool calls were used." : "Deterministic fallback was used and labeled."}` }],
     });
     await this.persist(state.customerId, state.supabaseUserId, mission);
@@ -689,18 +725,26 @@ export class InvestmentCommitteeService {
     return selected.map((item, index) => ({ opportunityId: item.id, percent: index === 0 ? 100 - base * (selected.length - 1) : base }));
   }
 
-  private buildFindings(research: OpportunityHunterResponse, risk: PortfolioRiskAnalysis, halal: HalalFinding[], planId: string): InvestmentCommitteeFinding[] {
+  private buildFindings(research: OpportunityHunterResponse, risk: PortfolioRiskAnalysis, halal: HalalFinding[], planId: string, allocations: Allocation[]): InvestmentCommitteeFinding[] {
+    const selectedIds = new Set(allocations.filter((item) => item.percent > 0).map((item) => item.opportunityId));
+    const evidenceStatus = (synthetic: boolean, evidence: Array<{ synthetic: boolean }>): InvestmentCommitteeFinding["evidenceStatus"] =>
+      synthetic ? "synthetic" : evidence.length === 0 ? "assumption" : evidence.every((item) => item.synthetic) ? "synthetic" : evidence.some((item) => item.synthetic) ? "mixed" : "verified";
     return [
-      ...research.opportunities.slice(0, 3).map((item) => ({
+      ...research.opportunities.filter((item) => selectedIds.has(item.id)).map((item) => ({
         agentId: "opportunity-agent" as const,
         category: "opportunity" as const,
         title: `${item.name} opportunity evidence`,
         summary: `${item.thesis} Deterministic score ${item.score}/100; ${item.riskLevel} risk.`,
         evidenceIds: item.evidence.map((evidence) => evidence.id),
-        evidenceStatus: item.synthetic ? "synthetic" as const : "verified" as const,
+        evidenceStatus: evidenceStatus(item.synthetic || research.dataset.kind === "synthetic_research", item.evidence),
       })),
-      { agentId: "risk-agent", category: "risk", title: "Independent portfolio risk review", summary: `${risk.current.metrics.riskLabel} weighted risk; ${risk.current.metrics.maximumAssetWeightPercent}% maximum asset exposure; ${risk.current.guardian.healthLabel} stress health.`, evidenceIds: risk.evidence.map((item) => item.id), evidenceStatus: risk.dataQuality.datasetKind === "live_market" ? "verified" : "synthetic" },
-      ...halal.map((item) => ({ agentId: "halal-research-agent" as const, category: "halal" as const, title: `${item.name} preliminary Shariah screen`, summary: `${item.status.replace(/_/gu, " ")}. ${item.rationale.join(" ")} ${item.evidenceGaps.length ? `Evidence gaps: ${item.evidenceGaps.join("; ")}.` : "No recorded evidence gap."}`, evidenceIds: item.evidenceIds, evidenceStatus: item.evidenceGaps.length ? "mixed" as const : "verified" as const })),
+      { agentId: "risk-agent", category: "risk", title: "Independent portfolio risk review", summary: `${risk.current.metrics.riskLabel} weighted risk; ${risk.current.metrics.maximumAssetWeightPercent}% maximum asset exposure; ${risk.current.guardian.healthLabel} stress health.`, evidenceIds: risk.evidence.map((item) => item.id), evidenceStatus: evidenceStatus(risk.dataQuality.datasetKind === "synthetic_research", risk.evidence) },
+      ...halal.map((item) => {
+        const opportunity = research.opportunities.find((candidate) => candidate.id === item.opportunityId);
+        const references = opportunity?.halalScreening.ruleResults.flatMap((rule) => rule.evidence) ?? [];
+        const status = evidenceStatus(research.dataset.kind === "synthetic_research" || Boolean(opportunity?.synthetic), references);
+        return { agentId: "halal-research-agent" as const, category: "halal" as const, title: `${item.name} preliminary Shariah screen`, summary: `${item.status.replace(/_/gu, " ")}. ${item.rationale.join(" ")} ${item.evidenceGaps.length ? `Evidence gaps: ${item.evidenceGaps.join("; ")}.` : "No recorded evidence gap."}`, evidenceIds: item.evidenceIds, evidenceStatus: status === "verified" && item.evidenceGaps.length ? "mixed" as const : status };
+      }),
       { agentId: "strategy-agent", category: "strategy", title: "Educational research plan", summary: `Research Plan Studio persisted plan ${planId} with assumptions, scenarios, monitoring signals, and reassessment conditions.`, evidenceIds: [], evidenceStatus: "assumption" },
     ];
   }

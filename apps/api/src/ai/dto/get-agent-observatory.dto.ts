@@ -22,6 +22,6 @@ export class GetAgentObservatoryDto {
   agentId?: string;
 
   @IsOptional()
-  @IsIn(["succeeded", "failed", "fallback"])
-  status?: "succeeded" | "failed" | "fallback";
+  @IsIn(["succeeded", "failed", "fallback", "running"])
+  status?: "succeeded" | "failed" | "fallback" | "running";
 }

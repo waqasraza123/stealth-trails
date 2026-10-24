@@ -20,10 +20,12 @@ import type {
   ResearchPlanStudioDashboard,
 } from "./research-plan.types";
 import { WealthBriefRateLimitService } from "./wealth-brief-rate-limit.service";
+import type { InvestmentCommitteeReview } from "./investment-committee.types";
 import {
   calculateDiversification,
   calculateHalalWeights,
   calculateWeightedRisk,
+  RISK_TOLERANCE_MAXIMUM,
 } from "./portfolio-risk.engine";
 
 const CREATED_ACTION = "investment_research_plan.created";
@@ -131,6 +133,7 @@ export class ResearchPlanService {
   async createPlan(
     supabaseUserId: string,
     input: ResearchPlanInput,
+    committeeReview?: InvestmentCommitteeReview,
   ): Promise<InvestmentResearchPlan> {
     await this.rateLimit.assertAllowed(supabaseUserId);
     const customerId = await this.resolveCustomerId(supabaseUserId);
@@ -149,6 +152,12 @@ export class ResearchPlanService {
       input,
       copilotFindings,
     });
+    if (committeeReview) {
+      plan.strategy.rationale = [committeeReview.summary, ...plan.strategy.rationale];
+      plan.strategy.risks = [...new Set([...plan.strategy.risks, ...committeeReview.challenges.map((item) => item.reason)])];
+      plan.strategy.researchSteps = [...new Set([...committeeReview.nextResearchSteps, ...plan.strategy.researchSteps])];
+      plan.strategy.reassessmentConditions = [...new Set([...committeeReview.nextResearchSteps, ...plan.strategy.reassessmentConditions])];
+    }
     await this.persistPlan(customerId, supabaseUserId, CREATED_ACTION, plan);
     return plan;
   }
@@ -257,11 +266,7 @@ export class ResearchPlanService {
     const riskLabel = weightedRisk.label;
     const diversificationScore = diversification.score;
     const maximumWeight = diversification.maximumWeight;
-    const toleranceMaximum = {
-      conservative: 1.5,
-      balanced: 2.25,
-      growth: 3,
-    }[args.input.goal.riskTolerance];
+    const toleranceMaximum = RISK_TOLERANCE_MAXIMUM[args.input.goal.riskTolerance];
     const { statusWeights, overallStatus: overallHalalStatus } =
       calculateHalalWeights(sharedAllocations);
     const uncertaintyWarnings = selected.flatMap(({ allocation, opportunity }) => {

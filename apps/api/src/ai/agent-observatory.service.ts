@@ -2,6 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service";
+import type { ResearchExecution } from "./financial-research.types";
+import { hashResearchValue } from "./financial-research.config";
 import type { GetAgentObservatoryDto } from "./dto/get-agent-observatory.dto";
 import type {
   AgentExecutionTrace,
@@ -17,6 +19,13 @@ const MAX_STEPS = 20;
 const MAX_EVIDENCE = 30;
 
 const REGISTRY: Omit<AgentRegistryEntry, "operationalStatus" | "lastExecutionAt">[] = [
+  {
+    id: "financial-research-agent", name: "Financial Research Agent",
+    description: "Opt-in, bounded LangGraph model-directed research with backend authorization.",
+    capabilities: ["dynamic tool selection", "identity-bound reads", "policy decisions", "execution evidence"],
+    executionModes: ["llm_opt_in"], tools: ["portfolio_snapshot", "transaction_history", "market_observations", "opportunity_research", "portfolio_risk", "document_passages", "financial_memory", "research_plan"],
+    customerVisible: true, externalAiProductionDisabled: true,
+  },
   {
     id: "financial-memory",
     name: "AI Financial Memory",
@@ -201,6 +210,28 @@ export class AgentObservatoryService {
   private readonly logger = new Logger(AgentObservatoryService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Durable checkpoints use the existing Observatory audit stream; failure is fatal. */
+  async recordResearchExecution(customerId: string, subject: string, execution: ResearchExecution): Promise<void> {
+    const research = { ...execution, output: `[output omitted; sha256=${hashResearchValue(execution.output)}]` };
+    const trace = {
+      agentId: execution.agent, agentName: "Financial Research Agent", workflow: "copilot_research",
+      mode: execution.mode === "live_llm" ? "llm_opt_in" : "unavailable",
+      status: execution.status === "running" ? "running" : execution.stopReason === "completed" ? "succeeded" : "failed", actorType: "customer",
+      startedAt: execution.timestamp, completedAt: new Date().toISOString(), durationMs: execution.durationMs,
+      steps: execution.toolCalls.slice(0, 20).map((call) => ({ id: call.id, label: call.requestedName, kind: "tool", status: ["requested", "accepted", "running"].includes(call.status) ? "running" : call.status === "succeeded" ? "succeeded" : "failed", durationMs: call.durationMs, toolName: call.executedName, outputSummary: call.summary ?? call.denialReason ?? call.status, evidenceIds: call.resultRef ? [call.resultRef] : [], failureReason: call.error })),
+      providerUsage: { providerName: execution.provider, model: execution.model, ...execution.usage, costNote: "Reserved spending uses operator-configured upper-bound rates; verified pricing unavailable." },
+      evidence: [], fallbackReason: null, failureReason: execution.errors[0] ?? null,
+    };
+    const data = { customerId, actorType: "customer", actorId: subject, action: TRACE_ACTION, targetType: TRACE_TARGET, targetId: execution.executionId, metadata: { trace, research } as unknown as Prisma.InputJsonValue };
+    await this.prisma.auditEvent.upsert({ where: { id: execution.executionId }, create: { id: execution.executionId, ...data }, update: { metadata: data.metadata } });
+  }
+
+  async getResearchExecution(customerId: string, executionId: string): Promise<ResearchExecution | null> {
+    const event = await this.prisma.auditEvent.findFirst({ where: { id: executionId, customerId, action: TRACE_ACTION, targetType: TRACE_TARGET }, select: { metadata: true } });
+    const metadata = asObject(event?.metadata ?? null);
+    return metadata.research ? metadata.research as unknown as ResearchExecution : null;
+  }
 
   async recordCustomerMemoryActivity(
     supabaseUserId: string,
@@ -433,7 +464,7 @@ export class AgentObservatoryService {
       buckets.set(bucket, [...(buckets.get(bucket) ?? []), trace]);
     }
     const errorMap = new Map<string, { count: number; latestAt: string }>();
-    for (const trace of traces.filter((item) => item.status !== "succeeded")) {
+    for (const trace of traces.filter((item) => item.status === "failed" || item.status === "fallback")) {
       const category = trace.failureReason ?? trace.fallbackReason ?? "unspecified_fallback";
       const current = errorMap.get(category);
       errorMap.set(category, {

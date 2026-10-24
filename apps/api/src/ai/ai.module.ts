@@ -66,6 +66,11 @@ import {
 import { WorkflowStudioService } from "./workflow-studio.service";
 import { FinancialMemoryController } from "./financial-memory.controller";
 import { FinancialMemoryService } from "./financial-memory.service";
+import { FinancialResearchService } from "./financial-research.service";
+import { FinancialResearchTools } from "./financial-research.tools";
+import { FinancialResearchPolicy } from "./financial-research.policy";
+import { RESEARCH_MODEL } from "./financial-research.types";
+import { createResearchModel } from "./financial-research.provider";
 
 @Module({
   imports: [
@@ -108,6 +113,10 @@ import { FinancialMemoryService } from "./financial-memory.service";
     InvestmentCommitteeTools,
     WorkflowStudioService,
     FinancialMemoryService,
+    FinancialResearchService,
+    FinancialResearchTools,
+    FinancialResearchPolicy,
+    { provide: RESEARCH_MODEL, useFactory: createResearchModel },
     InternalWorkerApiKeyGuard,
     {
       provide: MARKET_DATA_CONFIG,
