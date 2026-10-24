@@ -278,6 +278,7 @@ Roadmap items are directional and **not claims of current functionality**.
 
 ### Platform evolution
 
+- [ ] Future enhancement: customer web passkey setup prompts and passwordless login on Mac and other supported devices, with password/MFA fallback
 - [ ] Broaden contract deployment proofs and public verification tooling
 - [ ] Deepen disaster-recovery, rollback, and notification-delivery evidence
 - [ ] Continue accessibility, localization, and cross-platform experience parity
