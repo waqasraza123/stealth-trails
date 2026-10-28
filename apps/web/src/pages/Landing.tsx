@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Fingerprint,
   Landmark,
-  LineChart,
   LockKeyhole,
   ShieldCheck,
   Sparkles,
@@ -31,183 +30,189 @@ const portfolioUrl = import.meta.env.VITE_PORTFOLIO_URL?.trim() || "https://gith
 
 const capabilities = [
   {
-    icon: BrainCircuit,
-    title: "Conversational banking",
-    titleAr: "خدمات مالية بالمحادثة",
+    icon: Landmark,
+    title: "Financial services",
+    titleAr: "الخدمات المالية",
     description:
-      'Ask “where did my money go this month?” and get a sourced answer from real account data, not a generic chart.',
+      "Manage accounts and wallets, track transfers, and follow lending, yield, and vault activity. Balances are backed by a double-entry ledger, with settlement and reconciliation workflows behind each operation.",
     descriptionAr:
-      "اسأل «أين ذهبت أموالي هذا الشهر؟» واحصل على إجابة موثّقة من بيانات الحساب الفعلية، لا مجرد رسم بياني عام.",
+      "أدر الحسابات والمحافظ، وتتبّع التحويلات وأنشطة الإقراض والعائد والخزائن. تستند الأرصدة إلى سجل محاسبي مزدوج القيد، مع مسارات للتسوية والمطابقة خلف العمليات المالية.",
+    modules: ["Accounts, wallets & transfers", "Lending & collateral workflows", "Staking, yield & retirement vaults", "Ledger, settlement & reconciliation"],
+    modulesAr: ["الحسابات والمحافظ والتحويلات", "مسارات الإقراض والضمانات", "التحصيص والعائد وخزائن التقاعد", "السجل المحاسبي والتسوية والمطابقة"],
     accent: "emerald",
   },
   {
-    icon: ShieldCheck,
-    title: "Approval-gated actions",
-    titleAr: "إجراءات تتطلب موافقتك",
+    icon: BrainCircuit,
+    title: "AI research & intelligence",
+    titleAr: "البحث والتحليل بالذكاء الاصطناعي",
     description:
-      "The agent proposes, you approve. No transfer, trade, or release executes without your explicit confirmation.",
+      "Ask Copilot about account activity, investigate documents, and stress-test portfolios. Combine research tools into workflows with review checkpoints, saved context, and evidence you can inspect.",
     descriptionAr:
-      "يقترح الوكيل وتوافق أنت. لا يُنفَّذ أي تحويل أو تداول أو إفراج عن الأموال دون تأكيدك الصريح.",
+      "اسأل المساعد عن نشاط الحساب، وحلّل المستندات، واختبر المحافظ تحت الضغط. اجمع أدوات البحث في مسارات عمل تتضمن نقاط مراجعة وسياقاً محفوظاً وأدلة يمكنك فحصها.",
+    modules: ["Copilot, Wealth Brief & customer memory", "Document analysis & research plans", "Risk Lab & Investment Committee", "Scheduled research & human review"],
+    modulesAr: ["المساعد وموجز الثروة وذاكرة العميل", "تحليل المستندات وخطط البحث", "مختبر المخاطر ولجنة الاستثمار", "البحث المجدول والمراجعة البشرية"],
     accent: "blue",
   },
   {
-    icon: LineChart,
-    title: "Risk intelligence",
-    titleAr: "ذكاء المخاطر",
+    icon: ShieldCheck,
+    title: "Operations & governance",
+    titleAr: "العمليات والحوكمة",
     description:
-      "Stress-test a portfolio and get clear next steps, with the reasoning trail preserved so you can check every conclusion.",
+      "Give operators dedicated tools to review withdrawals, manage restrictions, reconcile balances, and investigate incidents. Follow execution status, audit history, and reserve evidence across the system.",
     descriptionAr:
-      "اختبر محفظة تحت سيناريوهات الضغط واحصل على خطوات واضحة، مع حفظ مسار الاستدلال لتتمكن من مراجعة كل استنتاج.",
+      "وفّر لفرق العمليات أدوات لمراجعة السحوبات وإدارة القيود ومطابقة الأرصدة والتحقيق في الحوادث. تتبّع حالة التنفيذ وسجل التدقيق وأدلة الاحتياطيات عبر النظام.",
+    modules: ["Operator console & review queues", "Treasury, restrictions & incident handling", "Audit trails, alerts & execution workers", "Reserve proofs & on-chain report anchoring"],
+    modulesAr: ["لوحة العمليات وقوائم المراجعة", "الخزينة والقيود ومعالجة الحوادث", "سجلات التدقيق والتنبيهات وعمال التنفيذ", "إثباتات الاحتياطيات وتثبيت التقارير على السلسلة"],
     accent: "violet",
-  },
-  {
-    icon: Vault,
-    title: "Protected vaults",
-    titleAr: "خزائن محمية",
-    description:
-      "Long-term funds stay separated from daily money, with release rules you set and can inspect at any time.",
-    descriptionAr:
-      "تبقى الأموال طويلة الأجل منفصلة عن الأموال اليومية، بقواعد إفراج تحددها وتستطيع فحصها في أي وقت.",
-    accent: "amber",
   },
 ];
 
 const copy = {
   en: {
-    navPlatform: "Capabilities",
-    navIntelligence: "Walkthrough",
+    navPlatform: "Platform",
+    navIntelligence: "Product tour",
     navSecurity: "Controls",
     signIn: "Demo sign in",
     signUp: "Try the demo",
     dashboard: "Open demo workspace",
-    eyebrow: "AI banking agent — live product demo",
-    titleOne: "Your money,",
-    titleTwo: "explained in plain English.",
+    eyebrow: "AI-powered financial platform · Product demo",
+    titleOne: "Financial services.",
+    titleTwo: "AI intelligence.",
+    titleThree: "Human control.",
     description:
-      "Ask questions, move funds, and review your portfolio through one secure conversation. Every sensitive action requires your explicit approval, and every decision comes with its reasoning attached.",
+      "Manage accounts, transfers, lending, yield, and protected vaults. Research portfolios with AI. Give operators the tools to review activity, reconcile balances, and follow execution across the platform.",
     attribution:
-      "This is a working demonstration of an AI-native banking system, designed and built end to end by Waqas Raza.",
-    primaryCta: "Try the live demo",
-    secondaryCta: "See what it does",
-    trustOne: "Approve sensitive actions",
-    trustTwo: "Review the reasoning",
-    trustThree: "Trace every transaction",
+      "A working engineering demo, designed and built end to end by Waqas Raza: customer web and mobile apps, an operator console, backend services, and Ethereum smart contracts.",
+    primaryCta: "Explore the live demo",
+    secondaryCta: "See the platform",
+    trustOne: "Ledger-backed balances",
+    trustTwo: "Evidence-linked research",
+    trustThree: "Policy-controlled execution",
     visualLabel: "Demo workspace · sample data",
     visualGreeting: "Good morning, Amina",
     visualBalanceLabel: "Sample portfolio balance",
     visualTrend: "Portfolio view",
     visualAvailable: "Available",
     visualProtected: "Protected",
-    visualAgent: "Wealth Guardian",
-    visualAgentText: "Your portfolio review is ready",
-    visualStatus: "Approval required",
+    visualAgent: "AI portfolio research",
+    visualAgentText: "Read-only · sources attached",
+    visualStatus: "Withdrawal under review",
     visualLedger: "Activity trail",
-    visualLedgerText: "Every instruction remains visible and reviewable.",
-    visualControlLabel: "Action controls",
-    visualControlText: "Explicit approval",
-    visualReasoningLabel: "Reasoning",
-    visualReasoningText: "Ready for review",
-    sectionEyebrow: "Explore the demo",
-    sectionTitle: "What the system does",
+    visualLedgerText: "Financial execution follows its own policy and review workflow.",
+    visualControlLabel: "Financial operations",
+    visualControlText: "Policy-controlled execution",
+    visualReasoningLabel: "AI intelligence",
+    visualReasoningText: "Research with evidence",
+    visualSurfaces: ["Customer web", "Mobile app", "Operator console"],
+    sectionEyebrow: "Three connected pillars",
+    sectionTitle: "The platform behind the experience.",
     sectionDescription:
-      "Ask about account activity, review a proposed action, stress-test a portfolio, and inspect the rules protecting long-term funds.",
-    trustEyebrow: "Inspect the controls",
-    trustTitle: "Built the way financial software should be built.",
+      "Financial services, AI research, and operational governance work together across customer apps and internal tools. Each layer has a clear role and an inspectable workflow.",
+    availabilityNote:
+      "The demo labels sample data, unavailable sources, and deterministic fallbacks. Live AI and network features depend on the services available in the environment.",
+    trustEyebrow: "Clear authority. Inspectable evidence.",
+    trustTitle: "Research has sources. Execution has controls.",
     trustDescription:
-      "Sensitive actions pass through explicit controls. Transactions carry references. System state is inspectable. Security here is not a promise in a footer — it is visible in the product.",
-    trustLink: "Inspect system evidence",
-    trustCardOne: "Protected access",
+      "Check the sources behind research, the state of a financial operation, and the evidence behind reserve reports. Identity checks, permissions, review policies, and audit events make those boundaries part of the product.",
+    trustLink: "Explore reserve evidence",
+    trustBadge: "Traceable",
+    trustCardOne: "AI with bounded authority",
     trustCardOneText:
-      "Layered sign-in controls and session safeguards protect access to the demo workspace.",
-    trustCardTwo: "Proof and traceability",
+      "Financial research tools are read-only. They can inspect data and produce cited analysis. They cannot transfer funds, sign transactions, or approve withdrawals. Research workflows can pause for human review.",
+    trustCardTwo: "Governed financial execution",
     trustCardTwoText:
-      "Inspect transaction references, verification reports, and system state in the working demo.",
-    journeyEyebrow: "Try the workflow",
-    journeyTitle: "Ask. Review. Approve.",
+      "Money movement runs through dedicated financial services, with policy checks, operator review where required, execution workers, and settlement tracking. Vault releases follow their configured rules.",
+    journeyEyebrow: "Explore the product",
+    journeyTitle: "See how the pieces work together.",
     journeyDescription:
-      "Explore how an account-aware agent turns a question into a proposal you can inspect before anything executes.",
+      "Start with the customer experience, explore the intelligence tools, then inspect the evidence that supports financial operations.",
     steps: [
-      ["01", "Ask a question", "Ask about balances, recent activity, or portfolio risk in plain English."],
-      ["02", "Review the proposal", "Inspect the source data, reasoning, and action details before deciding."],
-      ["03", "Approve the action", "Confirm a sensitive action explicitly, then follow its status and transaction reference."],
+      ["01", "Manage financial activity", "Explore balances, transfers, loans, yield, and retirement vaults in the customer workspace. The platform also includes a dedicated mobile app.", "Open customer workspace", "/dashboard"],
+      ["02", "Investigate with AI", "Ask Copilot a question, review cited documents, model portfolio scenarios, or build a research workflow with human review checkpoints.", "Explore AI Copilot", "/copilot"],
+      ["03", "Inspect the evidence", "Review reserve reports, liability inclusion proofs, and on-chain report references. Operator tools extend this with review queues, reconciliation, and incident handling.", "View reserve evidence", "/trust/solvency"],
     ],
     ctaEyebrow: "Work with Waqas Raza",
-    ctaTitle: "Want a system like this for your business?",
+    ctaTitle: "Building a financial or AI product?",
     ctaDescription:
-      "I design and build AI agents, approval-gated workflows, and full-stack AI products for clients. See more of my work or get in touch through my Upwork profile.",
+      "This platform shows how I connect customer experiences, backend workflows, AI research, and operational controls in one system. I help clients design and build complete products, from the first workflow to the services and tools behind it.",
     ctaButton: "Get in touch on Upwork",
     ctaWork: "See more of my work",
-    footerTagline: "AI financial workspace · Engineering demo by Waqas Raza.",
-    footerSecurity: "System evidence",
+    footerTagline: "AI-powered financial platform · Engineering demo by Waqas Raza.",
+    footerSecurity: "Reserve evidence",
     footerSignIn: "Demo sign in",
     footerCopyright: "Waqas Raza · Stealth Trails demo.",
   },
   ar: {
-    navPlatform: "الإمكانات",
-    navIntelligence: "خطوات التجربة",
+    navPlatform: "المنصة",
+    navIntelligence: "جولة المنتج",
     navSecurity: "الضوابط",
     signIn: "دخول التجربة",
     signUp: "جرّب النظام",
     dashboard: "فتح مساحة التجربة",
-    eyebrow: "وكيل مالي ذكي — عرض تجريبي مباشر",
-    titleOne: "أموالك،",
-    titleTwo: "بشرح واضح وبسيط.",
+    eyebrow: "منصة مالية مدعومة بالذكاء الاصطناعي · عرض تجريبي",
+    titleOne: "خدمات مالية.",
+    titleTwo: "تحليل ذكي.",
+    titleThree: "تحكم بشري.",
     description:
-      "اطرح الأسئلة وحرّك الأموال وراجع محفظتك عبر محادثة آمنة واحدة. يتطلب كل إجراء حساس موافقتك الصريحة، ويأتي كل قرار مع توضيح أسبابه.",
+      "أدر الحسابات والتحويلات والإقراض والعائد والخزائن المحمية. ابحث في المحافظ بالذكاء الاصطناعي. ووفّر لفرق العمليات أدوات لمراجعة النشاط ومطابقة الأرصدة ومتابعة التنفيذ عبر المنصة.",
     attribution:
-      "هذا عرض عملي لنظام خدمات مالية قائم على الذكاء الاصطناعي، صممه وبناه وقاص رضا من البداية إلى النهاية.",
-    primaryCta: "جرّب العرض المباشر",
-    secondaryCta: "استكشف ما يفعله",
-    trustOne: "وافق على الإجراءات الحساسة",
-    trustTwo: "راجع الاستدلال",
-    trustThree: "تتبّع كل معاملة",
+      "عرض هندسي عملي صممه وبناه وقاص رضا من البداية إلى النهاية: تطبيقات ويب وجوال للعملاء، ولوحة عمليات، وخدمات خلفية، وعقود إيثيريوم ذكية.",
+    primaryCta: "استكشف العرض المباشر",
+    secondaryCta: "شاهد المنصة",
+    trustOne: "أرصدة يدعمها سجل محاسبي",
+    trustTwo: "بحث مرتبط بالأدلة",
+    trustThree: "تنفيذ تحكمه السياسات",
     visualLabel: "مساحة تجريبية · بيانات نموذجية",
     visualGreeting: "صباح الخير، أمينة",
     visualBalanceLabel: "رصيد محفظة نموذجي",
     visualTrend: "عرض المحفظة",
     visualAvailable: "متاح",
     visualProtected: "محمي",
-    visualAgent: "حارس الثروة",
-    visualAgentText: "مراجعة محفظتك جاهزة",
-    visualStatus: "الموافقة مطلوبة",
+    visualAgent: "بحث ذكي في المحفظة",
+    visualAgentText: "للقراءة فقط · المصادر مرفقة",
+    visualStatus: "السحب قيد المراجعة",
     visualLedger: "سجل النشاط",
-    visualLedgerText: "تبقى كل تعليماتك مرئية وقابلة للمراجعة.",
-    visualControlLabel: "ضوابط الإجراءات",
-    visualControlText: "موافقة صريحة",
-    visualReasoningLabel: "الاستدلال",
-    visualReasoningText: "جاهز للمراجعة",
-    sectionEyebrow: "استكشف التجربة",
-    sectionTitle: "ما الذي يفعله النظام؟",
+    visualLedgerText: "يتبع التنفيذ المالي مساراً مستقلاً للسياسات والمراجعة.",
+    visualControlLabel: "العمليات المالية",
+    visualControlText: "تنفيذ تحكمه السياسات",
+    visualReasoningLabel: "التحليل الذكي",
+    visualReasoningText: "بحث يستند إلى الأدلة",
+    visualSurfaces: ["ويب العملاء", "تطبيق الجوال", "لوحة العمليات"],
+    sectionEyebrow: "ثلاث ركائز مترابطة",
+    sectionTitle: "المنصة خلف التجربة.",
     sectionDescription:
-      "اسأل عن نشاط الحساب، وراجع إجراءً مقترحاً، واختبر محفظة تحت الضغط، وافحص القواعد التي تحمي الأموال طويلة الأجل.",
-    trustEyebrow: "افحص الضوابط",
-    trustTitle: "مبني كما ينبغي أن تُبنى البرمجيات المالية.",
+      "تتكامل الخدمات المالية والبحث بالذكاء الاصطناعي وحوكمة العمليات عبر تطبيقات العملاء والأدوات الداخلية. لكل طبقة دور واضح ومسار عمل يمكن فحصه.",
+    availabilityNote:
+      "يميّز العرض البيانات النموذجية والمصادر غير المتاحة والنتائج الحتمية البديلة. تعتمد ميزات الذكاء الاصطناعي والشبكات المباشرة على الخدمات المتاحة في البيئة.",
+    trustEyebrow: "صلاحيات واضحة وأدلة قابلة للفحص",
+    trustTitle: "للبحث مصادر. وللتنفيذ ضوابط.",
     trustDescription:
-      "تمر الإجراءات الحساسة عبر ضوابط صريحة. تحمل المعاملات مراجع واضحة. ويمكن فحص حالة النظام. الأمان هنا ليس وعداً في تذييل الصفحة، بل هو ظاهر في المنتج.",
-    trustLink: "افحص أدلة النظام",
-    trustCardOne: "وصول محمي",
+      "افحص مصادر البحث وحالة العملية المالية والأدلة وراء تقارير الاحتياطيات. تجعل فحوص الهوية والصلاحيات وسياسات المراجعة وأحداث التدقيق هذه الحدود جزءاً من المنتج.",
+    trustLink: "استكشف أدلة الاحتياطيات",
+    trustBadge: "قابل للتتبع",
+    trustCardOne: "ذكاء اصطناعي بصلاحيات محددة",
     trustCardOneText:
-      "تحمي طبقات تسجيل الدخول وضمانات الجلسة الوصول إلى مساحة التجربة.",
-    trustCardTwo: "الإثبات وقابلية التتبع",
+      "أدوات البحث المالي للقراءة فقط. تفحص البيانات وتنتج تحليلاً موثّقاً، ولا تستطيع تحويل الأموال أو توقيع المعاملات أو الموافقة على السحوبات. ويمكن إيقاف مسارات البحث للمراجعة البشرية.",
+    trustCardTwo: "تنفيذ مالي تحكمه الضوابط",
     trustCardTwoText:
-      "افحص مراجع المعاملات وتقارير التحقق وحالة النظام في العرض العملي.",
-    journeyEyebrow: "جرّب سير العمل",
-    journeyTitle: "اسأل. راجع. وافق.",
+      "تعمل حركة الأموال عبر خدمات مالية مخصصة، مع فحص السياسات ومراجعة المشغّلين عند الحاجة وعمال التنفيذ وتتبّع التسوية. وتتبع عمليات الإفراج من الخزائن قواعدها المحددة.",
+    journeyEyebrow: "استكشف المنتج",
+    journeyTitle: "شاهد كيف تتكامل الأجزاء.",
     journeyDescription:
-      "استكشف كيف يحوّل وكيل مطّلع على الحساب سؤالك إلى مقترح يمكنك فحصه قبل تنفيذ أي شيء.",
+      "ابدأ بتجربة العميل، واستكشف أدوات التحليل الذكي، ثم افحص الأدلة التي تدعم العمليات المالية.",
     steps: [
-      ["01", "اطرح سؤالاً", "اسأل عن الأرصدة أو النشاط الأخير أو مخاطر المحفظة بلغة بسيطة."],
-      ["02", "راجع المقترح", "افحص البيانات المصدرية والاستدلال وتفاصيل الإجراء قبل اتخاذ قرارك."],
-      ["03", "وافق على الإجراء", "أكّد الإجراء الحساس صراحةً، ثم تتبّع حالته ومرجع المعاملة."],
+      ["01", "أدر النشاط المالي", "استكشف الأرصدة والتحويلات والقروض والعائد وخزائن التقاعد في مساحة العميل. تتضمن المنصة أيضاً تطبيقاً مخصصاً للجوال.", "افتح مساحة العميل", "/dashboard"],
+      ["02", "ابحث بالذكاء الاصطناعي", "اسأل المساعد، وراجع المستندات الموثّقة، وحلّل سيناريوهات المحافظ، أو أنشئ مسار بحث بنقاط مراجعة بشرية.", "استكشف المساعد الذكي", "/copilot"],
+      ["03", "افحص الأدلة", "راجع تقارير الاحتياطيات وإثباتات إدراج الالتزامات ومراجع التقارير على السلسلة. تضيف أدوات العمليات قوائم المراجعة والمطابقة ومعالجة الحوادث.", "شاهد أدلة الاحتياطيات", "/trust/solvency"],
     ],
     ctaEyebrow: "اعمل مع وقاص رضا",
-    ctaTitle: "هل تريد نظاماً كهذا لعملك؟",
+    ctaTitle: "هل تبني منتجاً مالياً أو منتج ذكاء اصطناعي؟",
     ctaDescription:
-      "أصمم وأبني وكلاء ذكاء اصطناعي ومسارات عمل تتطلب الموافقة ومنتجات ذكاء اصطناعي متكاملة للعملاء. شاهد المزيد من أعمالي أو تواصل معي عبر ملفي على Upwork.",
+      "توضح هذه المنصة كيف أربط تجارب العملاء ومسارات العمل الخلفية والبحث الذكي وضوابط العمليات في نظام واحد. أساعد العملاء على تصميم وبناء منتجات متكاملة، من أول مسار عمل إلى الخدمات والأدوات التي تدعمه.",
     ctaButton: "تواصل معي على Upwork",
     ctaWork: "شاهد المزيد من أعمالي",
-    footerTagline: "مساحة مالية ذكية · عرض هندسي من وقاص رضا.",
-    footerSecurity: "أدلة النظام",
+    footerTagline: "منصة مالية مدعومة بالذكاء الاصطناعي · عرض هندسي من وقاص رضا.",
+    footerSecurity: "أدلة الاحتياطيات",
     footerSignIn: "دخول التجربة",
     footerCopyright: "وقاص رضا · عرض Stealth Trails التجريبي.",
   },
@@ -282,11 +287,12 @@ export default function Landing() {
               </HeroItem>
               <HeroItem>
                 <h1
-                  aria-label={`${content.titleOne} ${content.titleTwo}`}
-                  className="landing-display mt-7 max-w-3xl text-[3.1rem] font-semibold leading-[1.04] tracking-[-0.055em] text-white sm:text-[4.2rem] lg:text-[4.5rem] xl:text-[5rem]"
+                  aria-label={`${content.titleOne} ${content.titleTwo} ${content.titleThree}`}
+                  className="landing-display mt-7 max-w-3xl text-[2.8rem] font-semibold leading-[1.08] tracking-[-0.055em] text-white sm:text-[4.2rem] lg:text-[3.7rem] xl:text-[4.3rem]"
                 >
                   <span className="block">{content.titleOne}</span>
-                  <span className="landing-title-accent block pb-2">{content.titleTwo}</span>
+                  <span className="landing-title-accent block">{content.titleTwo}</span>
+                  <span className="block pb-2">{content.titleThree}</span>
                 </h1>
               </HeroItem>
               <HeroItem>
@@ -349,14 +355,14 @@ export default function Landing() {
               </p>
             </div>
 
-            <StaggerGrid className="mt-14 grid gap-4 md:grid-cols-2 xl:grid-cols-4" delay={0.08}>
+            <StaggerGrid className="mt-14 grid gap-4 lg:grid-cols-3" delay={0.08}>
               {capabilities.map((item, index) => (
                 <StaggerItem key={item.title}>
                   <article className="landing-capability-card group h-full min-h-[310px] p-6 sm:p-7">
                     <div className={`landing-capability-icon landing-capability-icon--${item.accent}`}>
                       <item.icon className="h-5 w-5" />
                     </div>
-                    <div className="mt-20">
+                    <div className="mt-10">
                       <p className="font-mono text-xs text-slate-400">0{index + 1}</p>
                       <h3 className="landing-display mt-4 text-2xl font-semibold tracking-[-0.04em] text-slate-950">
                         {locale === "ar" ? item.titleAr : item.title}
@@ -364,11 +370,20 @@ export default function Landing() {
                       <p className="mt-3 text-sm leading-7 text-slate-600">
                         {locale === "ar" ? item.descriptionAr : item.description}
                       </p>
+                      <ul className="mt-6 space-y-3 border-t border-slate-200 pt-6 text-sm leading-6 text-slate-700">
+                        {(locale === "ar" ? item.modulesAr : item.modules).map((module) => (
+                          <li key={module} className="flex items-start gap-2">
+                            <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-emerald-700" aria-hidden="true" />
+                            <span>{module}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </article>
                 </StaggerItem>
               ))}
             </StaggerGrid>
+            <p className="mt-8 max-w-3xl text-sm leading-7 text-slate-500">{content.availabilityNote}</p>
           </div>
         </section>
 
@@ -407,7 +422,7 @@ export default function Landing() {
                   <div className="flex items-center justify-between">
                     <ShieldCheck className="h-7 w-7 text-sky-300" />
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400">
-                      Verified
+                      {content.trustBadge}
                     </span>
                   </div>
                   <h3 className="landing-display mt-16 text-xl font-semibold text-white">
@@ -436,13 +451,17 @@ export default function Landing() {
 
             <div className="relative mt-16 grid gap-4 lg:grid-cols-3">
               <div className="absolute left-[16.6%] right-[16.6%] top-[2rem] hidden h-px bg-slate-300 lg:block" aria-hidden="true" />
-              {content.steps.map(([number, title, description]) => (
-                <article className="relative rounded-[1.75rem] border border-slate-200/80 bg-white/65 p-7 backdrop-blur" key={number}>
+              {content.steps.map(([number, title, description, linkLabel, href]) => (
+                <article className="relative flex flex-col items-start rounded-[1.75rem] border border-slate-200/80 bg-white/65 p-7 backdrop-blur" key={number}>
                   <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-[#f5f2ea] font-mono text-xs font-semibold text-emerald-800 shadow-sm">
                     {number}
                   </div>
                   <h3 className="landing-display mt-8 text-2xl font-semibold tracking-[-0.04em]">{title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+                  <Link className="landing-text-link mt-auto pt-6" to={href}>
+                    {linkLabel}
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </Link>
                 </article>
               ))}
             </div>
@@ -600,6 +619,11 @@ function ProductVisual({ content }: { content: LandingCopy }) {
               </div>
               <p className="mt-3 text-[10px] leading-5 text-slate-500">{content.visualLedgerText}</p>
             </div>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 border-t border-white/10 pt-3 text-[10px] font-medium text-slate-300">
+            {content.visualSurfaces.map((surface) => (
+              <span key={surface} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">{surface}</span>
+            ))}
           </div>
         </div>
       </div>

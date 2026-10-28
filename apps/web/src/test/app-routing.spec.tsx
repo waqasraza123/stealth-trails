@@ -153,7 +153,7 @@ describe("app routing", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: /your money, explained in plain English/i,
+        name: /financial services\. AI intelligence\. Human control\./i,
       }),
     ).toBeInTheDocument();
     for (const link of screen.getAllByRole("link", { name: /^demo sign in$/i })) {
