@@ -33,7 +33,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyBrandingToDocument(branding);
-    document.title = `${branding.productName} · AI-native fintech`;
+    document.title = `${branding.productName} · AI banking agent demo by Waqas Raza`;
   }, [branding]);
 
   useEffect(() => {

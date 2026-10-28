@@ -153,14 +153,13 @@ describe("app routing", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: /a private bank, built around you/i,
+        name: /your money, explained in plain English/i,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^sign in$/i })).toHaveAttribute(
-      "href",
-      "/auth/sign-in",
-    );
-    expect(screen.getByRole("link", { name: /open account/i })).toHaveAttribute(
+    for (const link of screen.getAllByRole("link", { name: /^demo sign in$/i })) {
+      expect(link).toHaveAttribute("href", "/auth/sign-in");
+    }
+    expect(screen.getByRole("link", { name: /try the demo/i })).toHaveAttribute(
       "href",
       "/auth/sign-up",
     );

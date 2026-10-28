@@ -9,7 +9,6 @@ import {
   Landmark,
   LineChart,
   LockKeyhole,
-  ScanSearch,
   ShieldCheck,
   Sparkles,
   Vault,
@@ -27,35 +26,38 @@ import { Logo } from "@/components/ui/logo";
 import { useLocale } from "@/i18n/use-locale";
 import { useUserStore } from "@/stores/userStore";
 
+const upworkProfileUrl = import.meta.env.VITE_UPWORK_PROFILE_URL?.trim();
+const portfolioUrl = import.meta.env.VITE_PORTFOLIO_URL?.trim() || "https://github.com/waqasraza123";
+
 const capabilities = [
   {
     icon: BrainCircuit,
-    title: "Financial Copilot",
-    titleAr: "المساعد المالي",
+    title: "Conversational banking",
+    titleAr: "خدمات مالية بالمحادثة",
     description:
-      "Explore your financial picture through a secure, account-aware conversation.",
+      'Ask “where did my money go this month?” and get a sourced answer from real account data, not a generic chart.',
     descriptionAr:
-      "استكشف صورتك المالية من خلال محادثة آمنة وواعية بحسابك.",
+      "اسأل «أين ذهبت أموالي هذا الشهر؟» واحصل على إجابة موثّقة من بيانات الحساب الفعلية، لا مجرد رسم بياني عام.",
     accent: "emerald",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Approval-gated actions",
+    titleAr: "إجراءات تتطلب موافقتك",
+    description:
+      "The agent proposes, you approve. No transfer, trade, or release executes without your explicit confirmation.",
+    descriptionAr:
+      "يقترح الوكيل وتوافق أنت. لا يُنفَّذ أي تحويل أو تداول أو إفراج عن الأموال دون تأكيدك الصريح.",
+    accent: "blue",
   },
   {
     icon: LineChart,
     title: "Risk intelligence",
     titleAr: "ذكاء المخاطر",
     description:
-      "Stress-test a portfolio and turn complex exposure into clear next steps.",
+      "Stress-test a portfolio and get clear next steps, with the reasoning trail preserved so you can check every conclusion.",
     descriptionAr:
-      "اختبر محفظتك وحوّل المخاطر المعقدة إلى خطوات تالية واضحة.",
-    accent: "blue",
-  },
-  {
-    icon: ScanSearch,
-    title: "Research workspace",
-    titleAr: "مساحة البحث",
-    description:
-      "Compare opportunities, inspect documents, and preserve the reasoning trail.",
-    descriptionAr:
-      "قارن الفرص وافحص المستندات واحتفظ بمسار واضح للاستنتاجات.",
+      "اختبر محفظة تحت سيناريوهات الضغط واحصل على خطوات واضحة، مع حفظ مسار الاستدلال لتتمكن من مراجعة كل استنتاج.",
     accent: "violet",
   },
   {
@@ -63,137 +65,151 @@ const capabilities = [
     title: "Protected vaults",
     titleAr: "خزائن محمية",
     description:
-      "Separate long-term funds from daily money movement with explicit release rules.",
+      "Long-term funds stay separated from daily money, with release rules you set and can inspect at any time.",
     descriptionAr:
-      "افصل أموالك طويلة الأجل عن الحركة اليومية بقواعد إفراج واضحة.",
+      "تبقى الأموال طويلة الأجل منفصلة عن الأموال اليومية، بقواعد إفراج تحددها وتستطيع فحصها في أي وقت.",
     accent: "amber",
   },
 ];
 
 const copy = {
   en: {
-    navPlatform: "Platform",
-    navIntelligence: "Intelligence",
-    navSecurity: "Security",
-    signIn: "Sign in",
-    signUp: "Open account",
-    dashboard: "Open dashboard",
-    eyebrow: "AI-native banking on Ethereum",
-    titleOne: "A private bank,",
-    titleTwo: "built around you.",
+    navPlatform: "Capabilities",
+    navIntelligence: "Walkthrough",
+    navSecurity: "Controls",
+    signIn: "Demo sign in",
+    signUp: "Try the demo",
+    dashboard: "Open demo workspace",
+    eyebrow: "AI banking agent — live product demo",
+    titleOne: "Your money,",
+    titleTwo: "explained in plain English.",
     description:
-      "Bring banking, intelligent research, and long-term wealth tools into one calm, secure workspace—without losing sight of what your money is doing.",
-    primaryCta: "Open your account",
-    secondaryCta: "Explore the platform",
-    trustOne: "Policy-led security",
-    trustTwo: "Traceable money movement",
-    trustThree: "Human-readable controls",
-    visualLabel: "Illustrative account workspace",
+      "Ask questions, move funds, and review your portfolio through one secure conversation. Every sensitive action requires your explicit approval, and every decision comes with its reasoning attached.",
+    attribution:
+      "This is a working demonstration of an AI-native banking system, designed and built end to end by Waqas Raza.",
+    primaryCta: "Try the live demo",
+    secondaryCta: "See what it does",
+    trustOne: "Approve sensitive actions",
+    trustTwo: "Review the reasoning",
+    trustThree: "Trace every transaction",
+    visualLabel: "Demo workspace · sample data",
     visualGreeting: "Good morning, Amina",
-    visualBalanceLabel: "Total managed balance",
+    visualBalanceLabel: "Sample portfolio balance",
     visualTrend: "Portfolio view",
     visualAvailable: "Available",
     visualProtected: "Protected",
     visualAgent: "Wealth Guardian",
     visualAgentText: "Your portfolio review is ready",
-    visualStatus: "All systems clear",
+    visualStatus: "Approval required",
     visualLedger: "Activity trail",
     visualLedgerText: "Every instruction remains visible and reviewable.",
-    sectionEyebrow: "One intelligent workspace",
-    sectionTitle: "Clarity across every financial decision.",
+    visualControlLabel: "Action controls",
+    visualControlText: "Explicit approval",
+    visualReasoningLabel: "Reasoning",
+    visualReasoningText: "Ready for review",
+    sectionEyebrow: "Explore the demo",
+    sectionTitle: "What the system does",
     sectionDescription:
-      "Purpose-built tools work together, so you can move from a question to a considered action without stitching together disconnected apps.",
-    trustEyebrow: "Trust is a product feature",
-    trustTitle: "Designed to make control visible.",
+      "Ask about account activity, review a proposed action, stress-test a portfolio, and inspect the rules protecting long-term funds.",
+    trustEyebrow: "Inspect the controls",
+    trustTitle: "Built the way financial software should be built.",
     trustDescription:
-      "Security should feel understandable, not mysterious. Sensitive actions pass through explicit controls, while references and status remain available for review.",
-    trustLink: "Visit the public trust center",
+      "Sensitive actions pass through explicit controls. Transactions carry references. System state is inspectable. Security here is not a promise in a footer — it is visible in the product.",
+    trustLink: "Inspect system evidence",
     trustCardOne: "Protected access",
     trustCardOneText:
-      "Layered sign-in controls and session safeguards protect the path into your account.",
+      "Layered sign-in controls and session safeguards protect access to the demo workspace.",
     trustCardTwo: "Proof and traceability",
     trustCardTwoText:
-      "Transaction references and solvency views make important system state inspectable.",
-    journeyEyebrow: "A simpler path",
-    journeyTitle: "From first deposit to long-term plan.",
+      "Inspect transaction references, verification reports, and system state in the working demo.",
+    journeyEyebrow: "Try the workflow",
+    journeyTitle: "Ask. Review. Approve.",
     journeyDescription:
-      "Start with a secure profile. Build a complete view of your money. Then use intelligent tools when the decision deserves deeper attention.",
+      "Explore how an account-aware agent turns a question into a proposal you can inspect before anything executes.",
     steps: [
-      ["01", "Create your profile", "Set up secure access and your managed Ethereum account."],
-      ["02", "See the full picture", "Review balances, movement, protected funds, and current status."],
-      ["03", "Decide with context", "Use research, risk, and AI tools inside the same trusted workspace."],
+      ["01", "Ask a question", "Ask about balances, recent activity, or portfolio risk in plain English."],
+      ["02", "Review the proposal", "Inspect the source data, reasoning, and action details before deciding."],
+      ["03", "Approve the action", "Confirm a sensitive action explicitly, then follow its status and transaction reference."],
     ],
-    ctaEyebrow: "Your financial life, composed",
-    ctaTitle: "Bank with more intelligence—and less noise.",
+    ctaEyebrow: "Work with Waqas Raza",
+    ctaTitle: "Want a system like this for your business?",
     ctaDescription:
-      "Create your secure profile and enter a workspace built for clearer financial decisions.",
-    ctaButton: "Get started securely",
-    footerTagline: "Intelligent banking. Visible control.",
-    footerSecurity: "Trust center",
-    footerSignIn: "Client sign in",
-    footerCopyright: "Stealth Trails Bank. Built for the next financial era.",
+      "I design and build AI agents, approval-gated workflows, and full-stack AI products for clients. See more of my work or get in touch through my Upwork profile.",
+    ctaButton: "Get in touch on Upwork",
+    ctaWork: "See more of my work",
+    footerTagline: "AI financial workspace · Engineering demo by Waqas Raza.",
+    footerSecurity: "System evidence",
+    footerSignIn: "Demo sign in",
+    footerCopyright: "Waqas Raza · Stealth Trails demo.",
   },
   ar: {
-    navPlatform: "المنصة",
-    navIntelligence: "الذكاء",
-    navSecurity: "الأمان",
-    signIn: "تسجيل الدخول",
-    signUp: "فتح حساب",
-    dashboard: "فتح لوحة التحكم",
-    eyebrow: "خدمات مصرفية ذكية على إيثيريوم",
-    titleOne: "بنك خاص،",
-    titleTwo: "مصمم حولك.",
+    navPlatform: "الإمكانات",
+    navIntelligence: "خطوات التجربة",
+    navSecurity: "الضوابط",
+    signIn: "دخول التجربة",
+    signUp: "جرّب النظام",
+    dashboard: "فتح مساحة التجربة",
+    eyebrow: "وكيل مالي ذكي — عرض تجريبي مباشر",
+    titleOne: "أموالك،",
+    titleTwo: "بشرح واضح وبسيط.",
     description:
-      "اجمع الخدمات المصرفية والبحث الذكي وأدوات الثروة طويلة الأجل في مساحة واحدة هادئة وآمنة، مع رؤية واضحة لما تفعله أموالك.",
-    primaryCta: "افتح حسابك",
-    secondaryCta: "استكشف المنصة",
-    trustOne: "أمان قائم على السياسات",
-    trustTwo: "حركة أموال قابلة للتتبع",
-    trustThree: "ضوابط واضحة ومفهومة",
-    visualLabel: "عرض توضيحي لمساحة الحساب",
+      "اطرح الأسئلة وحرّك الأموال وراجع محفظتك عبر محادثة آمنة واحدة. يتطلب كل إجراء حساس موافقتك الصريحة، ويأتي كل قرار مع توضيح أسبابه.",
+    attribution:
+      "هذا عرض عملي لنظام خدمات مالية قائم على الذكاء الاصطناعي، صممه وبناه وقاص رضا من البداية إلى النهاية.",
+    primaryCta: "جرّب العرض المباشر",
+    secondaryCta: "استكشف ما يفعله",
+    trustOne: "وافق على الإجراءات الحساسة",
+    trustTwo: "راجع الاستدلال",
+    trustThree: "تتبّع كل معاملة",
+    visualLabel: "مساحة تجريبية · بيانات نموذجية",
     visualGreeting: "صباح الخير، أمينة",
-    visualBalanceLabel: "إجمالي الرصيد المُدار",
+    visualBalanceLabel: "رصيد محفظة نموذجي",
     visualTrend: "عرض المحفظة",
     visualAvailable: "متاح",
     visualProtected: "محمي",
     visualAgent: "حارس الثروة",
     visualAgentText: "مراجعة محفظتك جاهزة",
-    visualStatus: "جميع الأنظمة سليمة",
+    visualStatus: "الموافقة مطلوبة",
     visualLedger: "سجل النشاط",
     visualLedgerText: "تبقى كل تعليماتك مرئية وقابلة للمراجعة.",
-    sectionEyebrow: "مساحة عمل ذكية واحدة",
-    sectionTitle: "وضوح في كل قرار مالي.",
+    visualControlLabel: "ضوابط الإجراءات",
+    visualControlText: "موافقة صريحة",
+    visualReasoningLabel: "الاستدلال",
+    visualReasoningText: "جاهز للمراجعة",
+    sectionEyebrow: "استكشف التجربة",
+    sectionTitle: "ما الذي يفعله النظام؟",
     sectionDescription:
-      "تعمل الأدوات المتخصصة معاً لتنتقل من السؤال إلى قرار مدروس دون تجميع تطبيقات منفصلة.",
-    trustEyebrow: "الثقة ميزة أساسية",
-    trustTitle: "مصمم ليجعل التحكم مرئياً.",
+      "اسأل عن نشاط الحساب، وراجع إجراءً مقترحاً، واختبر محفظة تحت الضغط، وافحص القواعد التي تحمي الأموال طويلة الأجل.",
+    trustEyebrow: "افحص الضوابط",
+    trustTitle: "مبني كما ينبغي أن تُبنى البرمجيات المالية.",
     trustDescription:
-      "يجب أن يكون الأمان مفهوماً لا غامضاً. تمر الإجراءات الحساسة عبر ضوابط صريحة، بينما تبقى المراجع والحالات متاحة للمراجعة.",
-    trustLink: "زيارة مركز الثقة العام",
+      "تمر الإجراءات الحساسة عبر ضوابط صريحة. تحمل المعاملات مراجع واضحة. ويمكن فحص حالة النظام. الأمان هنا ليس وعداً في تذييل الصفحة، بل هو ظاهر في المنتج.",
+    trustLink: "افحص أدلة النظام",
     trustCardOne: "وصول محمي",
     trustCardOneText:
-      "تحمي طبقات تسجيل الدخول وضمانات الجلسة طريق الوصول إلى حسابك.",
+      "تحمي طبقات تسجيل الدخول وضمانات الجلسة الوصول إلى مساحة التجربة.",
     trustCardTwo: "الإثبات وقابلية التتبع",
     trustCardTwoText:
-      "تجعل مراجع المعاملات وعروض الملاءة حالة النظام المهمة قابلة للفحص.",
-    journeyEyebrow: "مسار أبسط",
-    journeyTitle: "من أول إيداع إلى خطة طويلة الأجل.",
+      "افحص مراجع المعاملات وتقارير التحقق وحالة النظام في العرض العملي.",
+    journeyEyebrow: "جرّب سير العمل",
+    journeyTitle: "اسأل. راجع. وافق.",
     journeyDescription:
-      "ابدأ بملف آمن، ثم كوّن رؤية كاملة لأموالك، واستخدم الأدوات الذكية عندما يحتاج القرار إلى اهتمام أعمق.",
+      "استكشف كيف يحوّل وكيل مطّلع على الحساب سؤالك إلى مقترح يمكنك فحصه قبل تنفيذ أي شيء.",
     steps: [
-      ["01", "أنشئ ملفك", "أعد وصولاً آمناً وحساب إيثيريوم مُداراً."],
-      ["02", "شاهد الصورة كاملة", "راجع الأرصدة والحركة والأموال المحمية والحالة الحالية."],
-      ["03", "قرر ضمن السياق", "استخدم أدوات البحث والمخاطر والذكاء ضمن المساحة الموثوقة نفسها."],
+      ["01", "اطرح سؤالاً", "اسأل عن الأرصدة أو النشاط الأخير أو مخاطر المحفظة بلغة بسيطة."],
+      ["02", "راجع المقترح", "افحص البيانات المصدرية والاستدلال وتفاصيل الإجراء قبل اتخاذ قرارك."],
+      ["03", "وافق على الإجراء", "أكّد الإجراء الحساس صراحةً، ثم تتبّع حالته ومرجع المعاملة."],
     ],
-    ctaEyebrow: "حياتك المالية في تناغم",
-    ctaTitle: "خدمات مصرفية بذكاء أكبر وضوضاء أقل.",
+    ctaEyebrow: "اعمل مع وقاص رضا",
+    ctaTitle: "هل تريد نظاماً كهذا لعملك؟",
     ctaDescription:
-      "أنشئ ملفك الآمن وادخل مساحة مصممة لاتخاذ قرارات مالية أوضح.",
-    ctaButton: "ابدأ بأمان",
-    footerTagline: "خدمات ذكية. تحكم واضح.",
-    footerSecurity: "مركز الثقة",
-    footerSignIn: "دخول العملاء",
-    footerCopyright: "Stealth Trails Bank. صُمم للعصر المالي القادم.",
+      "أصمم وأبني وكلاء ذكاء اصطناعي ومسارات عمل تتطلب الموافقة ومنتجات ذكاء اصطناعي متكاملة للعملاء. شاهد المزيد من أعمالي أو تواصل معي عبر ملفي على Upwork.",
+    ctaButton: "تواصل معي على Upwork",
+    ctaWork: "شاهد المزيد من أعمالي",
+    footerTagline: "مساحة مالية ذكية · عرض هندسي من وقاص رضا.",
+    footerSecurity: "أدلة النظام",
+    footerSignIn: "دخول التجربة",
+    footerCopyright: "وقاص رضا · عرض Stealth Trails التجريبي.",
   },
 };
 
@@ -206,15 +222,15 @@ export default function Landing() {
     <div className="landing-page min-h-screen overflow-hidden bg-[#07111f] text-white">
       <header className="landing-nav fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#07111f]/78 backdrop-blur-2xl">
         <div className="mx-auto flex h-[76px] w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
-          <Link to="/" aria-label="Stealth Trails Bank home">
-            <Logo size="sm" tone="light" />
+          <Link to="/" aria-label={locale === "ar" ? "عرض Stealth Trails التجريبي" : "Stealth Trails demo home"}>
+            <Logo size="sm" tone="light" className="[&>span]:hidden sm:[&>span]:inline" />
           </Link>
 
           <nav className="hidden items-center gap-8 lg:flex" aria-label="Primary navigation">
             <a className="landing-nav-link" href="#platform">
               {content.navPlatform}
             </a>
-            <a className="landing-nav-link" href="#intelligence">
+            <a className="landing-nav-link" href="#walkthrough">
               {content.navIntelligence}
             </a>
             <a className="landing-nav-link" href="#security">
@@ -240,8 +256,7 @@ export default function Landing() {
                 </Button>
                 <Button asChild className="landing-nav-primary">
                   <Link to="/auth/sign-up">
-                    <span className="hidden sm:inline">{content.signUp}</span>
-                    <span className="sm:hidden">{locale === "ar" ? "ابدأ" : "Join"}</span>
+                    <span>{content.signUp}</span>
                     <ArrowRight className="hidden h-4 w-4 sm:block rtl:rotate-180" />
                   </Link>
                 </Button>
@@ -268,7 +283,7 @@ export default function Landing() {
               <HeroItem>
                 <h1
                   aria-label={`${content.titleOne} ${content.titleTwo}`}
-                  className="landing-display mt-7 max-w-3xl text-[3.4rem] font-semibold leading-[0.98] tracking-[-0.065em] text-white sm:text-[4.7rem] lg:text-[5.25rem] xl:text-[6rem]"
+                  className="landing-display mt-7 max-w-3xl text-[3.1rem] font-semibold leading-[1.04] tracking-[-0.055em] text-white sm:text-[4.2rem] lg:text-[4.5rem] xl:text-[5rem]"
                 >
                   <span className="block">{content.titleOne}</span>
                   <span className="landing-title-accent block pb-2">{content.titleTwo}</span>
@@ -277,6 +292,9 @@ export default function Landing() {
               <HeroItem>
                 <p className="mt-7 max-w-xl text-base leading-8 text-slate-300 sm:text-lg sm:leading-9">
                   {content.description}
+                </p>
+                <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
+                  {content.attribution}
                 </p>
               </HeroItem>
               <HeroItem>
@@ -331,7 +349,7 @@ export default function Landing() {
               </p>
             </div>
 
-            <StaggerGrid id="intelligence" className="mt-14 grid scroll-mt-28 gap-4 md:grid-cols-2 xl:grid-cols-4" delay={0.08}>
+            <StaggerGrid className="mt-14 grid gap-4 md:grid-cols-2 xl:grid-cols-4" delay={0.08}>
               {capabilities.map((item, index) => (
                 <StaggerItem key={item.title}>
                   <article className="landing-capability-card group h-full min-h-[310px] p-6 sm:p-7">
@@ -404,7 +422,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="bg-[#f5f2ea] px-5 py-24 text-slate-950 sm:px-8 sm:py-32 lg:px-12">
+        <section id="walkthrough" className="scroll-mt-24 bg-[#f5f2ea] px-5 py-24 text-slate-950 sm:px-8 sm:py-32 lg:px-12">
           <div className="mx-auto max-w-[1344px]">
             <div className="mx-auto max-w-3xl text-center">
               <p className="landing-section-kicker justify-center">{content.journeyEyebrow}</p>
@@ -432,18 +450,6 @@ export default function Landing() {
         </section>
 
         <section className="bg-[#f5f2ea] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
-          <figure className="mx-auto max-w-[1344px] overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.12)] sm:rounded-[2.5rem]">
-            <img
-              src="/brand-hero.png"
-              alt="Stealth Trails Private Bank — AI-native banking on Ethereum"
-              className="aspect-[2/1] h-auto w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-        </section>
-
-        <section className="bg-[#f5f2ea] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
           <div className="landing-cta relative mx-auto max-w-[1344px] overflow-hidden rounded-[2.5rem] px-6 py-16 sm:px-12 sm:py-20 lg:px-20 lg:py-24">
             <div className="landing-grid absolute inset-0 opacity-30" aria-hidden="true" />
             <div className="landing-cta-orb" aria-hidden="true" />
@@ -455,12 +461,22 @@ export default function Landing() {
               <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
                 {content.ctaDescription}
               </p>
-              <Button asChild className="landing-hero-primary mt-9 h-14 px-7">
-                <Link to={user ? "/dashboard" : "/auth/sign-up"}>
-                  {user ? content.dashboard : content.ctaButton}
-                  <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                </Link>
-              </Button>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                {upworkProfileUrl && (
+                  <Button asChild className="landing-hero-primary h-14 px-7">
+                    <a href={upworkProfileUrl} target="_blank" rel="noopener noreferrer">
+                      {content.ctaButton}
+                      <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    </a>
+                  </Button>
+                )}
+                <Button asChild className={upworkProfileUrl ? "landing-hero-secondary h-14 px-7 !text-white hover:!text-white" : "landing-hero-primary h-14 px-7"} variant={upworkProfileUrl ? "outline" : "default"}>
+                  <a href={portfolioUrl} target="_blank" rel="noopener noreferrer">
+                    {content.ctaWork}
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </a>
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -593,8 +609,8 @@ function ProductVisual({ content }: { content: LandingCopy }) {
           <ShieldCheck className="h-4 w-4 text-emerald-300" />
         </span>
         <div>
-          <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Security</p>
-          <p className="mt-0.5 text-xs font-semibold text-white">Policy verified</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{content.visualControlLabel}</p>
+          <p className="mt-0.5 text-xs font-semibold text-white">{content.visualControlText}</p>
         </div>
       </div>
       <div className="landing-floating-chip landing-floating-chip--bottom hidden sm:flex">
@@ -602,8 +618,8 @@ function ProductVisual({ content }: { content: LandingCopy }) {
           <Sparkles className="h-4 w-4 text-sky-300" />
         </span>
         <div>
-          <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Intelligence</p>
-          <p className="mt-0.5 text-xs font-semibold text-white">Context synchronized</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{content.visualReasoningLabel}</p>
+          <p className="mt-0.5 text-xs font-semibold text-white">{content.visualReasoningText}</p>
         </div>
       </div>
     </div>
