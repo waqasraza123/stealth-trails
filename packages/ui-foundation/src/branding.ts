@@ -43,7 +43,7 @@ export const brandTypographyStacks: Record<
 
 export const defaultBranding: BrandingConfig = {
   productName: "Stealth Trails",
-  tagline: "Financial services, AI intelligence, and operational control.",
+  tagline: "AI-native banking, shaped around your brand.",
   logoUrl: "/brand-mark.png",
   colors: {
     primary: "#0F766E",
