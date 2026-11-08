@@ -204,7 +204,7 @@ export default function Landing() {
 
   return (
     <div className="landing-page min-h-screen overflow-hidden bg-[#07111f] text-white">
-      <header className="landing-nav fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#07111f]/78 backdrop-blur-2xl">
+      <header className="landing-nav fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#07111f]/80 backdrop-blur-2xl">
         <div className="mx-auto flex h-[76px] w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
           <Link to="/" aria-label="Stealth Trails Bank home">
             <Logo size="sm" tone="light" />
@@ -252,13 +252,22 @@ export default function Landing() {
       </header>
 
       <main>
-        <section className="landing-hero relative isolate min-h-[900px] overflow-hidden pt-[76px]">
-          <div className="landing-grid absolute inset-0 opacity-50" aria-hidden="true" />
-          <div className="landing-glow landing-glow--one" aria-hidden="true" />
-          <div className="landing-glow landing-glow--two" aria-hidden="true" />
+        <section className="landing-hero relative isolate overflow-hidden">
+          <div className="landing-hero-art" aria-hidden="true">
+            <img
+              src="/brand-hero.png"
+              alt=""
+              width="1774"
+              height="887"
+              loading="eager"
+              {...{ fetchpriority: "high" }}
+              decoding="async"
+            />
+          </div>
+          <div className="landing-hero-shade" aria-hidden="true" />
 
-          <div className="relative mx-auto grid w-full max-w-[1440px] gap-16 px-5 pb-24 pt-20 sm:px-8 sm:pt-28 lg:grid-cols-[minmax(0,0.86fr)_minmax(520px,1.14fr)] lg:items-center lg:gap-10 lg:px-12 lg:pb-32 lg:pt-32">
-            <HeroReveal className="relative z-10">
+          <div className="landing-hero-inner relative mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
+            <HeroReveal className="landing-hero-copy relative z-10">
               <HeroItem>
                 <div className="landing-kicker">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -268,67 +277,58 @@ export default function Landing() {
               <HeroItem>
                 <h1
                   aria-label={`${content.titleOne} ${content.titleTwo}`}
-                  className="landing-display mt-7 max-w-3xl text-[3.4rem] font-semibold leading-[0.98] tracking-[-0.065em] text-white sm:text-[4.7rem] lg:text-[5.25rem] xl:text-[6rem]"
+                  className="landing-hero-title landing-display mt-6 font-semibold leading-[1.02] tracking-[-0.06em] text-white"
                 >
                   <span className="block">{content.titleOne}</span>
                   <span className="landing-title-accent block pb-2">{content.titleTwo}</span>
                 </h1>
               </HeroItem>
               <HeroItem>
-                <p className="mt-7 max-w-xl text-base leading-8 text-slate-300 sm:text-lg sm:leading-9">
+                <p className="mt-6 max-w-lg text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">
                   {content.description}
                 </p>
               </HeroItem>
               <HeroItem>
-                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-5">
                   <Button asChild className="landing-hero-primary h-14 px-7 text-[0.95rem]">
                     <Link to={user ? "/dashboard" : "/auth/sign-up"}>
                       {user ? content.dashboard : content.primaryCta}
                       <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="landing-hero-secondary h-14 px-7 text-[0.95rem] !text-white hover:!text-white">
-                    <a href="#platform">
-                      {content.secondaryCta}
-                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-                    </a>
-                  </Button>
+                  <a className="landing-hero-explore inline-flex items-center gap-2 py-3 text-sm font-semibold text-white" href="#platform">
+                    {content.secondaryCta}
+                    <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                  </a>
                 </div>
-              </HeroItem>
-              <HeroItem>
-                <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-medium text-slate-400 sm:text-sm">
-                  {[content.trustOne, content.trustTwo, content.trustThree].map((item) => (
-                    <span className="inline-flex items-center gap-2" key={item}>
-                      <Check className="h-3.5 w-3.5 text-emerald-300" />
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </HeroItem>
-            </HeroReveal>
-
-            <HeroReveal className="relative z-10 lg:ps-8">
-              <HeroItem>
-                <ProductVisual content={content} />
               </HeroItem>
             </HeroReveal>
           </div>
-
-          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-[#f5f2ea]" aria-hidden="true" />
         </section>
 
         <section id="platform" className="scroll-mt-24 bg-[#f5f2ea] px-5 py-24 text-slate-950 sm:px-8 sm:py-32 lg:px-12">
           <div className="mx-auto max-w-[1344px]">
-            <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
+            <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20">
               <div>
                 <p className="landing-section-kicker">{content.sectionEyebrow}</p>
                 <h2 className="landing-display mt-5 max-w-xl text-4xl font-semibold leading-[1.04] tracking-[-0.055em] sm:text-5xl lg:text-[4rem]">
                   {content.sectionTitle}
                 </h2>
+                <p className="mt-6 max-w-xl text-base leading-8 text-slate-600 lg:text-lg">
+                  {content.sectionDescription}
+                </p>
+                <div className="mt-8 flex flex-col gap-3 text-sm font-medium text-slate-600">
+                  {[content.trustOne, content.trustTwo, content.trustThree].map((item) => (
+                    <span className="inline-flex items-center gap-2" key={item}>
+                      <Check className="h-4 w-4 shrink-0 text-emerald-700" />
+                      {item}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <p className="max-w-2xl text-base leading-8 text-slate-600 lg:justify-self-end lg:text-lg">
-                {content.sectionDescription}
-              </p>
+              <div className="landing-platform-preview min-w-0 rounded-[2rem] bg-[#07111f] px-4 py-8 sm:px-6 sm:py-10">
+                <ProductVisual content={content} />
+              </div>
             </div>
 
             <StaggerGrid id="intelligence" className="mt-14 grid scroll-mt-28 gap-4 md:grid-cols-2 xl:grid-cols-4" delay={0.08}>
@@ -432,18 +432,6 @@ export default function Landing() {
         </section>
 
         <section className="bg-[#f5f2ea] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
-          <figure className="mx-auto max-w-[1344px] overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.12)] sm:rounded-[2.5rem]">
-            <img
-              src="/brand-hero.png"
-              alt="Stealth Trails Private Bank — AI-native banking on Ethereum"
-              className="aspect-[2/1] h-auto w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-        </section>
-
-        <section className="bg-[#f5f2ea] px-5 pb-8 sm:px-8 sm:pb-10 lg:px-12">
           <div className="landing-cta relative mx-auto max-w-[1344px] overflow-hidden rounded-[2.5rem] px-6 py-16 sm:px-12 sm:py-20 lg:px-20 lg:py-24">
             <div className="landing-grid absolute inset-0 opacity-30" aria-hidden="true" />
             <div className="landing-cta-orb" aria-hidden="true" />
@@ -537,7 +525,7 @@ function ProductVisual({ content }: { content: LandingCopy }) {
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
               <div className="landing-visual-card p-4">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.13em] text-slate-500">
+                <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.13em] text-slate-500">
                   <WalletCards className="h-3.5 w-3.5 text-sky-300" />
                   {content.visualAvailable}
                 </div>
@@ -547,7 +535,7 @@ function ProductVisual({ content }: { content: LandingCopy }) {
                 </div>
               </div>
               <div className="landing-visual-card p-4">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.13em] text-slate-500">
+                <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.13em] text-slate-500">
                   <Vault className="h-3.5 w-3.5 text-violet-300" />
                   {content.visualProtected}
                 </div>
